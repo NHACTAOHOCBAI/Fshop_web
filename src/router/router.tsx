@@ -1,8 +1,11 @@
-import AmdinLayout from "@/components/layout/AdminLayout";
+import AdminLayout from "@/components/layout/AdminLayout";
+import BackupRestorePage from "@/pages/admin/backup-restore/BackupRestorePage";
 import BrandsPage from "@/pages/admin/brands/BrandsPage";
 import CategoriesPage from "@/pages/admin/categories/CategoriesPage";
+import CommunityPage from "@/pages/admin/community/CommunityPage";
 import CouponsPage from "@/pages/admin/coupons/CouponsPage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
+import LivestreamsPage from "@/pages/admin/livestreams/LivestreamsPage";
 import OrdersPage from "@/pages/admin/orders/OrdersPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
@@ -12,7 +15,7 @@ import { createBrowserRouter } from "react-router";
 const router = createBrowserRouter([
   {
     path: "/admin",
-    element: <AmdinLayout />,
+    element: <AdminLayout />,
     children: [
       {
         path: "dashboard",
@@ -45,6 +48,18 @@ const router = createBrowserRouter([
       {
         path: "stocks",
         element: <StocksPage />,
+      },
+      {
+        path: "community",
+        element: <CommunityPage />,
+      },
+      {
+        path: "livestreams",
+        element: <LivestreamsPage />,
+      },
+      {
+        path: "backup-restore",
+        element: <BackupRestorePage />,
       }
     ]
   }
