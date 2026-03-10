@@ -1,5 +1,6 @@
 import axios from "axios";
 import { authStorage } from "@/lib/auth";
+import { extractApiErrorMessage } from "@/lib/api-error";
 import type { RefreshTokenResponse } from "@/types/auth";
 
 const BE_URL = import.meta.env.VITE_API_URL || "https://api.example.com";
@@ -26,10 +27,17 @@ axiosInstance.interceptors.request.use((config) => {
 axiosInstance.interceptors.response.use(
     (response) => response,
     async (error) => {
+        const normalizeAxiosErrorMessage = (rawError: unknown) => {
+            if (axios.isAxiosError(rawError)) {
+                rawError.message = extractApiErrorMessage(rawError.response?.data, rawError.message);
+            }
+            return rawError;
+        };
+
         const originalRequest = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
 
         if (error.response?.status !== 401 || !originalRequest || originalRequest._retry) {
-            return Promise.reject(error);
+            return Promise.reject(normalizeAxiosErrorMessage(error));
         }
 
         // Avoid infinite loop when refresh endpoint itself returns 401.
@@ -38,7 +46,7 @@ axiosInstance.interceptors.response.use(
             if (window.location.pathname !== "/login") {
                 window.location.href = "/login";
             }
-            return Promise.reject(error);
+            return Promise.reject(normalizeAxiosErrorMessage(error));
         }
 
         originalRequest._retry = true;
@@ -62,7 +70,7 @@ axiosInstance.interceptors.response.use(
             if (window.location.pathname !== "/login") {
                 window.location.href = "/login";
             }
-            return Promise.reject(refreshError);
+            return Promise.reject(normalizeAxiosErrorMessage(refreshError));
         }
     }
 );
