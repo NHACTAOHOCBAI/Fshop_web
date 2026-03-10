@@ -1,6 +1,11 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 import { ImageUpload } from "@/components/image-upload/image-upload";
+import { useCreateBrand } from "@/hooks/useBrands";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -12,7 +17,58 @@ import {
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
-import useLocalCreateBrand from "./use-local-create-brand";
+const createBrandSchema = z.object({
+    name: z.string().min(1, "Brand name is required"),
+    description: z.string().optional(),
+    image: z.array(z.instanceof(File)).min(1, "You must choose an image"),
+});
+
+const useLocalCreateBrand = (closeDialog: () => void) => {
+    const { mutate: createItem, isPending } = useCreateBrand();
+
+    const form = useForm<z.infer<typeof createBrandSchema>>({
+        resolver: zodResolver(createBrandSchema),
+        defaultValues: {
+            name: "",
+            description: "",
+            image: [],
+        },
+    });
+
+    const onSubmit = (values: z.infer<typeof createBrandSchema>) => {
+        createItem(
+            {
+                name: values.name,
+                description: values.description,
+                image: values.image[0],
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Brand has been created");
+                },
+                onError: (error) => {
+                    toast.error(`Create failed: ${error.message}`);
+                },
+                onSettled: () => {
+                    form.reset({ name: "", description: "", image: [] });
+                    closeDialog();
+                },
+            }
+        );
+    };
+
+    const handleCancel = () => {
+        form.reset({ name: "", description: "", image: [] });
+        closeDialog();
+    };
+
+    return {
+        form,
+        isPending,
+        onSubmit,
+        handleCancel,
+    };
+};
 
 interface CreateBrandDialogProps {
     open: boolean;

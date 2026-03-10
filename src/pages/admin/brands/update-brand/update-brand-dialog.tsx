@@ -1,7 +1,13 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useCallback, useEffect, useState } from "react";
 import type { Dispatch, SetStateAction } from "react";
 import { Controller } from "react-hook-form";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
 
 import { ImageUpload } from "@/components/image-upload/image-upload";
+import { useUpdateBrand } from "@/hooks/useBrands";
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
@@ -14,7 +20,103 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import type { Brand } from "@/types/brand";
 
-import useLocalUpdateBrand from "./use-local-update-brand";
+type PreviewFile = File & { preview?: string };
+
+const updateBrandSchema = z.object({
+    name: z.string().min(1, "Brand name is required"),
+    description: z.string().optional(),
+    image: z.array(z.instanceof(File)).min(1, "You must choose an image"),
+});
+
+const useLocalUpdateBrand = (
+    updatedItem: Brand | undefined,
+    closeDialog: () => void
+) => {
+    const { mutate: updateItem, isPending } = useUpdateBrand();
+    const [isImageLoading, setIsImageLoading] = useState(false);
+
+    const form = useForm<z.infer<typeof updateBrandSchema>>({
+        resolver: zodResolver(updateBrandSchema),
+        defaultValues: {
+            name: "",
+            description: "",
+            image: [],
+        },
+    });
+
+    const onSubmit = (values: z.infer<typeof updateBrandSchema>) => {
+        if (!updatedItem) {
+            return;
+        }
+
+        updateItem(
+            {
+                id: updatedItem.id,
+                data: {
+                    name: values.name,
+                    description: values.description,
+                    image: values.image[0],
+                },
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Brand has been updated");
+                },
+                onError: (error) => {
+                    toast.error(`Update failed: ${error.message}`);
+                },
+                onSettled: () => {
+                    handleCancel();
+                },
+            }
+        );
+    };
+
+    const handleCancel = () => {
+        form.reset({ name: "", description: "", image: [] });
+        closeDialog();
+    };
+
+    const initializeImage = async (item: Brand) => {
+        if (!item.imageUrl) {
+            return [] as File[];
+        }
+
+        setIsImageLoading(true);
+        const response = await fetch(item.imageUrl);
+        const blob = await response.blob();
+        const file = new File([blob], "image", { type: blob.type }) as PreviewFile;
+        file.preview = item.imageUrl;
+        setIsImageLoading(false);
+
+        return [file] as File[];
+    };
+
+    const resetForm = useCallback(async () => {
+        if (!updatedItem) {
+            return;
+        }
+
+        const image = await initializeImage(updatedItem);
+        form.reset({
+            name: updatedItem.name,
+            description: updatedItem.description ?? "",
+            image,
+        });
+    }, [form, updatedItem]);
+
+    useEffect(() => {
+        resetForm();
+    }, [resetForm]);
+
+    return {
+        form,
+        isPending,
+        isImageLoading,
+        onSubmit,
+        handleCancel,
+    };
+};
 
 interface UpdateBrandDialogProps {
     open: boolean;
