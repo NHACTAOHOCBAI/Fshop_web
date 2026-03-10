@@ -20,3 +20,7 @@ export const getBrandBySlug = async (slug: string) => {
     const { data } = await axiosInstance.get<ApiResponse<Brand>>(`/brands/slug/${slug}`);
     return data;
 };
+
+export const deleteBrand = async ({ id }: { id: number }) => {
+    return axiosInstance.delete(`/brands/${id}`);
+};

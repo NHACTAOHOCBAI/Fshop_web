@@ -1,50 +1,49 @@
-import { useBrands } from "@/hooks/useBrands";
+import { Plus } from "lucide-react";
+import { toast } from "sonner";
+
+import CrudTable from "@/components/crud_table/crud-table";
+import { Button } from "@/components/ui/button";
+import { useBrands, useDeleteBrand } from "@/hooks/useBrands";
+import type { Brand } from "@/types/brand";
+
+import { brandColumns } from "./brand-columns";
 
 const BrandsPage = () => {
-    const { data, isLoading, isError, error } = useBrands({
-        page: 1,
-        limit: 10,
-        sortBy: "createdAt",
-        sortOrder: "DESC",
-    });
+    const { mutate: deleteItem } = useDeleteBrand();
 
-    if (isLoading) {
-        return (
-            <div className="dashboard">
-                <h1>Brands</h1>
-                <p>Loading brands...</p>
-            </div>
+    const handleUpdateBtn = (_item: Brand) => {
+        toast.info("Update brand dialog is not implemented yet");
+    };
+
+    const handleDeleteItem = (id: number) => {
+        deleteItem(
+            { id },
+            {
+                onSuccess: () => toast.success("Brand has been deleted"),
+                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+            }
         );
-    }
-
-    if (isError) {
-        return (
-            <div className="dashboard">
-                <h1>Brands</h1>
-                <p>Failed to load brands: {error.message}</p>
-            </div>
-        );
-    }
-
-    const brands = data?.data.data ?? [];
-    const total = data?.data.pagination.total ?? 0;
+    };
 
     return (
-        <div className="dashboard">
-            <h1>Brands</h1>
-            <p>Total brands: {total}</p>
+        <div className="space-y-4  w-full">
+            <h1 className="text-2xl font-semibold">Brands</h1>
 
-            {brands.length === 0 ? (
-                <p>No brands found.</p>
-            ) : (
-                <ul>
-                    {brands.map((brand) => (
-                        <li key={brand.id}>
-                            {brand.name} ({brand.slug})
-                        </li>
-                    ))}
-                </ul>
-            )}
+            <CrudTable<Brand>
+                columns={brandColumns(handleUpdateBtn, handleDeleteItem)}
+                useQuery={useBrands}
+                filterPlaceholder="Filter brand name..."
+            >
+                <Button
+                    variant="outline"
+                    size="sm"
+                    className="ml-2 h-8"
+                    onClick={() => toast.info("Create brand dialog is not implemented yet")}
+                >
+                    <Plus className="size-4" />
+                    Add Brand
+                </Button>
+            </CrudTable>
         </div>
     );
 };
