@@ -1,0 +1,24 @@
+import type { ReactNode } from "react";
+import { Navigate } from "react-router";
+
+import { authStorage } from "@/lib/auth";
+import type { User } from "@/types/user";
+
+interface ProtectedRouteProps {
+    children: ReactNode;
+}
+
+export default function ProtectedRoute({ children }: ProtectedRouteProps) {
+    const token = authStorage.getAccessToken();
+    const user = authStorage.getUser<User>();
+
+    if (!token || !user) {
+        return <Navigate to="/login" replace />;
+    }
+
+    if (user.role !== "admin") {
+        return <Navigate to="/login" replace state={{ reason: "forbidden" }} />;
+    }
+
+    return <>{children}</>;
+}

@@ -1,9 +1,13 @@
 "use client"
 
 import * as React from "react"
+import { toast } from "sonner"
 
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
+import { useLogout } from "@/hooks/useAuth"
+import { authStorage } from "@/lib/auth"
+import type { User } from "@/types/user"
 import {
   SidebarGroup,
   SidebarGroupLabel,
@@ -33,7 +37,7 @@ import {
   UsersIcon,
   VideoIcon,
 } from "lucide-react"
-import { Link, useLocation } from "react-router"
+import { Link, useLocation, useNavigate } from "react-router"
 
 const data = {
   user: {
@@ -86,9 +90,29 @@ const adminMenuItems = [
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
+  const navigate = useNavigate()
+  const { mutate: logoutMutation } = useLogout()
+
+  const authUser = authStorage.getUser<User>()
+  const sidebarUser = {
+    name: authUser?.fullName || authUser?.email || "Người dùng",
+    email: authUser?.email || "",
+    avatar: authUser?.avatar || "",
+  }
 
   const isItemActive = (url: string) => {
     return location.pathname === url || location.pathname.startsWith(`${url}/`)
+  }
+
+  const handleLogout = () => {
+    logoutMutation(undefined, {
+      onSettled: () => {
+        // Always clear local session even if API logout fails.
+        authStorage.clear()
+        toast.success("Đã đăng xuất")
+        navigate("/login", { replace: true })
+      },
+    })
   }
 
   return (
@@ -114,7 +138,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUser user={sidebarUser} onLogout={handleLogout} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

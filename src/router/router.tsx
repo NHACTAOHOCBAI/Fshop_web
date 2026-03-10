@@ -1,3 +1,5 @@
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import PublicRoute from "@/components/auth/PublicRoute";
 import AdminLayout from "@/components/layout/AdminLayout";
 import BackupRestorePage from "@/pages/admin/backup-restore/BackupRestorePage";
 import AttributesPage from "@/pages/admin/attributes/AttributesPage";
@@ -12,23 +14,43 @@ import CreateProductPage from "@/pages/admin/products/CreateProductPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
-import { createBrowserRouter } from "react-router";
+import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
 
 const router = createBrowserRouter([
   {
+    path: "/",
+    element: <Navigate to="/login" replace />,
+  },
+  {
     path: "/login",
-    element: <LoginPage />,
+    element: (
+      <PublicRoute>
+        <LoginPage />
+      </PublicRoute>
+    ),
   },
   {
     path: "/register",
-    element: <RegisterPage />,
+    element: (
+      <PublicRoute>
+        <RegisterPage />
+      </PublicRoute>
+    ),
   },
   {
     path: "/admin",
-    element: <AdminLayout />,
+    element: (
+      <ProtectedRoute>
+        <AdminLayout />
+      </ProtectedRoute>
+    ),
     children: [
+      {
+        index: true,
+        element: <Navigate to="dashboard" replace />,
+      },
       {
         path: "dashboard",
         element: <DashboardPage />,
