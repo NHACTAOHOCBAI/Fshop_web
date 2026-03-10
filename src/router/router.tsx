@@ -8,6 +8,7 @@ import CouponsPage from "@/pages/admin/coupons/CouponsPage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
 import LivestreamsPage from "@/pages/admin/livestreams/LivestreamsPage";
 import OrdersPage from "@/pages/admin/orders/OrdersPage";
+import CreateProductPage from "@/pages/admin/products/CreateProductPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
@@ -41,6 +42,10 @@ const router = createBrowserRouter([
       {
         path: "products",
         element: <ProductsPage />,
+      },
+      {
+        path: "products/create",
+        element: <CreateProductPage />,
       },
       {
         path: "users",
