@@ -13,8 +13,18 @@ import ProductsPage from "@/pages/admin/products/ProductsPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
 import { createBrowserRouter } from "react-router";
+import LoginPage from "@/pages/auth/login/LoginPage";
+import RegisterPage from "@/pages/auth/register/RegisterPage";
 
 const router = createBrowserRouter([
+  {
+    path: "/login",
+    element: <LoginPage />,
+  },
+  {
+    path: "/register",
+    element: <RegisterPage />,
+  },
   {
     path: "/admin",
     element: <AdminLayout />,
