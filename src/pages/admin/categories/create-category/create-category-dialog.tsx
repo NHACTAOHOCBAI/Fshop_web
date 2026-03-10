@@ -25,13 +25,19 @@ import { useCreateCategory } from "@/hooks/useCategories";
 
 const departmentOptions = ["men", "women", "kids"] as const;
 
+const departmentLabelMap: Record<(typeof departmentOptions)[number], string> = {
+    men: "Nam",
+    women: "Nữ",
+    kids: "Trẻ em",
+};
+
 const createCategorySchema = z.object({
-    name: z.string().min(1, "Category name is required"),
+    name: z.string().min(1, "Tên danh mục là bắt buộc"),
     department: z.enum(departmentOptions, {
-        error: "Department is required",
+        error: "Phân khu là bắt buộc",
     }),
     description: z.string().optional(),
-    image: z.array(z.instanceof(File)).min(1, "You must choose an image"),
+    image: z.array(z.instanceof(File)).min(1, "Bạn phải chọn một ảnh"),
 });
 
 interface CreateCategoryDialogProps {
@@ -62,10 +68,10 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
             },
             {
                 onSuccess: () => {
-                    toast.success("Category has been created");
+                    toast.success("Đã tạo danh mục");
                 },
                 onError: (error) => {
-                    toast.error(`Create failed: ${error.message}`);
+                    toast.error(`Tạo thất bại: ${error.message}`);
                 },
                 onSettled: () => {
                     form.reset({ name: "", department: undefined, description: "", image: [] });
@@ -84,9 +90,9 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-md max-h-[96vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Add Category</DialogTitle>
+                    <DialogTitle>Thêm danh mục</DialogTitle>
                     <DialogDescription>
-                        Enter category information below to add a new category.
+                        Nhập thông tin danh mục bên dưới để tạo mới.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -99,7 +105,7 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
                                 value={field.value}
                                 onChange={field.onChange}
                                 numOfImage={1}
-                                label="Upload Image"
+                                label="Tải ảnh lên"
                                 disabled={isPending}
                                 error={fieldState.error?.message}
                             />
@@ -107,13 +113,13 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
                     />
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
+                        <label className="text-sm font-medium">Tên</label>
                         <Input disabled={isPending} {...form.register("name")} />
                         <p className="text-sm text-destructive">{form.formState.errors.name?.message}</p>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Department</label>
+                        <label className="text-sm font-medium">Phân khu</label>
                         <Controller
                             control={form.control}
                             name="department"
@@ -124,12 +130,12 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
                                     disabled={isPending}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select department" />
+                                        <SelectValue placeholder="Chọn phân khu" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {departmentOptions.map((department) => (
                                             <SelectItem key={department} value={department}>
-                                                {department.toUpperCase()}
+                                                {departmentLabelMap[department]}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -142,14 +148,14 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
+                        <label className="text-sm font-medium">Mô tả</label>
                         <Textarea disabled={isPending} {...form.register("description")} />
                         <p className="text-sm text-destructive">{form.formState.errors.description?.message}</p>
                     </div>
 
                     <div className="flex flex-col gap-3">
                         <Button disabled={isPending} type="submit" className="w-full">
-                            {isPending ? "Creating..." : "Create"}
+                            {isPending ? "Đang tạo..." : "Tạo"}
                         </Button>
                         <Button
                             disabled={isPending}
@@ -158,7 +164,7 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
                             variant="outline"
                             className="w-full"
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </form>

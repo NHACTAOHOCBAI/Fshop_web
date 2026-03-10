@@ -70,18 +70,18 @@ const data = {
 }
 
 const adminMenuItems = [
-  { title: "Dashboard", url: "/admin/dashboard", icon: <LayoutDashboardIcon /> },
-  { title: "Brands", url: "/admin/brands", icon: <TagsIcon /> },
-  { title: "Categories", url: "/admin/categories", icon: <FolderTreeIcon /> },
-  { title: "Attributes", url: "/admin/attributes", icon: <RulerIcon /> },
-  { title: "Orders", url: "/admin/orders", icon: <ShoppingBagIcon /> },
-  { title: "Products", url: "/admin/products", icon: <BoxesIcon /> },
-  { title: "Users", url: "/admin/users", icon: <UsersIcon /> },
-  { title: "Coupons", url: "/admin/coupons", icon: <BadgePercentIcon /> },
-  { title: "Stocks", url: "/admin/stocks", icon: <PackageCheckIcon /> },
-  { title: "Community", url: "/admin/community", icon: <MessageSquareIcon /> },
-  { title: "Livestreams", url: "/admin/livestreams", icon: <VideoIcon /> },
-  { title: "Backup & Restore", url: "/admin/backup-restore", icon: <ArchiveRestoreIcon /> },
+  { title: "Bảng điều khiển", url: "/admin/dashboard", icon: <LayoutDashboardIcon /> },
+  { title: "Thương hiệu", url: "/admin/brands", icon: <TagsIcon /> },
+  { title: "Danh mục", url: "/admin/categories", icon: <FolderTreeIcon /> },
+  { title: "Thuộc tính", url: "/admin/attributes", icon: <RulerIcon /> },
+  { title: "Đơn hàng", url: "/admin/orders", icon: <ShoppingBagIcon /> },
+  { title: "Sản phẩm", url: "/admin/products", icon: <BoxesIcon /> },
+  { title: "Người dùng", url: "/admin/users", icon: <UsersIcon /> },
+  { title: "Mã giảm giá", url: "/admin/coupons", icon: <BadgePercentIcon /> },
+  { title: "Kho hàng", url: "/admin/stocks", icon: <PackageCheckIcon /> },
+  { title: "Cộng đồng", url: "/admin/community", icon: <MessageSquareIcon /> },
+  { title: "Livestream", url: "/admin/livestreams", icon: <VideoIcon /> },
+  { title: "Sao lưu & Khôi phục", url: "/admin/backup-restore", icon: <ArchiveRestoreIcon /> },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -98,7 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Admin</SidebarGroupLabel>
+          <SidebarGroupLabel>Quản trị</SidebarGroupLabel>
           <SidebarMenu className="gap-1">
             {adminMenuItems.map((item) => (
               <SidebarMenuItem key={item.title}>

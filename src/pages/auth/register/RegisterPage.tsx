@@ -1,6 +1,6 @@
 const RegisterPage = () => {
     return (
-        <div>Register</div>
+        <div>Đăng ký</div>
     )
 }
 export default RegisterPage;

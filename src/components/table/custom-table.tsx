@@ -43,7 +43,7 @@ const CustomTable = <TData,>({
                         <TableCell colSpan={columns.length} className="h-24 text-center">
                             <div className="flex items-center justify-center gap-2">
                                 <Loader2 className="size-5 animate-spin" />
-                                Loading...
+                                Đang tải...
                             </div>
                         </TableCell>
                     </TableRow>
@@ -60,7 +60,7 @@ const CustomTable = <TData,>({
                 ) : (
                     <TableRow>
                         <TableCell colSpan={columns.length} className="h-24 text-center">
-                            No results.
+                            Không có dữ liệu.
                         </TableCell>
                     </TableRow>
                 )}

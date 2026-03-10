@@ -26,7 +26,7 @@ export const categoryColumns = (
         },
         {
             accessorKey: "imageUrl",
-            header: "Image",
+            header: "Hình ảnh",
             cell: ({ row }) => {
                 const item = row.original;
                 return (
@@ -39,29 +39,29 @@ export const categoryColumns = (
         },
         {
             accessorKey: "name",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Tên" />,
             enableSorting: false,
         },
         {
             accessorKey: "department",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Department" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Phân khu" />,
             cell: ({ row }) => row.original.department.toUpperCase(),
             enableSorting: false,
         },
         {
             accessorKey: "description",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Mô tả" />,
             enableSorting: false,
             cell: ({ row }) => row.original.description ?? "-",
         },
         {
             accessorKey: "createdAt",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Ngày tạo" />,
             cell: ({ row }) => formatDate(row.original.createdAt),
         },
         {
             accessorKey: "updatedAt",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Updated At" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
             cell: ({ row }) => formatDate(row.original.updatedAt),
         },
         {
@@ -73,20 +73,20 @@ export const categoryColumns = (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
+                                <span className="sr-only">Mở menu</span>
                                 <MoreHorizontal className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>
-                                Update Category
+                                Cập nhật danh mục
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 className="focus:text-red-500"
                                 onClick={() => handleDeleteItem(item.id)}
                             >
-                                Delete Category
+                                Xóa danh mục
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

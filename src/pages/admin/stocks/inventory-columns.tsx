@@ -26,15 +26,15 @@ export const inventoryColumns = (
         },
         {
             accessorKey: "variantId",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Variant ID" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Mã biến thể" />,
         },
         {
             accessorKey: "quantity",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Quantity" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Số lượng" />,
         },
         {
             accessorKey: "updatedAt",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Updated At" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
             cell: ({ row }) => formatDate(row.original.updatedAt),
         },
         {
@@ -45,17 +45,17 @@ export const inventoryColumns = (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
+                                <span className="sr-only">Mở menu</span>
                                 <MoreHorizontal className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleUpdate(item)}>Update Quantity</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleCreateTransaction(item)}>New Transaction</DropdownMenuItem>
-                            <DropdownMenuItem onClick={() => handleViewHistory(item)}>View History</DropdownMenuItem>
+                            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleUpdate(item)}>Cập nhật số lượng</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleCreateTransaction(item)}>Tạo giao dịch mới</DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleViewHistory(item)}>Xem lịch sử</DropdownMenuItem>
                             <DropdownMenuItem className="focus:text-red-500" onClick={() => handleDelete(item.id)}>
-                                Delete Inventory
+                                Xóa tồn kho
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

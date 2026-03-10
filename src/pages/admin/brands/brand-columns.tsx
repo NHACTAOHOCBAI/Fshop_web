@@ -27,7 +27,7 @@ export const brandColumns = (
         },
         {
             accessorKey: "imageUrl",
-            header: "Image",
+            header: "Hình ảnh",
             cell: ({ row }) => {
                 const brand = row.original;
                 return (
@@ -40,23 +40,23 @@ export const brandColumns = (
         },
         {
             accessorKey: "name",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Tên" />,
             enableSorting: false,
         },
         {
             accessorKey: "description",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Mô tả" />,
             enableSorting: false,
             cell: ({ row }) => row.original.description ?? "-",
         },
         {
             accessorKey: "createdAt",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Created At" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Ngày tạo" />,
             cell: ({ row }) => formatDate(row.original.createdAt),
         },
         {
             accessorKey: "updatedAt",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Updated At" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
             cell: ({ row }) => formatDate(row.original.updatedAt),
         },
         {
@@ -68,20 +68,20 @@ export const brandColumns = (
                     <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                             <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Open menu</span>
+                                <span className="sr-only">Mở menu</span>
                                 <MoreHorizontal className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>
-                                Update Brand
+                                Cập nhật thương hiệu
                             </DropdownMenuItem>
                             <DropdownMenuItem
                                 className="focus:text-red-500"
                                 onClick={() => handleDeleteItem(item.id)}
                             >
-                                Delete Brand
+                                Xóa thương hiệu
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

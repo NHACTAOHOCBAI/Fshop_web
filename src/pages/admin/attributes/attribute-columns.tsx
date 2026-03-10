@@ -24,18 +24,18 @@ export const sizeTypeColumns = (
         },
         {
             accessorKey: "name",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Tên" />,
             enableSorting: false,
         },
         {
             accessorKey: "description",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Description" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Mô tả" />,
             enableSorting: false,
             cell: ({ row }) => row.original.description || "-",
         },
         {
             accessorKey: "updatedAt",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Updated At" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
             cell: ({ row }) => formatDate(row.original.updatedAt),
         },
         {
@@ -50,10 +50,10 @@ export const sizeTypeColumns = (
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>Update</DropdownMenuItem>
+                            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>Cập nhật</DropdownMenuItem>
                             <DropdownMenuItem className="focus:text-red-500" onClick={() => handleDeleteItem(item.id)}>
-                                Delete
+                                Xóa
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -72,22 +72,22 @@ export const sizeColumns = (
         },
         {
             accessorKey: "name",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Tên" />,
             enableSorting: false,
         },
         {
             accessorKey: "sizeType",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Size Type" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Loại kích thước" />,
             cell: ({ row }) => row.original.sizeType?.name || `#${row.original.sizeTypeId}`,
             enableSorting: false,
         },
         {
             accessorKey: "sortOrder",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Sort" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Thứ tự" />,
         },
         {
             accessorKey: "updatedAt",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Updated At" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
             cell: ({ row }) => formatDate(row.original.updatedAt),
         },
         {
@@ -102,10 +102,10 @@ export const sizeColumns = (
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>Update</DropdownMenuItem>
+                            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>Cập nhật</DropdownMenuItem>
                             <DropdownMenuItem className="focus:text-red-500" onClick={() => handleDeleteItem(item.id)}>
-                                Delete
+                                Xóa
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>
@@ -124,7 +124,7 @@ export const colorColumns = (
         },
         {
             accessorKey: "name",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Name" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Tên" />,
             enableSorting: false,
         },
         {
@@ -134,7 +134,7 @@ export const colorColumns = (
         },
         {
             id: "swatch",
-            header: "Color",
+            header: "Màu",
             cell: ({ row }) => {
                 const code = row.original.hexCode;
                 if (!code) {
@@ -145,7 +145,7 @@ export const colorColumns = (
         },
         {
             accessorKey: "updatedAt",
-            header: ({ column }) => <DataTableColumnHeader column={column} title="Updated At" />,
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
             cell: ({ row }) => formatDate(row.original.updatedAt),
         },
         {
@@ -160,10 +160,10 @@ export const colorColumns = (
                             </Button>
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
-                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>Update</DropdownMenuItem>
+                            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>Cập nhật</DropdownMenuItem>
                             <DropdownMenuItem className="focus:text-red-500" onClick={() => handleDeleteItem(item.id)}>
-                                Delete
+                                Xóa
                             </DropdownMenuItem>
                         </DropdownMenuContent>
                     </DropdownMenu>

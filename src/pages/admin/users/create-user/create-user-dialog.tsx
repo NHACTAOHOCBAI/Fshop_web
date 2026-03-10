@@ -24,12 +24,17 @@ import { useCreateUser } from "@/hooks/useUsers";
 
 const roleOptions = ["admin", "user"] as const;
 
+const roleLabelMap: Record<(typeof roleOptions)[number], string> = {
+    admin: "Quản trị viên",
+    user: "Người dùng",
+};
+
 const createUserSchema = z.object({
-    fullName: z.string().min(1, "Full name is required"),
-    email: z.email("Email is invalid"),
-    password: z.string().min(6, "Password must be at least 6 characters"),
-    role: z.enum(roleOptions, { error: "Role is required" }),
-    avatar: z.array(z.instanceof(File)).max(1, "Only one avatar is allowed"),
+    fullName: z.string().min(1, "Họ và tên là bắt buộc"),
+    email: z.email("Email không hợp lệ"),
+    password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+    role: z.enum(roleOptions, { error: "Vai trò là bắt buộc" }),
+    avatar: z.array(z.instanceof(File)).max(1, "Chỉ được chọn 1 ảnh đại diện"),
 });
 
 interface CreateUserDialogProps {
@@ -62,10 +67,10 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
             },
             {
                 onSuccess: () => {
-                    toast.success("User has been created");
+                    toast.success("Đã tạo người dùng");
                 },
                 onError: (error) => {
-                    toast.error(`Create failed: ${error.message}`);
+                    toast.error(`Tạo thất bại: ${error.message}`);
                 },
                 onSettled: () => {
                     form.reset({
@@ -96,9 +101,9 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-md max-h-[96vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Add User</DialogTitle>
+                    <DialogTitle>Thêm người dùng</DialogTitle>
                     <DialogDescription>
-                        Enter user information below to add a new user.
+                        Nhập thông tin bên dưới để tạo người dùng mới.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -111,7 +116,7 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
                                 value={field.value}
                                 onChange={field.onChange}
                                 numOfImage={1}
-                                label="Upload Avatar"
+                                label="Tải ảnh đại diện"
                                 disabled={isPending}
                                 error={fieldState.error?.message}
                             />
@@ -119,7 +124,7 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
                     />
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Full Name</label>
+                        <label className="text-sm font-medium">Họ và tên</label>
                         <Input disabled={isPending} {...form.register("fullName")} />
                         <p className="text-sm text-destructive">{form.formState.errors.fullName?.message}</p>
                     </div>
@@ -131,13 +136,13 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Password</label>
+                        <label className="text-sm font-medium">Mật khẩu</label>
                         <Input type="password" disabled={isPending} {...form.register("password")} />
                         <p className="text-sm text-destructive">{form.formState.errors.password?.message}</p>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Role</label>
+                        <label className="text-sm font-medium">Vai trò</label>
                         <Controller
                             control={form.control}
                             name="role"
@@ -148,12 +153,12 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
                                     disabled={isPending}
                                 >
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select role" />
+                                        <SelectValue placeholder="Chọn vai trò" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {roleOptions.map((role) => (
                                             <SelectItem key={role} value={role}>
-                                                {role.toUpperCase()}
+                                                {roleLabelMap[role]}
                                             </SelectItem>
                                         ))}
                                     </SelectContent>
@@ -165,7 +170,7 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
 
                     <div className="flex flex-col gap-3">
                         <Button disabled={isPending} type="submit" className="w-full">
-                            {isPending ? "Creating..." : "Create"}
+                            {isPending ? "Đang tạo..." : "Tạo"}
                         </Button>
                         <Button
                             disabled={isPending}
@@ -174,7 +179,7 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
                             variant="outline"
                             className="w-full"
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </form>

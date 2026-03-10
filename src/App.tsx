@@ -6,9 +6,9 @@ function App() {
   return (
     <h1 className='text-amber-100'>
       <Button size="lg">
-        Click me
+        Bấm vào đây
       </Button>
-      Hello World!
+      Xin chao!
     </h1>
   )
 }

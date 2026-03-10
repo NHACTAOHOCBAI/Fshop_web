@@ -89,17 +89,17 @@ export default function CreateProductPage() {
 
     const submit = () => {
         if (!name.trim()) {
-            toast.error("Product name is required");
+            toast.error("Tên sản phẩm là bắt buộc");
             return;
         }
 
         if (!brandId || !categoryId) {
-            toast.error("Brand and category are required");
+            toast.error("Thương hiệu và danh mục là bắt buộc");
             return;
         }
 
         if (!variantPayload || variantPayload.length === 0) {
-            toast.error("Please fill all variant fields and images");
+            toast.error("Vui lòng điền đầy đủ thông tin và ảnh cho biến thể");
             return;
         }
 
@@ -114,12 +114,12 @@ export default function CreateProductPage() {
             },
             {
                 onSuccess: () => {
-                    toast.success("Product has been created");
+                    toast.success("Đã tạo sản phẩm");
                     resetForm();
                     navigate("/admin/products");
                 },
                 onError: (error) => {
-                    toast.error(`Create failed: ${error.message}`);
+                    toast.error(`Tạo thất bại: ${error.message}`);
                 },
             }
         );
@@ -128,30 +128,30 @@ export default function CreateProductPage() {
     return (
         <div className="space-y-4 w-full">
             <div className="flex items-center justify-between">
-                <h1 className="text-2xl font-semibold">Create Product</h1>
-                <Button type="button" variant="outline" onClick={() => navigate("/admin/products")}>Back to Products</Button>
+                <h1 className="text-2xl font-semibold">Tạo sản phẩm</h1>
+                <Button type="button" variant="outline" onClick={() => navigate("/admin/products")}>Quay lại danh sách sản phẩm</Button>
             </div>
 
             <div className="space-y-4 rounded-lg border p-4">
                 <div className="grid gap-4 lg:grid-cols-2 lg:items-start">
                     <div className="space-y-4 rounded-md border p-4">
-                        <p className="text-sm font-semibold">Product Information</p>
+                        <p className="text-sm font-semibold">Thông tin sản phẩm</p>
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Name</label>
+                            <label className="text-sm font-medium">Tên</label>
                             <Input value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Description</label>
+                            <label className="text-sm font-medium">Mô tả</label>
                             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={isPending} />
                         </div>
 
                         <div className="grid gap-4 md:grid-cols-2">
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Brand</label>
+                                <label className="text-sm font-medium">Thương hiệu</label>
                                 <Select value={brandId} onValueChange={setBrandId}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select brand" />
+                                        <SelectValue placeholder="Chọn thương hiệu" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {brands.map((item) => (
@@ -164,10 +164,10 @@ export default function CreateProductPage() {
                             </div>
 
                             <div className="space-y-2">
-                                <label className="text-sm font-medium">Category</label>
+                                <label className="text-sm font-medium">Danh mục</label>
                                 <Select value={categoryId} onValueChange={setCategoryId}>
                                     <SelectTrigger>
-                                        <SelectValue placeholder="Select category" />
+                                        <SelectValue placeholder="Chọn danh mục" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {categories.map((item) => (
@@ -184,14 +184,14 @@ export default function CreateProductPage() {
                             value={productImages}
                             onChange={setProductImages}
                             numOfImage={10}
-                            label="Product Gallery Images"
+                            label="Ảnh thư viện sản phẩm"
                             disabled={isPending}
                         />
                     </div>
 
                     <div className="space-y-3 rounded-md border p-4">
                         <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold">Variants</p>
+                            <p className="text-sm font-semibold">Biến thể</p>
                             <Button
                                 type="button"
                                 variant="outline"
@@ -200,14 +200,14 @@ export default function CreateProductPage() {
                                 disabled={isPending}
                             >
                                 <Plus className="size-4" />
-                                Add Variant
+                                Thêm biến thể
                             </Button>
                         </div>
 
                         {variants.map((variant, index) => (
                             <div key={index} className="space-y-3 rounded-md border p-3">
                                 <div className="flex items-center justify-between">
-                                    <p className="text-sm font-medium">Variant {index + 1}</p>
+                                    <p className="text-sm font-medium">Biến thể {index + 1}</p>
                                     {variants.length > 1 && (
                                         <Button
                                             type="button"
@@ -240,7 +240,7 @@ export default function CreateProductPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Price</label>
+                                        <label className="text-sm font-medium">Giá</label>
                                         <Input
                                             type="number"
                                             value={variant.price}
@@ -256,7 +256,7 @@ export default function CreateProductPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Color</label>
+                                        <label className="text-sm font-medium">Màu sắc</label>
                                         <Select
                                             value={variant.colorId}
                                             onValueChange={(value) =>
@@ -268,7 +268,7 @@ export default function CreateProductPage() {
                                             }
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select color" />
+                                                <SelectValue placeholder="Chọn màu" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {colors.map((item) => (
@@ -281,7 +281,7 @@ export default function CreateProductPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-sm font-medium">Size</label>
+                                        <label className="text-sm font-medium">Kích thước</label>
                                         <Select
                                             value={variant.sizeId}
                                             onValueChange={(value) =>
@@ -293,7 +293,7 @@ export default function CreateProductPage() {
                                             }
                                         >
                                             <SelectTrigger>
-                                                <SelectValue placeholder="Select size" />
+                                                <SelectValue placeholder="Chọn kích thước" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {sizes.map((item) => (
@@ -316,7 +316,7 @@ export default function CreateProductPage() {
                                         })
                                     }
                                     numOfImage={1}
-                                    label="Variant Image"
+                                    label="Ảnh biến thể"
                                     disabled={isPending}
                                 />
                             </div>
@@ -326,7 +326,7 @@ export default function CreateProductPage() {
 
                 <div className="flex flex-col gap-3">
                     <Button type="button" disabled={isPending} onClick={submit} className="w-full">
-                        {isPending ? "Creating..." : "Create"}
+                        {isPending ? "Đang tạo..." : "Tạo"}
                     </Button>
                     <Button
                         type="button"
@@ -335,7 +335,7 @@ export default function CreateProductPage() {
                         disabled={isPending}
                         onClick={() => navigate("/admin/products")}
                     >
-                        Cancel
+                        Hủy
                     </Button>
                 </div>
             </div>

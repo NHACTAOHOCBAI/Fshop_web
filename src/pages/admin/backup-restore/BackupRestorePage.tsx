@@ -1,7 +1,7 @@
 const BackupRestorePage = () => {
     return (
         <div className="dashboard">
-            <h1>Backup & Restore</h1>
+            <h1>Sao lưu & Khôi phục</h1>
         </div>
     )
 }

@@ -31,7 +31,7 @@ export function NavProjects({
 
   return (
     <SidebarGroup className="group-data-[collapsible=icon]:hidden">
-      <SidebarGroupLabel>Projects</SidebarGroupLabel>
+      <SidebarGroupLabel>Dự án</SidebarGroupLabel>
       <SidebarMenu>
         {projects.map((item) => (
           <SidebarMenuItem key={item.name}>
@@ -49,7 +49,7 @@ export function NavProjects({
                 >
                   <MoreHorizontalIcon
                   />
-                  <span className="sr-only">More</span>
+                  <span className="sr-only">Thêm</span>
                 </SidebarMenuAction>
               </DropdownMenuTrigger>
               <DropdownMenuContent
@@ -59,16 +59,16 @@ export function NavProjects({
               >
                 <DropdownMenuItem>
                   <FolderIcon className="text-muted-foreground" />
-                  <span>View Project</span>
+                  <span>Xem dự án</span>
                 </DropdownMenuItem>
                 <DropdownMenuItem>
                   <ArrowRightIcon className="text-muted-foreground" />
-                  <span>Share Project</span>
+                  <span>Chia sẻ dự án</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Trash2Icon className="text-muted-foreground" />
-                  <span>Delete Project</span>
+                  <span>Xóa dự án</span>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -77,7 +77,7 @@ export function NavProjects({
         <SidebarMenuItem>
           <SidebarMenuButton className="text-sidebar-foreground/70">
             <MoreHorizontalIcon className="text-sidebar-foreground/70" />
-            <span>More</span>
+            <span>Thêm</span>
           </SidebarMenuButton>
         </SidebarMenuItem>
       </SidebarMenu>

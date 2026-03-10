@@ -29,11 +29,16 @@ type PreviewFile = File & { preview?: string };
 
 const roleOptions = ["admin", "user"] as const;
 
+const roleLabelMap: Record<(typeof roleOptions)[number], string> = {
+    admin: "Quản trị viên",
+    user: "Người dùng",
+};
+
 const updateUserSchema = z.object({
-    fullName: z.string().min(1, "Full name is required"),
-    email: z.email("Email is invalid"),
-    role: z.enum(roleOptions, { error: "Role is required" }),
-    avatar: z.array(z.instanceof(File)).max(1, "Only one avatar is allowed"),
+    fullName: z.string().min(1, "Họ và tên là bắt buộc"),
+    email: z.email("Email không hợp lệ"),
+    role: z.enum(roleOptions, { error: "Vai trò là bắt buộc" }),
+    avatar: z.array(z.instanceof(File)).max(1, "Chỉ được chọn 1 ảnh đại diện"),
 });
 
 interface UpdateUserDialogProps {
@@ -84,10 +89,10 @@ export function UpdateUserDialog({
             },
             {
                 onSuccess: () => {
-                    toast.success("User has been updated");
+                    toast.success("Đã cập nhật người dùng");
                 },
                 onError: (error) => {
-                    toast.error(`Update failed: ${error.message}`);
+                    toast.error(`Cập nhật thất bại: ${error.message}`);
                 },
                 onSettled: () => {
                     handleCancel();
@@ -138,14 +143,14 @@ export function UpdateUserDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-md max-h-[96vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Update User</DialogTitle>
+                    <DialogTitle>Cập nhật người dùng</DialogTitle>
                     <DialogDescription>
-                        Enter user information below to update this user.
+                        Nhập thông tin bên dưới để cập nhật người dùng.
                     </DialogDescription>
                 </DialogHeader>
 
                 {isImageLoading ? (
-                    <p className="text-sm text-muted-foreground">Loading avatar...</p>
+                    <p className="text-sm text-muted-foreground">Đang tải ảnh đại diện...</p>
                 ) : (
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <Controller
@@ -156,7 +161,7 @@ export function UpdateUserDialog({
                                     value={field.value}
                                     onChange={field.onChange}
                                     numOfImage={1}
-                                    label="Upload Avatar"
+                                    label="Tải ảnh đại diện"
                                     disabled={isPending}
                                     error={fieldState.error?.message}
                                 />
@@ -164,7 +169,7 @@ export function UpdateUserDialog({
                         />
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Full Name</label>
+                            <label className="text-sm font-medium">Họ và tên</label>
                             <Input disabled={isPending} {...form.register("fullName")} />
                             <p className="text-sm text-destructive">{form.formState.errors.fullName?.message}</p>
                         </div>
@@ -176,7 +181,7 @@ export function UpdateUserDialog({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Role</label>
+                            <label className="text-sm font-medium">Vai trò</label>
                             <Controller
                                 control={form.control}
                                 name="role"
@@ -187,12 +192,12 @@ export function UpdateUserDialog({
                                         disabled={isPending}
                                     >
                                         <SelectTrigger>
-                                            <SelectValue placeholder="Select role" />
+                                            <SelectValue placeholder="Chọn vai trò" />
                                         </SelectTrigger>
                                         <SelectContent>
                                             {roleOptions.map((role) => (
                                                 <SelectItem key={role} value={role}>
-                                                    {role.toUpperCase()}
+                                                    {roleLabelMap[role]}
                                                 </SelectItem>
                                             ))}
                                         </SelectContent>
@@ -204,7 +209,7 @@ export function UpdateUserDialog({
 
                         <div className="flex flex-col gap-3">
                             <Button disabled={isPending} type="submit" className="w-full">
-                                {isPending ? "Updating..." : "Update"}
+                                {isPending ? "Đang cập nhật..." : "Cập nhật"}
                             </Button>
                             <Button
                                 disabled={isPending}
@@ -213,7 +218,7 @@ export function UpdateUserDialog({
                                 variant="outline"
                                 className="w-full"
                             >
-                                Cancel
+                                Hủy
                             </Button>
                         </div>
                     </form>

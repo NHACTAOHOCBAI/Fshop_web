@@ -18,9 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 
 const createBrandSchema = z.object({
-    name: z.string().min(1, "Brand name is required"),
+    name: z.string().min(1, "Tên thương hiệu là bắt buộc"),
     description: z.string().optional(),
-    image: z.array(z.instanceof(File)).min(1, "You must choose an image"),
+    image: z.array(z.instanceof(File)).min(1, "Bạn phải chọn một ảnh"),
 });
 
 const useLocalCreateBrand = (closeDialog: () => void) => {
@@ -44,10 +44,10 @@ const useLocalCreateBrand = (closeDialog: () => void) => {
             },
             {
                 onSuccess: () => {
-                    toast.success("Brand has been created");
+                    toast.success("Đã tạo thương hiệu");
                 },
                 onError: (error) => {
-                    toast.error(`Create failed: ${error.message}`);
+                    toast.error(`Tạo thất bại: ${error.message}`);
                 },
                 onSettled: () => {
                     form.reset({ name: "", description: "", image: [] });
@@ -82,9 +82,9 @@ export function CreateBrandDialog({ open, setOpen }: CreateBrandDialogProps) {
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-md max-h-[96vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Add Brand</DialogTitle>
+                    <DialogTitle>Thêm thương hiệu</DialogTitle>
                     <DialogDescription>
-                        Enter brand information below to add a new brand.
+                        Nhập thông tin thương hiệu bên dưới để tạo mới.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -97,7 +97,7 @@ export function CreateBrandDialog({ open, setOpen }: CreateBrandDialogProps) {
                                 value={field.value}
                                 onChange={field.onChange}
                                 numOfImage={1}
-                                label="Upload Image"
+                                label="Tải ảnh lên"
                                 disabled={isPending}
                                 error={fieldState.error?.message}
                             />
@@ -105,20 +105,20 @@ export function CreateBrandDialog({ open, setOpen }: CreateBrandDialogProps) {
                     />
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
+                        <label className="text-sm font-medium">Tên</label>
                         <Input disabled={isPending} {...form.register("name")} />
                         <p className="text-sm text-destructive">{form.formState.errors.name?.message}</p>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
+                        <label className="text-sm font-medium">Mô tả</label>
                         <Textarea disabled={isPending} {...form.register("description")} />
                         <p className="text-sm text-destructive">{form.formState.errors.description?.message}</p>
                     </div>
 
                     <div className="flex flex-col gap-3">
                         <Button disabled={isPending} type="submit" className="w-full">
-                            {isPending ? "Creating..." : "Create"}
+                            {isPending ? "Đang tạo..." : "Tạo"}
                         </Button>
                         <Button
                             disabled={isPending}
@@ -127,7 +127,7 @@ export function CreateBrandDialog({ open, setOpen }: CreateBrandDialogProps) {
                             variant="outline"
                             className="w-full"
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </form>

@@ -65,8 +65,8 @@ export default function AttributesPage() {
         deleteSizeType(
             { id },
             {
-                onSuccess: () => toast.success("Size type deleted"),
-                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+                onSuccess: () => toast.success("Đã xóa loại kích thước"),
+                onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
     };
@@ -75,8 +75,8 @@ export default function AttributesPage() {
         deleteSize(
             { id },
             {
-                onSuccess: () => toast.success("Size deleted"),
-                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+                onSuccess: () => toast.success("Đã xóa kích thước"),
+                onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
     };
@@ -85,20 +85,20 @@ export default function AttributesPage() {
         deleteColor(
             { id },
             {
-                onSuccess: () => toast.success("Color deleted"),
-                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+                onSuccess: () => toast.success("Đã xóa màu sắc"),
+                onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
     };
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Attributes</h1>
+            <h1 className="text-2xl font-semibold">Thuộc tính</h1>
 
             <div className="flex flex-wrap gap-2">
-                <Button variant={tab === "size-types" ? "default" : "outline"} onClick={() => setTab("size-types")}>Size Types</Button>
-                <Button variant={tab === "sizes" ? "default" : "outline"} onClick={() => setTab("sizes")}>Sizes</Button>
-                <Button variant={tab === "colors" ? "default" : "outline"} onClick={() => setTab("colors")}>Colors</Button>
+                <Button variant={tab === "size-types" ? "default" : "outline"} onClick={() => setTab("size-types")}>Loại kích thước</Button>
+                <Button variant={tab === "sizes" ? "default" : "outline"} onClick={() => setTab("sizes")}>Kích thước</Button>
+                <Button variant={tab === "colors" ? "default" : "outline"} onClick={() => setTab("colors")}>Màu sắc</Button>
             </div>
 
             {tab === "size-types" && (
@@ -111,11 +111,11 @@ export default function AttributesPage() {
                         onDeleteSizeType
                     )}
                     useQuery={useSizeTypes}
-                    filterPlaceholder="Filter size type name..."
+                    filterPlaceholder="Lọc theo tên loại kích thước..."
                 >
                     <Button variant="outline" size="sm" className="ml-2 h-8" onClick={() => setOpenCreateSizeType(true)}>
                         <Plus className="size-4" />
-                        Add Size Type
+                        Thêm loại kích thước
                     </Button>
                 </CrudTable>
             )}
@@ -130,11 +130,11 @@ export default function AttributesPage() {
                         onDeleteSize
                     )}
                     useQuery={useSizes}
-                    filterPlaceholder="Filter size name..."
+                    filterPlaceholder="Lọc theo tên kích thước..."
                 >
                     <Button variant="outline" size="sm" className="ml-2 h-8" onClick={() => setOpenCreateSize(true)}>
                         <Plus className="size-4" />
-                        Add Size
+                        Thêm kích thước
                     </Button>
                 </CrudTable>
             )}
@@ -149,11 +149,11 @@ export default function AttributesPage() {
                         onDeleteColor
                     )}
                     useQuery={useColors}
-                    filterPlaceholder="Filter color name..."
+                    filterPlaceholder="Lọc theo tên màu sắc..."
                 >
                     <Button variant="outline" size="sm" className="ml-2 h-8" onClick={() => setOpenCreateColor(true)}>
                         <Plus className="size-4" />
-                        Add Color
+                        Thêm màu sắc
                     </Button>
                 </CrudTable>
             )}
@@ -200,7 +200,7 @@ function CreateSizeTypeDialog({ open, setOpen }: { open: boolean; setOpen: (v: b
             { name, description: description || undefined },
             {
                 onSuccess: () => {
-                    toast.success("Size type created");
+                    toast.success("Đã tạo loại kích thước");
                     setName("");
                     setDescription("");
                     setOpen(false);
@@ -214,18 +214,18 @@ function CreateSizeTypeDialog({ open, setOpen }: { open: boolean; setOpen: (v: b
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create Size Type</DialogTitle>
-                    <DialogDescription>Create a new size type</DialogDescription>
+                    <DialogTitle>Tạo loại kích thước</DialogTitle>
+                    <DialogDescription>Tạo mới một loại kích thước</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
-                        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
+                        <label className="text-sm font-medium">Tên</label>
+                        <Input placeholder="Tên" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
+                        <label className="text-sm font-medium">Mô tả</label>
                         <Input
-                            placeholder="Description (optional)"
+                            placeholder="Mô tả (không bắt buộc)"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             disabled={isPending}
@@ -233,7 +233,7 @@ function CreateSizeTypeDialog({ open, setOpen }: { open: boolean; setOpen: (v: b
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button className="w-full" onClick={submit} disabled={isPending || !name.trim()}>
-                            {isPending ? "Creating..." : "Create"}
+                            {isPending ? "Đang tạo..." : "Tạo"}
                         </Button>
                         <Button
                             type="button"
@@ -246,7 +246,7 @@ function CreateSizeTypeDialog({ open, setOpen }: { open: boolean; setOpen: (v: b
                                 setOpen(false);
                             }}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>
@@ -283,7 +283,7 @@ function UpdateSizeTypeDialog({
             { id: item.id, data: { name, description: description || undefined } },
             {
                 onSuccess: () => {
-                    toast.success("Size type updated");
+                    toast.success("Đã cập nhật loại kích thước");
                     setOpen(false);
                     setItem(undefined);
                 },
@@ -302,18 +302,18 @@ function UpdateSizeTypeDialog({
         >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Update Size Type</DialogTitle>
-                    <DialogDescription>Update selected size type</DialogDescription>
+                    <DialogTitle>Cập nhật loại kích thước</DialogTitle>
+                    <DialogDescription>Cập nhật loại kích thước đã chọn</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
-                        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
+                        <label className="text-sm font-medium">Tên</label>
+                        <Input placeholder="Tên" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Description</label>
+                        <label className="text-sm font-medium">Mô tả</label>
                         <Input
-                            placeholder="Description (optional)"
+                            placeholder="Mô tả (không bắt buộc)"
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             disabled={isPending}
@@ -321,7 +321,7 @@ function UpdateSizeTypeDialog({
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button className="w-full" onClick={submit} disabled={isPending || !name.trim()}>
-                            {isPending ? "Updating..." : "Update"}
+                            {isPending ? "Đang cập nhật..." : "Cập nhật"}
                         </Button>
                         <Button
                             type="button"
@@ -333,7 +333,7 @@ function UpdateSizeTypeDialog({
                                 setItem(undefined);
                             }}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>
@@ -365,7 +365,7 @@ function CreateSizeDialog({
             },
             {
                 onSuccess: () => {
-                    toast.success("Size created");
+                    toast.success("Đã tạo kích thước");
                     setName("");
                     setSizeTypeId("");
                     setSortOrder("0");
@@ -380,19 +380,19 @@ function CreateSizeDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create Size</DialogTitle>
-                    <DialogDescription>Create a new size</DialogDescription>
+                    <DialogTitle>Tạo kích thước</DialogTitle>
+                    <DialogDescription>Tạo mới một kích thước</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
-                        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
+                        <label className="text-sm font-medium">Tên</label>
+                        <Input placeholder="Tên" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Size Type</label>
+                        <label className="text-sm font-medium">Loại kích thước</label>
                         <Select value={sizeTypeId} onValueChange={setSizeTypeId}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select size type" />
+                                <SelectValue placeholder="Chọn loại kích thước" />
                             </SelectTrigger>
                             <SelectContent>
                                 {sizeTypeOptions.map((sizeType) => (
@@ -404,10 +404,10 @@ function CreateSizeDialog({
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Sort Order</label>
+                        <label className="text-sm font-medium">Thứ tự sắp xếp</label>
                         <Input
                             type="number"
-                            placeholder="Sort order"
+                            placeholder="Thứ tự sắp xếp"
                             value={sortOrder}
                             onChange={(e) => setSortOrder(e.target.value)}
                             disabled={isPending}
@@ -415,7 +415,7 @@ function CreateSizeDialog({
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button className="w-full" onClick={submit} disabled={isPending || !name.trim() || !sizeTypeId}>
-                            {isPending ? "Creating..." : "Create"}
+                            {isPending ? "Đang tạo..." : "Tạo"}
                         </Button>
                         <Button
                             type="button"
@@ -429,7 +429,7 @@ function CreateSizeDialog({
                                 setOpen(false);
                             }}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>
@@ -477,7 +477,7 @@ function UpdateSizeDialog({
             },
             {
                 onSuccess: () => {
-                    toast.success("Size updated");
+                    toast.success("Đã cập nhật kích thước");
                     setOpen(false);
                     setItem(undefined);
                 },
@@ -496,19 +496,19 @@ function UpdateSizeDialog({
         >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Update Size</DialogTitle>
-                    <DialogDescription>Update selected size</DialogDescription>
+                    <DialogTitle>Cập nhật kích thước</DialogTitle>
+                    <DialogDescription>Cập nhật kích thước đã chọn</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
-                        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
+                        <label className="text-sm font-medium">Tên</label>
+                        <Input placeholder="Tên" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Size Type</label>
+                        <label className="text-sm font-medium">Loại kích thước</label>
                         <Select value={sizeTypeId} onValueChange={setSizeTypeId}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select size type" />
+                                <SelectValue placeholder="Chọn loại kích thước" />
                             </SelectTrigger>
                             <SelectContent>
                                 {sizeTypeOptions.map((sizeType) => (
@@ -520,10 +520,10 @@ function UpdateSizeDialog({
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Sort Order</label>
+                        <label className="text-sm font-medium">Thứ tự sắp xếp</label>
                         <Input
                             type="number"
-                            placeholder="Sort order"
+                            placeholder="Thứ tự sắp xếp"
                             value={sortOrder}
                             onChange={(e) => setSortOrder(e.target.value)}
                             disabled={isPending}
@@ -531,7 +531,7 @@ function UpdateSizeDialog({
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button className="w-full" onClick={submit} disabled={isPending || !name.trim() || !sizeTypeId}>
-                            {isPending ? "Updating..." : "Update"}
+                            {isPending ? "Đang cập nhật..." : "Cập nhật"}
                         </Button>
                         <Button
                             type="button"
@@ -543,7 +543,7 @@ function UpdateSizeDialog({
                                 setItem(undefined);
                             }}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>
@@ -562,7 +562,7 @@ function CreateColorDialog({ open, setOpen }: { open: boolean; setOpen: (v: bool
             { name, hexCode: hexCode || undefined },
             {
                 onSuccess: () => {
-                    toast.success("Color created");
+                    toast.success("Đã tạo màu sắc");
                     setName("");
                     setHexCode("");
                     setOpen(false);
@@ -576,16 +576,16 @@ function CreateColorDialog({ open, setOpen }: { open: boolean; setOpen: (v: bool
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create Color</DialogTitle>
-                    <DialogDescription>Create a new color</DialogDescription>
+                    <DialogTitle>Tạo màu sắc</DialogTitle>
+                    <DialogDescription>Tạo mới một màu sắc</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
-                        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
+                        <label className="text-sm font-medium">Tên</label>
+                        <Input placeholder="Tên" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Hex Code</label>
+                        <label className="text-sm font-medium">Mã HEX</label>
                         <Input
                             placeholder="#FFFFFF"
                             value={hexCode}
@@ -595,7 +595,7 @@ function CreateColorDialog({ open, setOpen }: { open: boolean; setOpen: (v: bool
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button className="w-full" onClick={submit} disabled={isPending || !name.trim()}>
-                            {isPending ? "Creating..." : "Create"}
+                            {isPending ? "Đang tạo..." : "Tạo"}
                         </Button>
                         <Button
                             type="button"
@@ -608,7 +608,7 @@ function CreateColorDialog({ open, setOpen }: { open: boolean; setOpen: (v: bool
                                 setOpen(false);
                             }}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>
@@ -645,7 +645,7 @@ function UpdateColorDialog({
             { id: item.id, data: { name, hexCode: hexCode || undefined } },
             {
                 onSuccess: () => {
-                    toast.success("Color updated");
+                    toast.success("Đã cập nhật màu sắc");
                     setOpen(false);
                     setItem(undefined);
                 },
@@ -664,16 +664,16 @@ function UpdateColorDialog({
         >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Update Color</DialogTitle>
-                    <DialogDescription>Update selected color</DialogDescription>
+                    <DialogTitle>Cập nhật màu sắc</DialogTitle>
+                    <DialogDescription>Cập nhật màu sắc đã chọn</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Name</label>
-                        <Input placeholder="Name" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
+                        <label className="text-sm font-medium">Tên</label>
+                        <Input placeholder="Tên" value={name} onChange={(e) => setName(e.target.value)} disabled={isPending} />
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Hex Code</label>
+                        <label className="text-sm font-medium">Mã HEX</label>
                         <Input
                             placeholder="#FFFFFF"
                             value={hexCode}
@@ -683,7 +683,7 @@ function UpdateColorDialog({
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button className="w-full" onClick={submit} disabled={isPending || !name.trim()}>
-                            {isPending ? "Updating..." : "Update"}
+                            {isPending ? "Đang cập nhật..." : "Cập nhật"}
                         </Button>
                         <Button
                             type="button"
@@ -695,7 +695,7 @@ function UpdateColorDialog({
                                 setItem(undefined);
                             }}
                         >
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>

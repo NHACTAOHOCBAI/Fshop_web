@@ -1,7 +1,7 @@
 const OrdersPage = () => {
     return (
         <div className="dashboard">
-            <h1>Orders</h1>
+            <h1>Đơn hàng</h1>
         </div>
     );
 };

@@ -1,7 +1,7 @@
 const CommunityPage = () => {
     return (
         <div className="dashboard">
-            <h1>Community</h1>
+            <h1>Cộng đồng</h1>
         </div>
     )
 }

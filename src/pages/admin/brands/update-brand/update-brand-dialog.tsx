@@ -23,9 +23,9 @@ import type { Brand } from "@/types/brand";
 type PreviewFile = File & { preview?: string };
 
 const updateBrandSchema = z.object({
-    name: z.string().min(1, "Brand name is required"),
+    name: z.string().min(1, "Tên thương hiệu là bắt buộc"),
     description: z.string().optional(),
-    image: z.array(z.instanceof(File)).min(1, "You must choose an image"),
+    image: z.array(z.instanceof(File)).min(1, "Bạn phải chọn một ảnh"),
 });
 
 const useLocalUpdateBrand = (
@@ -60,10 +60,10 @@ const useLocalUpdateBrand = (
             },
             {
                 onSuccess: () => {
-                    toast.success("Brand has been updated");
+                    toast.success("Đã cập nhật thương hiệu");
                 },
                 onError: (error) => {
-                    toast.error(`Update failed: ${error.message}`);
+                    toast.error(`Cập nhật thất bại: ${error.message}`);
                 },
                 onSettled: () => {
                     handleCancel();
@@ -145,14 +145,14 @@ export function UpdateBrandDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="sm:max-w-md max-h-[96vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Update Brand</DialogTitle>
+                    <DialogTitle>Cập nhật thương hiệu</DialogTitle>
                     <DialogDescription>
-                        Enter brand information below to update this brand.
+                        Nhập thông tin bên dưới để cập nhật thương hiệu.
                     </DialogDescription>
                 </DialogHeader>
 
                 {isImageLoading ? (
-                    <p className="text-sm text-muted-foreground">Loading image...</p>
+                    <p className="text-sm text-muted-foreground">Đang tải ảnh...</p>
                 ) : (
                     <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                         <Controller
@@ -163,7 +163,7 @@ export function UpdateBrandDialog({
                                     value={field.value}
                                     onChange={field.onChange}
                                     numOfImage={1}
-                                    label="Upload Image"
+                                    label="Tải ảnh lên"
                                     disabled={isPending}
                                     error={fieldState.error?.message}
                                 />
@@ -171,20 +171,20 @@ export function UpdateBrandDialog({
                         />
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Name</label>
+                            <label className="text-sm font-medium">Tên</label>
                             <Input disabled={isPending} {...form.register("name")} />
                             <p className="text-sm text-destructive">{form.formState.errors.name?.message}</p>
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Description</label>
+                            <label className="text-sm font-medium">Mô tả</label>
                             <Textarea disabled={isPending} {...form.register("description")} />
                             <p className="text-sm text-destructive">{form.formState.errors.description?.message}</p>
                         </div>
 
                         <div className="flex flex-col gap-3">
                             <Button disabled={isPending} type="submit" className="w-full">
-                                {isPending ? "Updating..." : "Update"}
+                                {isPending ? "Đang cập nhật..." : "Cập nhật"}
                             </Button>
                             <Button
                                 disabled={isPending}
@@ -193,7 +193,7 @@ export function UpdateBrandDialog({
                                 variant="outline"
                                 className="w-full"
                             >
-                                Cancel
+                                Hủy
                             </Button>
                         </div>
                     </form>

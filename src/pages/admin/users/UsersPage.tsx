@@ -27,20 +27,20 @@ const UsersPage = () => {
         deleteItem(
             { id },
             {
-                onSuccess: () => toast.success("User has been deleted"),
-                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+                onSuccess: () => toast.success("Đã xóa người dùng"),
+                onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
     };
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Users</h1>
+            <h1 className="text-2xl font-semibold">Người dùng</h1>
 
             <CrudTable<User>
                 columns={userColumns(handleUpdateBtn, handleDeleteItem)}
                 useQuery={useUsers}
-                filterPlaceholder="Filter user name or email..."
+                filterPlaceholder="Lọc theo tên hoặc email..."
             >
                 <Button
                     variant="outline"
@@ -49,7 +49,7 @@ const UsersPage = () => {
                     onClick={() => setOpenCreate(true)}
                 >
                     <Plus className="size-4" />
-                    Add User
+                    Thêm người dùng
                 </Button>
             </CrudTable>
 

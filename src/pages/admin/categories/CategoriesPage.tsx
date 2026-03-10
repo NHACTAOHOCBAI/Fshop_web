@@ -27,20 +27,20 @@ const CategoriesPage = () => {
         deleteItem(
             { id },
             {
-                onSuccess: () => toast.success("Category has been deleted"),
-                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+                onSuccess: () => toast.success("Đã xóa danh mục"),
+                onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
     };
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Categories</h1>
+            <h1 className="text-2xl font-semibold">Danh mục</h1>
 
             <CrudTable<Category>
                 columns={categoryColumns(handleUpdateBtn, handleDeleteItem)}
                 useQuery={useCategories}
-                filterPlaceholder="Filter category name..."
+                filterPlaceholder="Lọc theo tên danh mục..."
             >
                 <Button
                     variant="outline"
@@ -49,7 +49,7 @@ const CategoriesPage = () => {
                     onClick={() => setOpenCreate(true)}
                 >
                     <Plus className="size-4" />
-                    Add Category
+                    Thêm danh mục
                 </Button>
             </CrudTable>
 

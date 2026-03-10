@@ -1,7 +1,7 @@
 const LivestreamsPage = () => {
     return (
         <div className="dashboard">
-            <h1>Livestreams</h1>
+            <h1>Livestream</h1>
         </div>
     )
 }

@@ -49,18 +49,18 @@ export default function StocksPage() {
         deleteItem(
             { id },
             {
-                onSuccess: () => toast.success("Inventory has been deleted"),
-                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+                onSuccess: () => toast.success("Đã xóa tồn kho"),
+                onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
     };
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Inventory</h1>
+            <h1 className="text-2xl font-semibold">Tồn kho</h1>
 
             <div className="rounded-md border p-3 text-sm">
-                Low stock items (&lt;=10): <strong>{lowStockData?.length ?? 0}</strong>
+                Sản phẩm sắp hết hàng (&lt;=10): <strong>{lowStockData?.length ?? 0}</strong>
             </div>
 
             <CrudTable<Inventory>
@@ -80,11 +80,11 @@ export default function StocksPage() {
                     handleDeleteItem
                 )}
                 useQuery={useInventories}
-                filterPlaceholder="Filter by variant id..."
+                filterPlaceholder="Lọc theo mã biến thể..."
             >
                 <Button variant="outline" size="sm" className="ml-2 h-8" onClick={() => setOpenCreate(true)}>
                     <Plus className="size-4" />
-                    Add Inventory
+                    Thêm tồn kho
                 </Button>
             </CrudTable>
 
@@ -123,14 +123,14 @@ function CreateInventoryDialog({ open, setOpen }: { open: boolean; setOpen: (v: 
         return products.flatMap((product) =>
             (product.variants ?? []).map((variant) => ({
                 id: variant.id,
-                label: `${product.name} - ${variant.sku || `Variant #${variant.id}`}`,
+                label: `${product.name} - ${variant.sku || `Biến thể #${variant.id}`}`,
             }))
         );
     }, [productsData?.data.data]);
 
     const submit = () => {
         if (!variantId) {
-            toast.error("Variant is required");
+            toast.error("Biến thể là bắt buộc");
             return;
         }
 
@@ -138,7 +138,7 @@ function CreateInventoryDialog({ open, setOpen }: { open: boolean; setOpen: (v: 
             { variantId: Number(variantId), quantity: Number(quantity) || 0 },
             {
                 onSuccess: () => {
-                    toast.success("Inventory created");
+                    toast.success("Đã tạo tồn kho");
                     setVariantId("");
                     setQuantity("0");
                     setOpen(false);
@@ -152,15 +152,15 @@ function CreateInventoryDialog({ open, setOpen }: { open: boolean; setOpen: (v: 
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create Inventory</DialogTitle>
-                    <DialogDescription>Initialize inventory for a product variant</DialogDescription>
+                    <DialogTitle>Tạo tồn kho</DialogTitle>
+                    <DialogDescription>Khởi tạo tồn kho cho một biến thể sản phẩm</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Variant</label>
+                        <label className="text-sm font-medium">Biến thể</label>
                         <Select value={variantId} onValueChange={setVariantId}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select variant" />
+                                <SelectValue placeholder="Chọn biến thể" />
                             </SelectTrigger>
                             <SelectContent>
                                 {variantOptions.map((item) => (
@@ -172,7 +172,7 @@ function CreateInventoryDialog({ open, setOpen }: { open: boolean; setOpen: (v: 
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Quantity</label>
+                        <label className="text-sm font-medium">Số lượng</label>
                         <Input
                             type="number"
                             value={quantity}
@@ -182,10 +182,10 @@ function CreateInventoryDialog({ open, setOpen }: { open: boolean; setOpen: (v: 
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button onClick={submit} disabled={isPending || !variantId}>
-                            {isPending ? "Creating..." : "Create"}
+                            {isPending ? "Đang tạo..." : "Tạo"}
                         </Button>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>
@@ -221,7 +221,7 @@ function UpdateInventoryDialog({
             { id: item.id, data: { quantity: Number(quantity) || 0 } },
             {
                 onSuccess: () => {
-                    toast.success("Inventory updated");
+                    toast.success("Đã cập nhật tồn kho");
                     setOpen(false);
                     setItem(undefined);
                 },
@@ -240,12 +240,12 @@ function UpdateInventoryDialog({
         >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Update Inventory</DialogTitle>
-                    <DialogDescription>Update quantity for selected inventory</DialogDescription>
+                    <DialogTitle>Cập nhật tồn kho</DialogTitle>
+                    <DialogDescription>Cập nhật số lượng cho tồn kho đã chọn</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Quantity</label>
+                        <label className="text-sm font-medium">Số lượng</label>
                         <Input
                             type="number"
                             value={quantity}
@@ -255,10 +255,10 @@ function UpdateInventoryDialog({
                     </div>
                     <div className="flex flex-col gap-3">
                         <Button onClick={submit} disabled={isPending}>
-                            {isPending ? "Updating..." : "Update"}
+                            {isPending ? "Đang cập nhật..." : "Cập nhật"}
                         </Button>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>
@@ -295,7 +295,7 @@ function CreateInventoryTransactionDialog({
             },
             {
                 onSuccess: () => {
-                    toast.success("Transaction created");
+                    toast.success("Đã tạo giao dịch");
                     setType("IMPORT");
                     setQuantity("0");
                     setNote("");
@@ -317,27 +317,27 @@ function CreateInventoryTransactionDialog({
         >
             <DialogContent>
                 <DialogHeader>
-                    <DialogTitle>Create Inventory Transaction</DialogTitle>
-                    <DialogDescription>Variant ID: {item?.variantId}</DialogDescription>
+                    <DialogTitle>Tạo giao dịch kho</DialogTitle>
+                    <DialogDescription>Mã biến thể: {item?.variantId}</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Type</label>
+                        <label className="text-sm font-medium">Loại giao dịch</label>
                         <Select value={type} onValueChange={(v) => setType(v as InventoryType)}>
                             <SelectTrigger>
-                                <SelectValue placeholder="Select type" />
+                                <SelectValue placeholder="Chọn loại giao dịch" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="IMPORT">IMPORT</SelectItem>
-                                <SelectItem value="EXPORT">EXPORT</SelectItem>
-                                <SelectItem value="RETURN">RETURN</SelectItem>
-                                <SelectItem value="ADJUSTMENT">ADJUSTMENT</SelectItem>
+                                <SelectItem value="IMPORT">Nhập kho</SelectItem>
+                                <SelectItem value="EXPORT">Xuất kho</SelectItem>
+                                <SelectItem value="RETURN">Hoàn kho</SelectItem>
+                                <SelectItem value="ADJUSTMENT">Điều chỉnh</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Quantity</label>
+                        <label className="text-sm font-medium">Số lượng</label>
                         <Input
                             type="number"
                             value={quantity}
@@ -347,16 +347,16 @@ function CreateInventoryTransactionDialog({
                     </div>
 
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Note</label>
+                        <label className="text-sm font-medium">Ghi chú</label>
                         <Input value={note} onChange={(e) => setNote(e.target.value)} disabled={isPending} />
                     </div>
 
                     <div className="flex flex-col gap-3">
                         <Button onClick={submit} disabled={isPending}>
-                            {isPending ? "Creating..." : "Create"}
+                            {isPending ? "Đang tạo..." : "Tạo"}
                         </Button>
                         <Button type="button" variant="outline" onClick={() => setOpen(false)} disabled={isPending}>
-                            Cancel
+                            Hủy
                         </Button>
                     </div>
                 </div>
@@ -388,23 +388,23 @@ function InventoryHistoryDialog({
         >
             <DialogContent className="max-h-[80vh] overflow-y-auto">
                 <DialogHeader>
-                    <DialogTitle>Inventory Transactions</DialogTitle>
-                    <DialogDescription>Variant ID: {item?.variantId}</DialogDescription>
+                    <DialogTitle>Lịch sử giao dịch kho</DialogTitle>
+                    <DialogDescription>Mã biến thể: {item?.variantId}</DialogDescription>
                 </DialogHeader>
 
                 {isFetching ? (
-                    <p className="text-sm text-muted-foreground">Loading...</p>
+                    <p className="text-sm text-muted-foreground">Đang tải...</p>
                 ) : (
                     <div className="space-y-2">
                         {(data?.data ?? []).length === 0 ? (
-                            <p className="text-sm text-muted-foreground">No transactions found</p>
+                            <p className="text-sm text-muted-foreground">Không có giao dịch</p>
                         ) : (
                             (data?.data ?? []).map((txn) => (
                                 <div key={txn.id} className="rounded border p-2 text-sm">
-                                    <div><strong>Type:</strong> {txn.type}</div>
-                                    <div><strong>Qty:</strong> {txn.quantity}</div>
-                                    <div><strong>Note:</strong> {txn.note || "-"}</div>
-                                    <div><strong>At:</strong> {new Date(txn.createdAt).toLocaleString()}</div>
+                                    <div><strong>Loại:</strong> {txn.type}</div>
+                                    <div><strong>SL:</strong> {txn.quantity}</div>
+                                    <div><strong>Ghi chú:</strong> {txn.note || "-"}</div>
+                                    <div><strong>Thời gian:</strong> {new Date(txn.createdAt).toLocaleString()}</div>
                                 </div>
                             ))
                         )}

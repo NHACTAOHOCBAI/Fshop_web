@@ -37,7 +37,7 @@ interface CrudTableProps<T extends { id: number }> {
 export default function CrudTable<T extends { id: number }>({
     columns,
     useQuery,
-    filterPlaceholder = "Filter...",
+    filterPlaceholder = "Tìm kiếm...",
     children,
 }: CrudTableProps<T>) {
     const { table, isFetching, filter, setFilter, setPagination } = useTable<T>({

@@ -16,20 +16,20 @@ const ProductsPage = () => {
         deleteItem(
             { id },
             {
-                onSuccess: () => toast.success("Product has been deleted"),
-                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+                onSuccess: () => toast.success("Đã xóa sản phẩm"),
+                onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
     };
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Products</h1>
+            <h1 className="text-2xl font-semibold">Sản phẩm</h1>
 
             <CrudTable<Product>
                 columns={productColumns(handleDeleteItem)}
                 useQuery={useProducts}
-                filterPlaceholder="Filter product name..."
+                filterPlaceholder="Lọc theo tên sản phẩm..."
             >
                 <Button
                     variant="outline"
@@ -39,7 +39,7 @@ const ProductsPage = () => {
                 >
                     <Link to="/admin/products/create">
                         <Plus className="size-4" />
-                        Add Product
+                        Thêm sản phẩm
                     </Link>
                 </Button>
             </CrudTable>

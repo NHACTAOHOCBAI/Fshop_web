@@ -27,20 +27,20 @@ const BrandsPage = () => {
         deleteItem(
             { id },
             {
-                onSuccess: () => toast.success("Brand has been deleted"),
-                onError: (error) => toast.error(`Delete failed: ${error.message}`),
+                onSuccess: () => toast.success("Đã xóa thương hiệu"),
+                onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
     };
 
     return (
         <div className="space-y-4  w-full">
-            <h1 className="text-2xl font-semibold">Brands</h1>
+            <h1 className="text-2xl font-semibold">Thương hiệu</h1>
 
             <CrudTable<Brand>
                 columns={brandColumns(handleUpdateBtn, handleDeleteItem)}
                 useQuery={useBrands}
-                filterPlaceholder="Filter brand name..."
+                filterPlaceholder="Lọc theo tên thương hiệu..."
             >
                 <Button
                     variant="outline"
@@ -49,7 +49,7 @@ const BrandsPage = () => {
                     onClick={() => setOpenCreate(true)}
                 >
                     <Plus className="size-4" />
-                    Add Brand
+                    Thêm thương hiệu
                 </Button>
             </CrudTable>
 
