@@ -24,3 +24,47 @@ export const getBrandBySlug = async (slug: string) => {
 export const deleteBrand = async ({ id }: { id: number }) => {
     return axiosInstance.delete(`/brands/${id}`);
 };
+
+export const createBrand = async (data: {
+    name: string;
+    image: File;
+    description?: string;
+}) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    if (data.description) {
+        formData.append("description", data.description);
+    }
+    formData.append("image", data.image);
+
+    return axiosInstance.post("/brands", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+};
+
+export const updateBrand = async ({
+    id,
+    data,
+}: {
+    id: number;
+    data: {
+        name: string;
+        image: File;
+        description?: string;
+    };
+}) => {
+    const formData = new FormData();
+    formData.append("name", data.name);
+    if (data.description) {
+        formData.append("description", data.description);
+    }
+    formData.append("image", data.image);
+
+    return axiosInstance.patch(`/brands/${id}`, formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+};
