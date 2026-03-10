@@ -1,5 +1,6 @@
 import AdminLayout from "@/components/layout/AdminLayout";
 import BackupRestorePage from "@/pages/admin/backup-restore/BackupRestorePage";
+import AttributesPage from "@/pages/admin/attributes/AttributesPage";
 import BrandsPage from "@/pages/admin/brands/BrandsPage";
 import CategoriesPage from "@/pages/admin/categories/CategoriesPage";
 import CommunityPage from "@/pages/admin/community/CommunityPage";
@@ -28,6 +29,10 @@ const router = createBrowserRouter([
       {
         path: "categories",
         element: <CategoriesPage />,
+      },
+      {
+        path: "attributes",
+        element: <AttributesPage />,
       },
       {
         path: "orders",
