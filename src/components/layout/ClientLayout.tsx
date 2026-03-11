@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet } from "react-router";
+import { Link, NavLink, Outlet, useParams } from "react-router";
 import { Heart, ShoppingCart, UserRound } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -11,6 +11,12 @@ const navItems = [
 ];
 
 const ClientLayout = () => {
+    const params = useParams<{ department?: string }>();
+    const currentDepartment = params.department?.toLowerCase();
+    const breadcrumbDepartment = currentDepartment === "men" || currentDepartment === "women" || currentDepartment === "kids"
+        ? currentDepartment
+        : "men";
+
     return (
         <div className="min-h-screen bg-white text-slate-900">
             <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
@@ -57,9 +63,9 @@ const ClientLayout = () => {
             </header>
             <div className="bg-gray-100 py-3.5">
                 <div className="px-4  md:px-8 mx-auto max-w-6xl text-sm text-slate-500">
-                    <span>Shop</span>
+                    <span>shop</span>
                     <span className="mx-2">/</span>
-                    <span className="text-primary">Shoes</span>
+                    <span className="text-primary">{breadcrumbDepartment}</span>
                 </div>
             </div>
             <main className=" mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">

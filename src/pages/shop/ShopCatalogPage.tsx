@@ -11,6 +11,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useShopCatalog, type ShopCatalogProduct, type ShopSortOption } from "@/hooks/useShopCatalog";
+import type { DepartmentType } from "@/types/category";
 
 const sortOptions: { value: ShopSortOption; label: string }[] = [
     { value: "newest", label: "Newest" },
@@ -24,6 +25,8 @@ const departmentLabelMap = {
     women: "Woman",
     kids: "Kid",
 } as const;
+
+const departmentList: DepartmentType[] = ["men", "women", "kids"];
 
 const getProductImage = (product: ShopCatalogProduct) => {
     const imageUrl = product.images?.[0]?.imageUrl;
@@ -128,10 +131,10 @@ const ProductCard = ({ product }: { product: ShopCatalogProduct }) => {
 
 const ShopCatalogPage = () => {
     const params = useParams<{ department?: string }>();
-    const department = useMemo(() => {
+    const department = useMemo<DepartmentType>(() => {
         const rawDepartment = params.department?.toLowerCase();
-        if (rawDepartment === "men" || rawDepartment === "women" || rawDepartment === "kids") {
-            return rawDepartment;
+        if (rawDepartment && departmentList.includes(rawDepartment as DepartmentType)) {
+            return rawDepartment as DepartmentType;
         }
 
         return "men";
@@ -160,7 +163,7 @@ const ShopCatalogPage = () => {
         onCategoryChange,
         onBrandChange,
         clearFilters,
-    } = useShopCatalog();
+    } = useShopCatalog(department);
 
     const pageItems = buildPaginationItems(page, totalPages);
 

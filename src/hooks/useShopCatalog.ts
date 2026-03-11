@@ -1,9 +1,10 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
 import { useDebounce } from "@/hooks/useDebounce";
 import { useProducts } from "@/hooks/useProducts";
+import type { DepartmentType } from "@/types/category";
 import type { Product } from "@/types/product";
 
 type SortOption = "newest" | "oldest" | "name-asc" | "name-desc";
@@ -18,7 +19,7 @@ const sortOptionMap: Record<SortOption, { sortBy: string; sortOrder: "ASC" | "DE
     "name-desc": { sortBy: "name", sortOrder: "DESC" },
 };
 
-export const useShopCatalog = () => {
+export const useShopCatalog = (department: DepartmentType) => {
     const [page, setPage] = useState(1);
     const [searchInput, setSearchInput] = useState("");
     const [sortOption, setSortOption] = useState<SortOption>("newest");
@@ -49,6 +50,23 @@ export const useShopCatalog = () => {
         sortBy: "name",
         sortOrder: "ASC",
     });
+
+    const categoriesByDepartment = useMemo(() => {
+        const allCategories = categoriesQuery.data?.data.data ?? [];
+        return allCategories.filter((category) => category.department === department);
+    }, [categoriesQuery.data?.data.data, department]);
+
+    useEffect(() => {
+        if (!selectedCategoryId) {
+            return;
+        }
+
+        const belongsToDepartment = categoriesByDepartment.some((category) => category.id === selectedCategoryId);
+        if (!belongsToDepartment) {
+            setSelectedCategoryId(null);
+            setPage(1);
+        }
+    }, [categoriesByDepartment, selectedCategoryId]);
 
     const filteredProducts = useMemo(() => {
         const allProducts = productsQuery.data?.data.data ?? [];
@@ -119,7 +137,7 @@ export const useShopCatalog = () => {
         selectedCategoryId,
         selectedBrandId,
         products: paginatedProducts,
-        categories: categoriesQuery.data?.data.data ?? [],
+        categories: categoriesByDepartment,
         brands: brandsQuery.data?.data.data ?? [],
         isLoading: productsQuery.isLoading || categoriesQuery.isLoading || brandsQuery.isLoading,
         isFetching: productsQuery.isFetching,
