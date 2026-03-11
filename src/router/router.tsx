@@ -14,6 +14,7 @@ import CreateProductPage from "@/pages/admin/products/CreateProductPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
+import ShopCatalogPage from "@/pages/shop/ShopCatalogPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
@@ -30,6 +31,10 @@ const router = createBrowserRouter([
         <LoginPage />
       </PublicRoute>
     ),
+  },
+  {
+    path: "/shop",
+    element: <ShopCatalogPage />,
   },
   {
     path: "/register",
