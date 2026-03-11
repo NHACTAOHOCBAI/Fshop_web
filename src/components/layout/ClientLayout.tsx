@@ -1,21 +1,16 @@
-import type { ReactNode } from "react";
-import { Link, NavLink } from "react-router";
+import { Link, NavLink, Outlet } from "react-router";
 import { Heart, ShoppingCart, UserRound } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-type ShopLayoutProps = {
-    children: ReactNode;
-};
-
 const navItems = [
-    { to: "/shop", label: "Home" },
-    { to: "/shop", label: "Man" },
-    { to: "/shop", label: "Woman" },
-    { to: "/shop", label: "Kid" },
+    { to: "/", label: "Home" },
+    { to: "/men", label: "Man" },
+    { to: "/women", label: "Woman" },
+    { to: "/kids", label: "Kid" },
 ];
 
-const ShopLayout = ({ children }: ShopLayoutProps) => {
+const ClientLayout = () => {
     return (
         <div className="min-h-screen bg-white text-slate-900">
             <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
@@ -36,7 +31,7 @@ const ShopLayout = ({ children }: ShopLayoutProps) => {
 
                 </div>
                 <div className="mx-auto flex w-full max-w-6xl items-center  px-4 py-3 md:px-8">
-                    <Link to="/shop" className="inline-flex items-center gap-2">
+                    <Link to="/men" className="inline-flex items-center gap-2">
                         <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground shadow-sm">
                             F
                         </span>
@@ -67,7 +62,9 @@ const ShopLayout = ({ children }: ShopLayoutProps) => {
                     <span className="text-primary">Shoes</span>
                 </div>
             </div>
-            <main className=" mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">{children}</main>
+            <main className=" mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
+                <Outlet />
+            </main>
 
             <footer className="mt-12 bg-primary/35">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 text-sm text-slate-700 md:grid-cols-3 md:px-8">
@@ -89,4 +86,4 @@ const ShopLayout = ({ children }: ShopLayoutProps) => {
     );
 };
 
-export default ShopLayout;
+export default ClientLayout;

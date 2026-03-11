@@ -1,6 +1,6 @@
 import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
-
-import ShopLayout from "@/components/layout/ShopLayout";
+import { useMemo } from "react";
+import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +18,12 @@ const sortOptions: { value: ShopSortOption; label: string }[] = [
     { value: "name-asc", label: "Name A-Z" },
     { value: "name-desc", label: "Name Z-A" },
 ];
+
+const departmentLabelMap = {
+    men: "Man",
+    women: "Woman",
+    kids: "Kid",
+} as const;
 
 const getProductImage = (product: ShopCatalogProduct) => {
     const imageUrl = product.images?.[0]?.imageUrl;
@@ -121,6 +127,18 @@ const ProductCard = ({ product }: { product: ShopCatalogProduct }) => {
 };
 
 const ShopCatalogPage = () => {
+    const params = useParams<{ department?: string }>();
+    const department = useMemo(() => {
+        const rawDepartment = params.department?.toLowerCase();
+        if (rawDepartment === "men" || rawDepartment === "women" || rawDepartment === "kids") {
+            return rawDepartment;
+        }
+
+        return "men";
+    }, [params.department]);
+
+    const departmentLabel = departmentLabelMap[department];
+
     const {
         page,
         totalPages,
@@ -147,140 +165,138 @@ const ShopCatalogPage = () => {
     const pageItems = buildPaginationItems(page, totalPages);
 
     return (
-        <ShopLayout>
 
+        <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
+            <aside className="space-y-4">
+                <FilterPanel
+                    title="Categories"
+                    name="category"
+                    items={categories}
+                    selectedId={selectedCategoryId}
+                    onSelect={onCategoryChange}
+                    onClear={() => onCategoryChange(null)}
+                />
 
-            <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
-                <aside className="space-y-4">
-                    <FilterPanel
-                        title="Categories"
-                        name="category"
-                        items={categories}
-                        selectedId={selectedCategoryId}
-                        onSelect={onCategoryChange}
-                        onClear={() => onCategoryChange(null)}
-                    />
+                <FilterPanel
+                    title="Brands"
+                    name="brand"
+                    items={brands}
+                    selectedId={selectedBrandId}
+                    onSelect={onBrandChange}
+                    onClear={() => onBrandChange(null)}
+                />
 
-                    <FilterPanel
-                        title="Brands"
-                        name="brand"
-                        items={brands}
-                        selectedId={selectedBrandId}
-                        onSelect={onBrandChange}
-                        onClear={() => onBrandChange(null)}
-                    />
+                <Button type="button" variant="outline" className="w-full" onClick={clearFilters}>
+                    <SlidersHorizontal className="size-4" />
+                    Reset filters
+                </Button>
+            </aside>
 
-                    <Button type="button" variant="outline" className="w-full" onClick={clearFilters}>
-                        <SlidersHorizontal className="size-4" />
-                        Reset filters
-                    </Button>
-                </aside>
-
-                <section className="space-y-4">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_1px_rgba(15,23,42,0.06)]">
-                        <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-                            <div className="relative w-full md:max-w-sm">
-                                <Input
-                                    value={searchInput}
-                                    onChange={(event) => onSearchChange(event.target.value)}
-                                    placeholder="Search products..."
-                                    className="p-5 rounded-[24px]"
-                                />
-                                <Search className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                            </div>
-
-                            <Select value={sortOption} onValueChange={(value) => onSortChange(value as ShopSortOption)}>
-                                <SelectTrigger className="w-full md:w-45">
-                                    <SelectValue placeholder="Sort by" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    {sortOptions.map((option) => (
-                                        <SelectItem key={option.value} value={option.value}>
-                                            {option.label}
-                                        </SelectItem>
-                                    ))}
-                                </SelectContent>
-                            </Select>
+            <section className="space-y-4">
+                <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_1px_rgba(15,23,42,0.06)]">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                        <div className="relative w-full md:max-w-sm">
+                            <Input
+                                value={searchInput}
+                                onChange={(event) => onSearchChange(event.target.value)}
+                                placeholder="Search products..."
+                                className="p-5 rounded-[24px]"
+                            />
+                            <Search className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                         </div>
 
-                        <p className="mt-3 text-sm text-slate-600">
-                            <span className="font-semibold text-primary">{totalItems}</span> items found
-                            {isFetching ? " (updating...)" : ""}
-                        </p>
+                        <Select value={sortOption} onValueChange={(value) => onSortChange(value as ShopSortOption)}>
+                            <SelectTrigger className="w-full md:w-45">
+                                <SelectValue placeholder="Sort by" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                {sortOptions.map((option) => (
+                                    <SelectItem key={option.value} value={option.value}>
+                                        {option.label}
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
-                    <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-linear-to-r from-primary/95 via-primary/85 to-cyan-400 p-5 text-white md:p-6">
-                        <div className="absolute -right-8 -top-12 h-36 w-36 rounded-full bg-white/20 blur-3xl" />
-                        <h2 className="relative text-xl font-semibold md:text-2xl">Men&apos;s Shoes</h2>
-                        <p className="relative mt-2 max-w-xl text-sm text-sky-50">
-                            Build your storefront base with clean layout blocks, reusable hooks and ready pagination logic.
-                        </p>
+                    <p className="mt-3 text-sm text-slate-600">
+                        <span className="font-semibold text-primary">{totalItems}</span> items found
+                        {isFetching ? " (updating...)" : ""}
+                    </p>
+                </div>
+
+                <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-linear-to-r from-primary/95 via-primary/85 to-cyan-400 p-5 text-white md:p-6">
+                    <div className="absolute -right-8 -top-12 h-36 w-36 rounded-full bg-white/20 blur-3xl" />
+                    <p className="relative text-xs font-semibold tracking-[0.18em] text-sky-100 uppercase">Department</p>
+                    <h2 className="relative mt-1 text-xl font-semibold md:text-2xl">{departmentLabel}&apos;s Shoes</h2>
+                    <p className="relative mt-2 max-w-xl text-sm text-sky-50">
+                        Showing products for <span className="font-semibold text-white">{departmentLabel}</span> department.
+                    </p>
+                </div>
+
+                {isError ? (
+                    <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                        {errorMessage ?? "Cannot load products."}
                     </div>
+                ) : null}
 
-                    {isError ? (
-                        <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                            {errorMessage ?? "Cannot load products."}
-                        </div>
-                    ) : null}
-
-                    {isLoading ? (
+                {isLoading ? (
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <div key={index} className="h-67.5 animate-pulse rounded-2xl bg-slate-200" />
+                        ))}
+                    </div>
+                ) : (
+                    <>
                         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                            {Array.from({ length: 6 }).map((_, index) => (
-                                <div key={index} className="h-67.5 animate-pulse rounded-2xl bg-slate-200" />
+                            {products.map((product) => (
+                                <ProductCard key={product.id} product={product} />
                             ))}
                         </div>
-                    ) : (
-                        <>
-                            <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                                {products.map((product) => (
-                                    <ProductCard key={product.id} product={product} />
-                                ))}
+
+                        {products.length === 0 ? (
+                            <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
+                                No products matched your filters.
                             </div>
+                        ) : null}
+                    </>
+                )}
 
-                            {products.length === 0 ? (
-                                <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                                    No products matched your filters.
-                                </div>
-                            ) : null}
-                        </>
-                    )}
+                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                    <Button variant="outline" size="icon-sm" onClick={() => updatePage(page - 1)} disabled={page <= 1}>
+                        <ChevronLeft className="size-4" />
+                    </Button>
 
-                    <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                        <Button variant="outline" size="icon-sm" onClick={() => updatePage(page - 1)} disabled={page <= 1}>
-                            <ChevronLeft className="size-4" />
-                        </Button>
+                    {pageItems.map((item, index) => {
+                        const previous = pageItems[index - 1];
+                        const shouldRenderEllipsis = previous !== undefined && item - previous > 1;
 
-                        {pageItems.map((item, index) => {
-                            const previous = pageItems[index - 1];
-                            const shouldRenderEllipsis = previous !== undefined && item - previous > 1;
+                        return (
+                            <div key={item} className="flex items-center gap-2">
+                                {shouldRenderEllipsis ? <span className="px-1 text-slate-400">...</span> : null}
+                                <Button
+                                    variant={item === page ? "default" : "outline"}
+                                    size="sm"
+                                    onClick={() => updatePage(item)}
+                                    className={item === page ? "bg-primary text-white" : ""}
+                                >
+                                    {item}
+                                </Button>
+                            </div>
+                        );
+                    })}
 
-                            return (
-                                <div key={item} className="flex items-center gap-2">
-                                    {shouldRenderEllipsis ? <span className="px-1 text-slate-400">...</span> : null}
-                                    <Button
-                                        variant={item === page ? "default" : "outline"}
-                                        size="sm"
-                                        onClick={() => updatePage(item)}
-                                        className={item === page ? "bg-primary text-white" : ""}
-                                    >
-                                        {item}
-                                    </Button>
-                                </div>
-                            );
-                        })}
-
-                        <Button
-                            variant="outline"
-                            size="icon-sm"
-                            onClick={() => updatePage(page + 1)}
-                            disabled={page >= totalPages}
-                        >
-                            <ChevronRight className="size-4" />
-                        </Button>
-                    </div>
-                </section>
-            </div>
-        </ShopLayout>
+                    <Button
+                        variant="outline"
+                        size="icon-sm"
+                        onClick={() => updatePage(page + 1)}
+                        disabled={page >= totalPages}
+                    >
+                        <ChevronRight className="size-4" />
+                    </Button>
+                </div>
+            </section>
+        </div>
     );
 };
 

@@ -1,6 +1,7 @@
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import PublicRoute from "@/components/auth/PublicRoute";
 import AdminLayout from "@/components/layout/AdminLayout";
+import ClientLayout from "@/components/layout/ClientLayout";
 import BackupRestorePage from "@/pages/admin/backup-restore/BackupRestorePage";
 import AttributesPage from "@/pages/admin/attributes/AttributesPage";
 import BrandsPage from "@/pages/admin/brands/BrandsPage";
@@ -22,7 +23,17 @@ import RegisterPage from "@/pages/auth/register/RegisterPage";
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <Navigate to="/login" replace />,
+    element: <ClientLayout />,
+    children: [
+      {
+        index: true,
+        element: <Navigate to="/men" replace />,
+      },
+      {
+        path: ":department",
+        element: <ShopCatalogPage />,
+      },
+    ],
   },
   {
     path: "/login",
@@ -31,10 +42,6 @@ const router = createBrowserRouter([
         <LoginPage />
       </PublicRoute>
     ),
-  },
-  {
-    path: "/shop",
-    element: <ShopCatalogPage />,
   },
   {
     path: "/register",
@@ -107,8 +114,9 @@ const router = createBrowserRouter([
       {
         path: "backup-restore",
         element: <BackupRestorePage />,
-      }
-    ]
-  }
+      },
+    ],
+  },
 ]);
+
 export default router
