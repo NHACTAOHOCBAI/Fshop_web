@@ -184,9 +184,9 @@ const ShopCatalogPage = () => {
                                     value={searchInput}
                                     onChange={(event) => onSearchChange(event.target.value)}
                                     placeholder="Search products..."
-                                    className="pr-9"
+                                    className="p-5 rounded-[24px]"
                                 />
-                                <Search className="pointer-events-none absolute right-2 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                                <Search className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                             </div>
 
                             <Select value={sortOption} onValueChange={(value) => onSortChange(value as ShopSortOption)}>
