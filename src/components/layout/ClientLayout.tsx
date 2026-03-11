@@ -4,10 +4,10 @@ import { Heart, ShoppingCart, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-    { to: "/", label: "Home" },
-    { to: "/men", label: "Man" },
-    { to: "/women", label: "Woman" },
-    { to: "/kids", label: "Kid" },
+    { to: "/", label: "Trang chủ" },
+    { to: "/men", label: "Nam" },
+    { to: "/women", label: "Nữ" },
+    { to: "/kids", label: "Trẻ em" },
 ];
 
 const ClientLayout = () => {
@@ -16,6 +16,11 @@ const ClientLayout = () => {
     const breadcrumbDepartment = currentDepartment === "men" || currentDepartment === "women" || currentDepartment === "kids"
         ? currentDepartment
         : "men";
+    const breadcrumbDepartmentLabel = breadcrumbDepartment === "men"
+        ? "nam"
+        : breadcrumbDepartment === "women"
+            ? "nữ"
+            : "trẻ-em";
 
     return (
         <div className="min-h-screen bg-white text-slate-900">
@@ -63,9 +68,9 @@ const ClientLayout = () => {
             </header>
             <div className="bg-gray-100 py-3.5">
                 <div className="px-4  md:px-8 mx-auto max-w-6xl text-sm text-slate-500">
-                    <span>shop</span>
+                    <span>cửa-hàng</span>
                     <span className="mx-2">/</span>
-                    <span className="text-primary">{breadcrumbDepartment}</span>
+                    <span className="text-primary">{breadcrumbDepartmentLabel}</span>
                 </div>
             </div>
             <main className=" mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
@@ -76,14 +81,14 @@ const ClientLayout = () => {
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 text-sm text-slate-700 md:grid-cols-3 md:px-8">
                     <div>
                         <p className="font-semibold text-slate-900">FShop</p>
-                        <p className="mt-2">Nen tang ban hang thoi trang online voi trai nghiem nhanh va on dinh.</p>
+                        <p className="mt-2">Nền tảng bán hàng thời trang online với trải nghiệm nhanh và ổn định.</p>
                     </div>
                     <div>
-                        <p className="font-semibold text-slate-900">Follow Us</p>
-                        <p className="mt-2">Cap nhat xu huong va bo suu tap moi moi tuan.</p>
+                        <p className="font-semibold text-slate-900">Theo dõi chúng tôi</p>
+                        <p className="mt-2">Cập nhật xu hướng và bộ sưu tập mới mỗi tuần.</p>
                     </div>
                     <div>
-                        <p className="font-semibold text-slate-900">Contact</p>
+                        <p className="font-semibold text-slate-900">Liên hệ</p>
                         <p className="mt-2">E-Comm, Thu Duc, Ho Chi Minh City</p>
                     </div>
                 </div>

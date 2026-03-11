@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Star } from "lucide-react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -14,36 +14,27 @@ import { useShopCatalog, type ShopCatalogProduct, type ShopSortOption } from "@/
 import type { DepartmentType } from "@/types/category";
 
 const sortOptions: { value: ShopSortOption; label: string }[] = [
-    { value: "newest", label: "Newest" },
-    { value: "oldest", label: "Oldest" },
-    { value: "name-asc", label: "Name A-Z" },
-    { value: "name-desc", label: "Name Z-A" },
+    { value: "newest", label: "Mới nhất" },
+    { value: "oldest", label: "Cũ nhất" },
+    { value: "name-asc", label: "Tên A-Z" },
+    { value: "name-desc", label: "Tên Z-A" },
 ];
 
 const departmentLabelMap = {
-    men: "Man",
-    women: "Woman",
-    kids: "Kid",
+    men: "Nam",
+    women: "Nữ",
+    kids: "Trẻ em",
 } as const;
 
 const departmentList: DepartmentType[] = ["men", "women", "kids"];
 
-const getProductImage = (product: ShopCatalogProduct) => {
-    const imageUrl = product.images?.[0]?.imageUrl;
-    if (!imageUrl) {
-        return "https://placehold.co/600x420/e5e7eb/64748b?text=No+Image";
-    }
-
-    return imageUrl;
-};
-
 const getProductPrice = (product: ShopCatalogProduct) => {
     if (!product.variants || product.variants.length === 0) {
-        return "Contact";
+        return "Liên hệ";
     }
 
     const minPrice = Math.min(...product.variants.map((variant) => variant.price));
-    return `$${minPrice.toFixed(2)}`;
+    return `${new Intl.NumberFormat("vi-VN").format(minPrice)}đ`;
 };
 
 const buildPaginationItems = (currentPage: number, totalPages: number) => {
@@ -80,11 +71,11 @@ const FilterPanel = ({ title, name, items, selectedId, onSelect, onClear }: Filt
             <div className="mb-3 flex items-center justify-between">
                 <h3 className="text-[11px] font-semibold tracking-[0.18em] text-slate-600 uppercase">{title}</h3>
                 <button type="button" onClick={onClear} className="text-xs font-medium text-primary hover:underline">
-                    Clear
+                    Xóa
                 </button>
             </div>
 
-            {items.length === 0 ? <p className="text-sm text-slate-400">No data</p> : null}
+            {items.length === 0 ? <p className="text-sm text-slate-400">Không có dữ liệu</p> : null}
 
             <div className="space-y-2 text-sm">
                 {items.map((item) => (
@@ -104,25 +95,40 @@ const FilterPanel = ({ title, name, items, selectedId, onSelect, onClear }: Filt
 };
 
 const ProductCard = ({ product }: { product: ShopCatalogProduct }) => {
+    const imageUrl = product.images?.[0]?.imageUrl;
+
     return (
-        <article className="group rounded-2xl border border-slate-200 bg-white p-3 transition-all hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-[0_12px_24px_-16px_rgba(14,165,233,0.6)]">
-            <div className="relative aspect-4/3 overflow-hidden rounded-xl bg-slate-100">
-                <img
-                    src={getProductImage(product)}
-                    alt={product.name}
-                    className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.03]"
-                    loading="lazy"
-                />
-                <span className="absolute left-2 top-2 rounded-md bg-app-secondary px-2 py-1 text-[10px] font-semibold tracking-wide text-white uppercase">
-                    New
+        <article className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_16px_30px_-18px_rgba(64,191,255,0.9)]">
+            <div className="relative h-56 w-full overflow-hidden bg-slate-100">
+                {imageUrl ? (
+                    <img
+                        src={imageUrl}
+                        alt={product.name}
+                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
+                        loading="lazy"
+                    />
+                ) : (
+                    <div className="flex h-full w-full items-center justify-center bg-slate-200 text-xs text-slate-500">
+                        Không có ảnh
+                    </div>
+                )}
+
+                <span className="absolute right-2 top-2 rounded-md bg-app-secondary px-2 py-1 text-[10px] font-semibold tracking-wide text-white uppercase">
+                    Mới
                 </span>
             </div>
 
-            <div className="pt-3">
-                <p className="line-clamp-2 text-sm font-medium text-slate-800">{product.name}</p>
-                <div className="mt-2 flex items-center justify-between text-sm">
-                    <span className="text-slate-500">{product.brand?.name ?? "Brand"}</span>
-                    <span className="font-semibold text-primary">{getProductPrice(product)}</span>
+            <div className="p-3">
+                <p className="mb-1.5 line-clamp-2 text-sm font-medium leading-tight text-slate-800">{product.name}</p>
+
+                <p className="text-lg font-black text-primary">{getProductPrice(product)}</p>
+
+                <p className="mt-1.5 text-xs text-slate-500">{product.category?.name ?? "Khác"}</p>
+
+                <div className="mt-2 flex items-center gap-1 text-xs">
+                    <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                    <span className="font-semibold text-slate-700">4.8</span>
+                    <span className="text-slate-500">Đã bán 1.2k</span>
                 </div>
             </div>
         </article>
@@ -172,7 +178,7 @@ const ShopCatalogPage = () => {
         <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
             <aside className="space-y-4">
                 <FilterPanel
-                    title="Categories"
+                    title="Danh mục"
                     name="category"
                     items={categories}
                     selectedId={selectedCategoryId}
@@ -181,7 +187,7 @@ const ShopCatalogPage = () => {
                 />
 
                 <FilterPanel
-                    title="Brands"
+                    title="Thương hiệu"
                     name="brand"
                     items={brands}
                     selectedId={selectedBrandId}
@@ -191,7 +197,7 @@ const ShopCatalogPage = () => {
 
                 <Button type="button" variant="outline" className="w-full" onClick={clearFilters}>
                     <SlidersHorizontal className="size-4" />
-                    Reset filters
+                    Đặt lại bộ lọc
                 </Button>
             </aside>
 
@@ -202,7 +208,7 @@ const ShopCatalogPage = () => {
                             <Input
                                 value={searchInput}
                                 onChange={(event) => onSearchChange(event.target.value)}
-                                placeholder="Search products..."
+                                placeholder="Tìm kiếm sản phẩm..."
                                 className="p-5 rounded-[24px]"
                             />
                             <Search className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
@@ -210,7 +216,7 @@ const ShopCatalogPage = () => {
 
                         <Select value={sortOption} onValueChange={(value) => onSortChange(value as ShopSortOption)}>
                             <SelectTrigger className="w-full md:w-45">
-                                <SelectValue placeholder="Sort by" />
+                                <SelectValue placeholder="Sắp xếp theo" />
                             </SelectTrigger>
                             <SelectContent>
                                 {sortOptions.map((option) => (
@@ -223,23 +229,23 @@ const ShopCatalogPage = () => {
                     </div>
 
                     <p className="mt-3 text-sm text-slate-600">
-                        <span className="font-semibold text-primary">{totalItems}</span> items found
-                        {isFetching ? " (updating...)" : ""}
+                        Tìm thấy <span className="font-semibold text-primary">{totalItems}</span> sản phẩm
+                        {isFetching ? " (đang cập nhật...)" : ""}
                     </p>
                 </div>
 
                 <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-linear-to-r from-primary/95 via-primary/85 to-cyan-400 p-5 text-white md:p-6">
                     <div className="absolute -right-8 -top-12 h-36 w-36 rounded-full bg-white/20 blur-3xl" />
-                    <p className="relative text-xs font-semibold tracking-[0.18em] text-sky-100 uppercase">Department</p>
-                    <h2 className="relative mt-1 text-xl font-semibold md:text-2xl">{departmentLabel}&apos;s Shoes</h2>
+                    <p className="relative text-xs font-semibold tracking-[0.18em] text-sky-100 uppercase">Danh mục theo đối tượng</p>
+                    <h2 className="relative mt-1 text-xl font-semibold md:text-2xl">Giày {departmentLabel}</h2>
                     <p className="relative mt-2 max-w-xl text-sm text-sky-50">
-                        Showing products for <span className="font-semibold text-white">{departmentLabel}</span> department.
+                        Đang hiển thị sản phẩm thuộc nhóm <span className="font-semibold text-white">{departmentLabel}</span>.
                     </p>
                 </div>
 
                 {isError ? (
                     <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
-                        {errorMessage ?? "Cannot load products."}
+                        {errorMessage ?? "Không thể tải danh sách sản phẩm."}
                     </div>
                 ) : null}
 
@@ -259,7 +265,7 @@ const ShopCatalogPage = () => {
 
                         {products.length === 0 ? (
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                                No products matched your filters.
+                                Không có sản phẩm phù hợp với bộ lọc hiện tại.
                             </div>
                         ) : null}
                     </>
