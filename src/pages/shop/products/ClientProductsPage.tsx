@@ -87,7 +87,7 @@ const FilterPanel = ({ title, name, items, selectedId, onSelect, onClear }: Filt
 };
 
 
-const ProductsPage = () => {
+const ClientProductsPage = () => {
     const params = useParams<{ department?: string }>();
     const department = useMemo<DepartmentType>(() => {
         const rawDepartment = params.department?.toLowerCase();
@@ -261,4 +261,4 @@ const ProductsPage = () => {
     );
 };
 
-export default ProductsPage;
+export default ClientProductsPage;

@@ -1,17 +1,8 @@
 import type { ShopCatalogProduct } from "@/hooks/useShopCatalog";
-import type { DepartmentType } from "@/types/category";
 import { formatCurrency } from "@/lib/utils";
+import type { DepartmentType } from "@/types/category";
 import { Star } from "lucide-react";
 import { Link } from "react-router";
-
-const getProductPrice = (product: ShopCatalogProduct) => {
-    if (!product.variants || product.variants.length === 0) {
-        return "Liên hệ";
-    }
-
-    const minPrice = Math.min(...product.variants.map((variant) => variant.price));
-    return formatCurrency(minPrice);
-};
 
 const ProductCard = ({ product, department }: { product: ShopCatalogProduct; department: DepartmentType }) => {
     const imageUrl = product.images?.[0]?.imageUrl;
@@ -44,7 +35,7 @@ const ProductCard = ({ product, department }: { product: ShopCatalogProduct; dep
             <div className="p-3">
                 <p className="mb-1.5 line-clamp-2 text-sm font-medium leading-tight text-slate-800">{product.name}</p>
 
-                <p className="text-lg font-black text-primary">{getProductPrice(product)}</p>
+                <p className="text-lg font-black text-primary">{formatCurrency(product.price)}</p>
 
                 <p className="mt-1.5 text-xs text-slate-500">{product.category?.name ?? "Khác"}</p>
 

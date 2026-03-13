@@ -19,7 +19,8 @@ import CartPage from "@/pages/shop/cart/CartPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
-import ProductsPage from "@/pages/shop/products/ProductsPage";
+import ClientProductsPage from "@/pages/shop/products/ClientProductsPage";
+import ProductsPage from "@/pages/admin/products/ProductsPage";
 
 const router = createBrowserRouter([
   {
@@ -32,7 +33,7 @@ const router = createBrowserRouter([
       },
       {
         path: ":department",
-        element: <ProductsPage />,
+        element: <ClientProductsPage />,
       },
       {
         path: ":department/products/:productId",

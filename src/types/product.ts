@@ -31,6 +31,7 @@ export type Product = {
     description?: string;
     brandId: number;
     categoryId: number;
+    price: number;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
