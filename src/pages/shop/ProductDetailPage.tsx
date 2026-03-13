@@ -71,14 +71,14 @@ const ProductDetailPage = () => {
     const product = productQuery.data?.data;
 
     const colorMap = useMemo(() => {
-        const colors = colorsQuery.data?.data.data ?? [];
+        const colors = colorsQuery.data?.data ?? [];
         return new Map(colors.map((color) => [color.id, color]));
-    }, [colorsQuery.data?.data.data]);
+    }, [colorsQuery.data?.data]);
 
     const sizeMap = useMemo(() => {
-        const sizes = sizesQuery.data?.data.data ?? [];
+        const sizes = sizesQuery.data?.data ?? [];
         return new Map(sizes.map((size) => [size.id, size]));
-    }, [sizesQuery.data?.data.data]);
+    }, [sizesQuery.data?.data]);
 
     const allImages = useMemo(() => {
         if (!product) {

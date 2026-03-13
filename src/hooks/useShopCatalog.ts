@@ -52,9 +52,9 @@ export const useShopCatalog = (department: DepartmentType) => {
     });
 
     const categoriesByDepartment = useMemo(() => {
-        const allCategories = categoriesQuery.data?.data.data ?? [];
+        const allCategories = categoriesQuery.data?.data ?? [];
         return allCategories.filter((category) => category.department === department);
-    }, [categoriesQuery.data?.data.data, department]);
+    }, [categoriesQuery.data?.data, department]);
 
     useEffect(() => {
         if (!selectedCategoryId) {
@@ -69,7 +69,7 @@ export const useShopCatalog = (department: DepartmentType) => {
     }, [categoriesByDepartment, selectedCategoryId]);
 
     const filteredProducts = useMemo(() => {
-        const allProducts = productsQuery.data?.data.data ?? [];
+        const allProducts = productsQuery.data?.data ?? [];
 
         return allProducts.filter((product) => {
             if (selectedCategoryId && product.categoryId !== selectedCategoryId) {
@@ -82,7 +82,7 @@ export const useShopCatalog = (department: DepartmentType) => {
 
             return true;
         });
-    }, [productsQuery.data?.data.data, selectedBrandId, selectedCategoryId]);
+    }, [productsQuery.data?.data, selectedBrandId, selectedCategoryId]);
 
     const totalItems = filteredProducts.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
@@ -138,7 +138,7 @@ export const useShopCatalog = (department: DepartmentType) => {
         selectedBrandId,
         products: paginatedProducts,
         categories: categoriesByDepartment,
-        brands: brandsQuery.data?.data.data ?? [],
+        brands: brandsQuery.data?.data ?? [],
         isLoading: productsQuery.isLoading || categoriesQuery.isLoading || brandsQuery.isLoading,
         isFetching: productsQuery.isFetching,
         isError: productsQuery.isError,

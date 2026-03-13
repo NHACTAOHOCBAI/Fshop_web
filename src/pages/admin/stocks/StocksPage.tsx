@@ -119,14 +119,14 @@ function CreateInventoryDialog({ open, setOpen }: { open: boolean; setOpen: (v: 
     const [quantity, setQuantity] = useState("0");
 
     const variantOptions = useMemo(() => {
-        const products = productsData?.data.data ?? [];
+        const products = productsData?.data ?? [];
         return products.flatMap((product) =>
             (product.variants ?? []).map((variant) => ({
                 id: variant.id,
                 label: `${product.name} - ${variant.sku || `Biến thể #${variant.id}`}`,
             }))
         );
-    }, [productsData?.data.data]);
+    }, [productsData?.data]);
 
     const submit = () => {
         if (!variantId) {

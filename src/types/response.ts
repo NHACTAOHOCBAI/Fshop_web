@@ -10,12 +10,10 @@ export type ApiResponse<T> = {
     statusCode: number;
     timestamp?: string;
     takenTime?: string;
+    meta?: {
+        pagination?: Pagination;
+    };
     data: T;
 };
 
-export type PaginatedData<T> = {
-    pagination: Pagination;
-    data: T[];
-};
-
-export type PaginatedApiResponse<T> = ApiResponse<PaginatedData<T>>;
+export type PaginatedApiResponse<T> = ApiResponse<T[]>;

@@ -26,7 +26,7 @@ export const useRelatedProducts = (categoryId?: number, excludedId?: number) => 
         sortOrder: "DESC",
     });
 
-    const relatedProducts = (productsQuery.data?.data.data ?? [])
+    const relatedProducts = (productsQuery.data?.data ?? [])
         .filter((product) => {
             if (!categoryId) {
                 return false;

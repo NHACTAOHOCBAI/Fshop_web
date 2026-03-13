@@ -2,28 +2,31 @@ import axiosInstance from "@/lib/axios";
 import type { Inventory, InventoryTransaction, InventoryType } from "@/types/inventory";
 import type { ApiResponse } from "@/types/response";
 
-type InventoryListPayload = {
+type LegacyInventoryListPayload = {
     data: Inventory[];
     total: number;
 };
 
-type TransactionListPayload = {
+type LegacyTransactionListPayload = {
     data: InventoryTransaction[];
     total: number;
 };
 
 export const getInventories = async ({ page = 1, limit = 10 }: { page?: number; limit?: number }) => {
-    const { data } = await axiosInstance.get<ApiResponse<InventoryListPayload>>("/inventories", {
+    const { data } = await axiosInstance.get<ApiResponse<Inventory[] | LegacyInventoryListPayload>>("/inventories", {
         params: { page, limit },
     });
 
+    const list = Array.isArray(data.data) ? data.data : data.data.data;
+    const total = data.meta?.pagination?.total ?? (Array.isArray(data.data) ? data.data.length : data.data.total);
+
     return {
         pagination: {
-            total: data.data.total,
+            total,
             page,
             limit,
         },
-        data: data.data.data,
+        data: list,
     };
 };
 
@@ -65,15 +68,18 @@ export const getInventoryTransactionHistory = async ({
     page?: number;
     limit?: number;
 }) => {
-    const { data } = await axiosInstance.get<ApiResponse<TransactionListPayload>>(
+    const { data } = await axiosInstance.get<ApiResponse<InventoryTransaction[] | LegacyTransactionListPayload>>(
         `/inventories/${variantId}/transactions`,
         {
             params: { page, limit },
         }
     );
 
+    const history = Array.isArray(data.data) ? data.data : data.data.data;
+    const total = data.meta?.pagination?.total ?? (Array.isArray(data.data) ? data.data.length : data.data.total);
+
     return {
-        total: data.data.total,
-        data: data.data.data,
+        total,
+        data: history,
     };
 };

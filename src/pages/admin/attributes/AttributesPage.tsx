@@ -169,14 +169,14 @@ export default function AttributesPage() {
             <CreateSizeDialog
                 open={openCreateSize}
                 setOpen={setOpenCreateSize}
-                sizeTypeOptions={sizeTypeSelections?.data.data ?? []}
+                sizeTypeOptions={sizeTypeSelections?.data ?? []}
             />
             <UpdateSizeDialog
                 open={openUpdateSize}
                 setOpen={setOpenUpdateSize}
                 item={editingSize}
                 setItem={setEditingSize}
-                sizeTypeOptions={sizeTypeSelections?.data.data ?? []}
+                sizeTypeOptions={sizeTypeSelections?.data ?? []}
             />
 
             <CreateColorDialog open={openCreateColor} setOpen={setOpenCreateColor} />

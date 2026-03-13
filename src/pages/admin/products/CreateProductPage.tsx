@@ -53,10 +53,10 @@ export default function CreateProductPage() {
     const { data: colorsData } = useColors({ page: 1, limit: 200 });
     const { data: sizesData } = useSizes({ page: 1, limit: 200 });
 
-    const brands = brandsData?.data.data ?? [];
-    const categories = categoriesData?.data.data ?? [];
-    const colors = colorsData?.data.data ?? [];
-    const sizes = sizesData?.data.data ?? [];
+    const brands = brandsData?.data ?? [];
+    const categories = categoriesData?.data ?? [];
+    const colors = colorsData?.data ?? [];
+    const sizes = sizesData?.data ?? [];
 
     const variantPayload = useMemo(() => {
         const payload: CreateProductVariantPayload[] = [];

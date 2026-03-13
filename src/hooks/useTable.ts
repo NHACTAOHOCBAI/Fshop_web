@@ -24,8 +24,19 @@ type WrappedTableDataPayload<T> = {
     data: TableDataPayload<T>;
 };
 
+type ApiListPayload<T> = {
+    data: T[];
+    meta?: {
+        pagination?: {
+            total?: number;
+            page?: number;
+            limit?: number;
+        };
+    };
+};
+
 interface UseTableProps<T> {
-    use: (params: QueryParams) => UseQueryResult<TableDataPayload<T> | WrappedTableDataPayload<T>, Error>;
+    use: (params: QueryParams) => UseQueryResult<unknown, Error>;
     columns: ColumnDef<T>[];
     defaultPageSize?: number;
 }
@@ -44,7 +55,7 @@ function isTableDataPayload<T>(value: unknown): value is TableDataPayload<T> {
 }
 
 const normalizePayload = <T,>(
-    value: TableDataPayload<T> | WrappedTableDataPayload<T> | undefined
+    value: unknown
 ): TableDataPayload<T> => {
     if (isTableDataPayload<T>(value)) {
         return value;
@@ -53,6 +64,19 @@ const normalizePayload = <T,>(
     const wrapped = value as WrappedTableDataPayload<T> | undefined;
     if (wrapped?.data && isTableDataPayload<T>(wrapped.data)) {
         return wrapped.data;
+    }
+
+    const apiPayload = value as ApiListPayload<T> | undefined;
+    if (apiPayload && Array.isArray(apiPayload.data)) {
+        const pagination = apiPayload.meta?.pagination;
+        return {
+            pagination: {
+                total: pagination?.total ?? apiPayload.data.length,
+                page: pagination?.page,
+                limit: pagination?.limit,
+            },
+            data: apiPayload.data,
+        };
     }
 
     return {
@@ -82,7 +106,7 @@ const useTable = <T,>({ use, columns, defaultPageSize = 10 }: UseTableProps<T>) 
         sortOrder: sorting[0]?.desc ? "DESC" : "ASC",
     });
 
-    const normalizedData = normalizePayload(data);
+    const normalizedData = normalizePayload<T>(data);
 
     const totalPages = useMemo(() => {
         return Math.max(
@@ -91,7 +115,7 @@ const useTable = <T,>({ use, columns, defaultPageSize = 10 }: UseTableProps<T>) 
         );
     }, [normalizedData.pagination.total, pagination.pageSize]);
 
-    const table = useReactTable({
+    const table = useReactTable<T>({
         data: normalizedData.data,
         columns,
         pageCount: totalPages,

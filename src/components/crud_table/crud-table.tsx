@@ -10,26 +10,7 @@ import type { QueryParams } from "@/types/query";
 
 interface CrudTableProps<T extends { id: number }> {
     columns: ColumnDef<T>[];
-    useQuery: (params: QueryParams) => UseQueryResult<
-        {
-            pagination: {
-                total: number;
-                page?: number;
-                limit?: number;
-            };
-            data: T[];
-        } | {
-            data: {
-                pagination: {
-                    total: number;
-                    page?: number;
-                    limit?: number;
-                };
-                data: T[];
-            };
-        },
-        Error
-    >;
+    useQuery: (params: QueryParams) => UseQueryResult<unknown, Error>;
     filterPlaceholder?: string;
     children?: React.ReactNode;
 }
