@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Star } from "lucide-react";
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
 import { useMemo } from "react";
 import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -10,8 +10,9 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { useShopCatalog, type ShopCatalogProduct, type ShopSortOption } from "@/hooks/useShopCatalog";
+import { useShopCatalog, type ShopSortOption } from "@/hooks/useShopCatalog";
 import type { DepartmentType } from "@/types/category";
+import ProductCard from "./components/ProductCard";
 
 const sortOptions: { value: ShopSortOption; label: string }[] = [
     { value: "newest", label: "Mới nhất" },
@@ -27,15 +28,6 @@ const departmentLabelMap = {
 } as const;
 
 const departmentList: DepartmentType[] = ["men", "women", "kids"];
-
-const getProductPrice = (product: ShopCatalogProduct) => {
-    if (!product.variants || product.variants.length === 0) {
-        return "Liên hệ";
-    }
-
-    const minPrice = Math.min(...product.variants.map((variant) => variant.price));
-    return `${new Intl.NumberFormat("vi-VN").format(minPrice)}đ`;
-};
 
 const buildPaginationItems = (currentPage: number, totalPages: number) => {
     const pages = new Set<number>();
@@ -94,48 +86,8 @@ const FilterPanel = ({ title, name, items, selectedId, onSelect, onClear }: Filt
     );
 };
 
-const ProductCard = ({ product }: { product: ShopCatalogProduct }) => {
-    const imageUrl = product.images?.[0]?.imageUrl;
 
-    return (
-        <article className="group overflow-hidden rounded-xl border border-slate-200 bg-white transition-all hover:-translate-y-0.5 hover:border-primary/35 hover:shadow-[0_16px_30px_-18px_rgba(64,191,255,0.9)]">
-            <div className="relative h-56 w-full overflow-hidden bg-slate-100">
-                {imageUrl ? (
-                    <img
-                        src={imageUrl}
-                        alt={product.name}
-                        className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
-                        loading="lazy"
-                    />
-                ) : (
-                    <div className="flex h-full w-full items-center justify-center bg-slate-200 text-xs text-slate-500">
-                        Không có ảnh
-                    </div>
-                )}
-
-                <span className="absolute right-2 top-2 rounded-md bg-app-secondary px-2 py-1 text-[10px] font-semibold tracking-wide text-white uppercase">
-                    Mới
-                </span>
-            </div>
-
-            <div className="p-3">
-                <p className="mb-1.5 line-clamp-2 text-sm font-medium leading-tight text-slate-800">{product.name}</p>
-
-                <p className="text-lg font-black text-primary">{getProductPrice(product)}</p>
-
-                <p className="mt-1.5 text-xs text-slate-500">{product.category?.name ?? "Khác"}</p>
-
-                <div className="mt-2 flex items-center gap-1 text-xs">
-                    <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                    <span className="font-semibold text-slate-700">4.8</span>
-                    <span className="text-slate-500">Đã bán 1.2k</span>
-                </div>
-            </div>
-        </article>
-    );
-};
-
-const ShopCatalogPage = () => {
+const ProductsPage = () => {
     const params = useParams<{ department?: string }>();
     const department = useMemo<DepartmentType>(() => {
         const rawDepartment = params.department?.toLowerCase();
@@ -259,7 +211,7 @@ const ShopCatalogPage = () => {
                     <>
                         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                             {products.map((product) => (
-                                <ProductCard key={product.id} product={product} />
+                                <ProductCard key={product.id} product={product} department={department} />
                             ))}
                         </div>
 
@@ -309,4 +261,4 @@ const ShopCatalogPage = () => {
     );
 };
 
-export default ShopCatalogPage;
+export default ProductsPage;

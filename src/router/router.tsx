@@ -15,7 +15,7 @@ import CreateProductPage from "@/pages/admin/products/CreateProductPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
-import ShopCatalogPage from "@/pages/shop/ShopCatalogPage";
+import ProductDetailPage from "@/pages/shop/product-detail/ProductDetailPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
@@ -31,7 +31,11 @@ const router = createBrowserRouter([
       },
       {
         path: ":department",
-        element: <ShopCatalogPage />,
+        element: <ProductsPage />,
+      },
+      {
+        path: ":department/products/:productId",
+        element: <ProductDetailPage />,
       },
     ],
   },
