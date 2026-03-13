@@ -43,9 +43,9 @@ axiosInstance.interceptors.response.use(
         // Avoid infinite loop when refresh endpoint itself returns 401.
         if (String(originalRequest.url || "").includes("/auth/refresh-token")) {
             authStorage.clear();
-            if (window.location.pathname !== "/login") {
-                window.location.href = "/login";
-            }
+            // if (window.location.pathname !== "/login") {
+            //     window.location.href = "/login";
+            // }
             return Promise.reject(normalizeAxiosErrorMessage(error));
         }
 
@@ -67,9 +67,9 @@ axiosInstance.interceptors.response.use(
             return axiosInstance(originalRequest);
         } catch (refreshError) {
             authStorage.clear();
-            if (window.location.pathname !== "/login") {
-                window.location.href = "/login";
-            }
+            // if (window.location.pathname !== "/login") {
+            //     window.location.href = "/login";
+            // }
             return Promise.reject(normalizeAxiosErrorMessage(refreshError));
         }
     }

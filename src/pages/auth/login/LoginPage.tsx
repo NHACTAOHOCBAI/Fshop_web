@@ -48,6 +48,7 @@ export default function LoginPage() {
             },
             {
                 onSuccess: (data) => {
+                    console.log("Login success:", data);
                     authStorage.setAccessToken(data.accessToken);
                     authStorage.setUser(data.user);
                     toast.success("Đăng nhập thành công");

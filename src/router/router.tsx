@@ -12,13 +12,14 @@ import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
 import LivestreamsPage from "@/pages/admin/livestreams/LivestreamsPage";
 import OrdersPage from "@/pages/admin/orders/OrdersPage";
 import CreateProductPage from "@/pages/admin/products/CreateProductPage";
-import ProductsPage from "@/pages/admin/products/ProductsPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
 import ProductDetailPage from "@/pages/shop/product-detail/ProductDetailPage";
+import CartPage from "@/pages/shop/cart/CartPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
+import ProductsPage from "@/pages/shop/products/ProductsPage";
 
 const router = createBrowserRouter([
   {
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: ":department/products/:productId",
         element: <ProductDetailPage />,
+      },
+      {
+        path: "cart",
+        element: <CartPage />,
       },
     ],
   },

@@ -7,8 +7,8 @@ import type {
 } from "@/types/auth";
 
 export const login = async (payload: LoginPayload) => {
-    const { data } = await axiosInstance.post<LoginResponse>("/auth/login", payload);
-    return data;
+    const { data } = await axiosInstance.post("/auth/login", payload);
+    return data.data as LoginResponse;
 };
 
 export const register = async (payload: RegisterPayload) => {
