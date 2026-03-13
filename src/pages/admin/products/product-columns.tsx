@@ -11,8 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Product } from "@/types/product";
-
-const formatDate = (iso: string) => new Date(iso).toLocaleString();
+import { formatDateTime } from "@/lib/utils";
 
 export const productColumns = (
     handleDeleteItem: (id: number) => void
@@ -51,7 +50,7 @@ export const productColumns = (
         {
             accessorKey: "updatedAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
-            cell: ({ row }) => formatDate(row.original.updatedAt),
+            cell: ({ row }) => formatDateTime(row.original.updatedAt),
         },
         {
             id: "actions",

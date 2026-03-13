@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import QuantityStepper from "@/components/ui/quantity-stepper";
 import { useColors, useSizes } from "@/hooks/useAttributes";
 import { useProductById, useRelatedProducts } from "@/hooks/useProducts";
+import { formatCurrency, formatDate, toAlias } from "@/lib/utils";
 import type { DepartmentType } from "@/types/category";
 
 const departmentList: DepartmentType[] = ["men", "women", "kids"];
@@ -45,16 +46,6 @@ const mockReviews: MockReview[] = [
         avatarUrl: "https://i.pravatar.cc/80?img=15",
     },
 ];
-
-const formatCurrency = (price: number) => `${new Intl.NumberFormat("vi-VN").format(price)}đ`;
-const formatReviewDate = (value: string) => new Intl.DateTimeFormat("vi-VN").format(new Date(value));
-const getInitials = (name: string) =>
-    name
-        .split(" ")
-        .filter(Boolean)
-        .slice(0, 2)
-        .map((part) => part[0]?.toUpperCase() ?? "")
-        .join("");
 
 const ProductDetailPage = () => {
     const params = useParams<{ department?: string; productId?: string }>();
@@ -321,12 +312,12 @@ const ProductDetailPage = () => {
                                             />
                                         ) : (
                                             <div className="inline-flex size-10 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-                                                {getInitials(review.author)}
+                                                {toAlias(review.author)}
                                             </div>
                                         )}
                                         <div>
                                             <p className="text-sm font-semibold text-slate-900">{review.author}</p>
-                                            <p className="text-xs text-slate-500">{formatReviewDate(review.createdAt)}</p>
+                                            <p className="text-xs text-slate-500">{formatDate(review.createdAt)}</p>
                                         </div>
                                     </div>
                                     <div className="inline-flex items-center gap-1 text-amber-500">

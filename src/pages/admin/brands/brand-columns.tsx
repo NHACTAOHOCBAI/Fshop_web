@@ -12,10 +12,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Brand } from "@/types/brand";
-import { toAlias } from "@/lib/utils";
-
-
-const formatDate = (iso: string) => new Date(iso).toLocaleString();
+import { formatDateTime, toAlias } from "@/lib/utils";
 
 export const brandColumns = (
     handleUpdateBtn: (item: Brand) => void,
@@ -52,12 +49,12 @@ export const brandColumns = (
         {
             accessorKey: "createdAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Ngày tạo" />,
-            cell: ({ row }) => formatDate(row.original.createdAt),
+            cell: ({ row }) => formatDateTime(row.original.createdAt),
         },
         {
             accessorKey: "updatedAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
-            cell: ({ row }) => formatDate(row.original.updatedAt),
+            cell: ({ row }) => formatDateTime(row.original.updatedAt),
         },
         {
             id: "actions",

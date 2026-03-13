@@ -11,10 +11,8 @@ import {
     DropdownMenuLabel,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toAlias } from "@/lib/utils";
+import { formatDateTime, toAlias } from "@/lib/utils";
 import type { Category } from "@/types/category";
-
-const formatDate = (iso: string) => new Date(iso).toLocaleString();
 
 export const categoryColumns = (
     handleUpdateBtn: (item: Category) => void,
@@ -57,12 +55,12 @@ export const categoryColumns = (
         {
             accessorKey: "createdAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Ngày tạo" />,
-            cell: ({ row }) => formatDate(row.original.createdAt),
+            cell: ({ row }) => formatDateTime(row.original.createdAt),
         },
         {
             accessorKey: "updatedAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
-            cell: ({ row }) => formatDate(row.original.updatedAt),
+            cell: ({ row }) => formatDateTime(row.original.updatedAt),
         },
         {
             id: "actions",

@@ -1,14 +1,16 @@
 import type { ShopCatalogProduct } from "@/hooks/useShopCatalog";
 import type { DepartmentType } from "@/types/category";
+import { formatCurrency } from "@/lib/utils";
 import { Star } from "lucide-react";
 import { Link } from "react-router";
+
 const getProductPrice = (product: ShopCatalogProduct) => {
     if (!product.variants || product.variants.length === 0) {
         return "Liên hệ";
     }
 
     const minPrice = Math.min(...product.variants.map((variant) => variant.price));
-    return `${new Intl.NumberFormat("vi-VN").format(minPrice)}đ`;
+    return formatCurrency(minPrice);
 };
 
 const ProductCard = ({ product, department }: { product: ShopCatalogProduct; department: DepartmentType }) => {

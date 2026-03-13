@@ -11,8 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Color, Size, SizeType } from "@/types/attribute";
-
-const formatDate = (iso: string) => new Date(iso).toLocaleString();
+import { formatDateTime } from "@/lib/utils";
 
 export const sizeTypeColumns = (
     handleUpdateBtn: (item: SizeType) => void,
@@ -36,7 +35,7 @@ export const sizeTypeColumns = (
         {
             accessorKey: "updatedAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
-            cell: ({ row }) => formatDate(row.original.updatedAt),
+            cell: ({ row }) => formatDateTime(row.original.updatedAt),
         },
         {
             id: "actions",
@@ -88,7 +87,7 @@ export const sizeColumns = (
         {
             accessorKey: "updatedAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
-            cell: ({ row }) => formatDate(row.original.updatedAt),
+            cell: ({ row }) => formatDateTime(row.original.updatedAt),
         },
         {
             id: "actions",
@@ -146,7 +145,7 @@ export const colorColumns = (
         {
             accessorKey: "updatedAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
-            cell: ({ row }) => formatDate(row.original.updatedAt),
+            cell: ({ row }) => formatDateTime(row.original.updatedAt),
         },
         {
             id: "actions",

@@ -11,8 +11,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import type { Inventory } from "@/types/inventory";
-
-const formatDate = (iso: string) => new Date(iso).toLocaleString();
+import { formatDateTime } from "@/lib/utils";
 
 export const inventoryColumns = (
     handleUpdate: (item: Inventory) => void,
@@ -35,7 +34,7 @@ export const inventoryColumns = (
         {
             accessorKey: "updatedAt",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Cập nhật lúc" />,
-            cell: ({ row }) => formatDate(row.original.updatedAt),
+            cell: ({ row }) => formatDateTime(row.original.updatedAt),
         },
         {
             id: "actions",
