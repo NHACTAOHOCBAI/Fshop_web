@@ -8,7 +8,9 @@ import QuantityStepper from "@/components/ui/quantity-stepper";
 import { useColors, useSizes } from "@/hooks/useAttributes";
 import { useAddToCart } from "@/hooks/useCart";
 import { useProductById, useRelatedProducts } from "@/hooks/useProducts";
+import { useToggleWishlist, useWishlists } from "@/hooks/useWishlists";
 import { extractApiErrorMessage } from "@/lib/api-error";
+import { authStorage } from "@/lib/auth";
 import { formatCurrency, formatDate, toAlias } from "@/lib/utils";
 import type { DepartmentType } from "@/types/category";
 import ProductCard from "../products/components/ProductCard";
@@ -73,7 +75,10 @@ const ProductDetailPage = () => {
     const colorsQuery = useColors({ page: 1, limit: 200, sortBy: "name", sortOrder: "ASC" });
     const sizesQuery = useSizes({ page: 1, limit: 200, sortBy: "sortOrder", sortOrder: "ASC" });
     const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
+    const { data: wishlistData } = useWishlists();
+    const { mutate: toggleWishlist, isPending: isTogglingWishlist } = useToggleWishlist();
     const product = productQuery.data?.data;
+    const hasToken = Boolean(authStorage.getAccessToken());
 
     const colorMap = useMemo(() => {
         const colors = colorsQuery.data?.data ?? [];
@@ -170,6 +175,36 @@ const ProductDetailPage = () => {
     const roundedAverageRating = Math.round(averageRating);
 
     const { relatedProducts, isLoading: isRelatedLoading } = useRelatedProducts(product?.categoryId, product?.id);
+
+    const isInWishlist = useMemo(() => {
+        const wishlists = wishlistData?.data ?? [];
+        return wishlists.some((item) => item.product?.id === product?.id);
+    }, [product?.id, wishlistData?.data]);
+
+    const handleToggleWishlist = () => {
+        if (!product) {
+            return;
+        }
+
+        if (!hasToken) {
+            toast.error("Vui lòng đăng nhập để sử dụng danh sách yêu thích");
+            return;
+        }
+
+        const wasInWishlist = isInWishlist;
+
+        toggleWishlist(
+            { productId: product.id },
+            {
+                onSuccess: () => {
+                    toast.success(wasInWishlist ? "Đã xóa khỏi danh sách yêu thích" : "Đã thêm vào danh sách yêu thích");
+                },
+                onError: (error) => {
+                    toast.error(extractApiErrorMessage(error, "Không thể cập nhật danh sách yêu thích"));
+                },
+            }
+        );
+    };
 
     if (productQuery.isLoading) {
         return <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Đang tải chi tiết sản phẩm...</div>;
@@ -290,8 +325,15 @@ const ProductDetailPage = () => {
                                   ? "Thêm vào giỏ"
                                   : "Chọn màu và kích cỡ"}
                         </Button>
-                        <Button type="button" variant="outline" size="icon">
-                            <Heart className="size-4" />
+                        <Button
+                            type="button"
+                            variant="outline"
+                            size="icon"
+                            disabled={isTogglingWishlist}
+                            onClick={handleToggleWishlist}
+                            aria-label={isInWishlist ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
+                        >
+                            <Heart className={`size-4 ${isInWishlist ? "fill-red-500 text-red-500" : ""}`} />
                         </Button>
                     </div>
                 </section>
