@@ -1,4 +1,4 @@
-import { Bell, Heart, Package, UserRound } from "lucide-react";
+import { Bell, Heart, MapPinHouse, Package, UserRound } from "lucide-react";
 import { NavLink, Outlet } from "react-router";
 
 import { useMe } from "@/hooks/useAuth";
@@ -9,6 +9,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const sidebarItems = [
     { to: "/my-account/profile", icon: UserRound, label: "Thông tin cá nhân" },
+    { to: "/my-account/addresses", icon: MapPinHouse, label: "Địa chỉ của tôi" },
     { to: "/my-account/orders", icon: Package, label: "Đơn hàng của tôi" },
     { to: "/my-account/wishlists", icon: Heart, label: "Danh sách yêu thích" },
     { to: "/my-account/notifications", icon: Bell, label: "Thông báo" },

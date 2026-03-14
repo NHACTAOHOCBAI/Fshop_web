@@ -14,3 +14,14 @@ export type Address = {
     createdAt: string;
     updatedAt: string;
 };
+
+export type UpsertAddressPayload = {
+    recipientName: string;
+    recipientPhone: string;
+    detailAddress: string;
+    province: string;
+    district: string;
+    commune: string;
+    type: AddressType;
+    isDefault?: boolean;
+};

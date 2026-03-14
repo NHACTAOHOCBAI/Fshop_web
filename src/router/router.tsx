@@ -19,6 +19,7 @@ import CartPage from "@/pages/shop/cart/CartPage";
 import CheckoutPage from "@/pages/shop/checkout/CheckoutPage";
 import AccountLayout from "@/components/layout/AccountLayout";
 import ProfilePage from "@/pages/shop/my-account/ProfilePage";
+import AddressesPage from "@/pages/shop/my-account/AddressesPage";
 import MyOrdersPage from "@/pages/shop/my-account/MyOrdersPage";
 import WishlistsPage from "@/pages/shop/my-account/WishlistsPage";
 import NotificationsPage from "@/pages/shop/my-account/NotificationsPage";
@@ -64,6 +65,10 @@ const router = createBrowserRouter([
           {
             path: "profile",
             element: <ProfilePage />,
+          },
+          {
+            path: "addresses",
+            element: <AddressesPage />,
           },
           {
             path: "orders",

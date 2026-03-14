@@ -244,9 +244,13 @@ const ProfilePage = () => {
                         <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
                             Địa chỉ mặc định
                         </label>
-                        <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-800">
-                            <MapPin className="size-4 shrink-0 text-slate-400" />
-                            <span>{addressDisplay}</span>
+                        <div className="relative">
+                            <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                            <Input
+                                className="pl-9"
+                                disabled
+                                value={addressDisplay}
+                            />
                         </div>
                         <p className="text-xs text-slate-400">
                             {isAddressesLoading

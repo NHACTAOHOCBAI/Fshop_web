@@ -21,6 +21,8 @@ const ClientLayout = () => {
         : "men";
     const breadcrumbDepartmentLabel = pathname.startsWith("/my-account/orders")
         ? "đơn hàng của tôi"
+        : pathname.startsWith("/my-account/addresses")
+            ? "địa chỉ của tôi"
         : pathname.startsWith("/my-account/wishlists")
             ? "yêu thích"
             : pathname.startsWith("/my-account/notifications")
