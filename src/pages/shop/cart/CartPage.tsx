@@ -1,17 +1,21 @@
 import { Trash2, ShoppingBag } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import QuantityStepper from "@/components/ui/quantity-stepper";
 import { useAddToCart, useCart, useRemoveFromCart } from "@/hooks/useCart";
+
 import { useColors, useSizes } from "@/hooks/useAttributes";
 import { formatCurrency } from "@/lib/utils";
 import type { CartItem } from "@/types/cart";
+import { saveCheckoutSession } from "@/lib/checkout";
 
 const SHIPPING_FEE = 20000;
 
 const CartPage = () => {
+    const navigate = useNavigate();
     const { data: cart, isLoading, isError } = useCart();
     const { mutate: addToCart, isPending: isAdding } = useAddToCart();
     const { mutate: removeFromCart, isPending: isRemoving } = useRemoveFromCart();
@@ -31,7 +35,6 @@ const CartPage = () => {
     }, [sizesQuery.data?.data]);
 
     const items = cart?.items ?? [];
-
     const toggleCheck = (id: number) => {
         setCheckedIds((prev) => {
             const next = new Set(prev);
@@ -53,15 +56,15 @@ const CartPage = () => {
     };
 
     const handleIncrease = (item: CartItem) => {
-        addToCart({ variantId: item.variantId, quantity: 1 });
+        addToCart({ variantId: item.variant.id, quantity: 1 });
     };
 
     const handleDecrease = (item: CartItem) => {
-        removeFromCart({ variantId: item.variantId, quantity: 1 });
+        removeFromCart({ variantId: item.variant.id, quantity: 1 });
     };
 
     const handleRemoveItem = (item: CartItem) => {
-        removeFromCart({ variantId: item.variantId, quantity: item.quantity });
+        removeFromCart({ variantId: item.variant.id, quantity: item.quantity });
         setCheckedIds((prev) => {
             const next = new Set(prev);
             next.delete(item.id);
@@ -72,16 +75,57 @@ const CartPage = () => {
     const handleDeleteChecked = () => {
         const toRemove = items.filter((item) => checkedIds.has(item.id));
         toRemove.forEach((item) => {
-            removeFromCart({ variantId: item.variantId, quantity: item.quantity });
+            removeFromCart({ variantId: item.variant.id, quantity: item.quantity });
         });
         setCheckedIds(new Set());
     };
 
-    const subtotal = useMemo(() => {
-        return items.reduce((sum, item) => sum + item.variant.price * item.quantity, 0);
-    }, [items]);
+    const selectedItems = useMemo(() => {
+        return items.filter((item) => checkedIds.has(item.id));
+    }, [checkedIds, items]);
 
-    const total = subtotal + (items.length > 0 ? SHIPPING_FEE : 0);
+    const subtotal = useMemo(() => {
+        return selectedItems.reduce((sum, item) => sum + item.variant.product.price * item.quantity, 0);
+    }, [selectedItems]);
+
+    const total = subtotal + (selectedItems.length > 0 ? SHIPPING_FEE : 0);
+
+    const handleCheckout = () => {
+        if (selectedItems.length === 0) {
+            return;
+        }
+
+        const checkoutItems = selectedItems.map((item) => {
+            const product = item.variant.product;
+            const imageUrl = item.variant.imageUrl || product?.images?.[0]?.imageUrl;
+            const colorName = colorMap.get(item.variant.colorId)?.name;
+            const sizeName = sizeMap.get(item.variant.sizeId)?.name;
+            const lineTotal = item.variant.price * item.quantity;
+
+            return {
+                cartItemId: item.id,
+                variantId: item.variant.id,
+                productId: item.variant.productId,
+                productName: product?.name ?? `Sản phẩm #${item.variant.productId}`,
+                imageUrl,
+                colorName,
+                sizeName,
+                unitPrice: item.variant.price,
+                quantity: item.quantity,
+                lineTotal,
+            };
+        });
+
+        saveCheckoutSession({
+            items: checkoutItems,
+            subtotal,
+            shippingFee: SHIPPING_FEE,
+            total,
+            createdAt: new Date().toISOString(),
+        });
+
+        navigate("/checkout");
+    };
 
     if (isLoading) {
         return (
@@ -120,18 +164,21 @@ const CartPage = () => {
 
     const isMutating = isAdding || isRemoving;
     const allChecked = checkedIds.size === items.length && items.length > 0;
-
     return (
         <div className="space-y-6">
             {/* Header */}
             <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                    <input
-                        type="checkbox"
+                <div className="flex items-center gap-3 h-8">
+                    <Checkbox
                         id="check-all"
                         checked={allChecked}
-                        onChange={toggleAll}
-                        className="size-4 cursor-pointer accent-primary"
+                        onCheckedChange={(checked) => {
+                            if (checked === "indeterminate") {
+                                return;
+                            }
+                            toggleAll();
+                        }}
+                        className="cursor-pointer"
                     />
                     <label htmlFor="check-all" className="cursor-pointer text-sm font-medium text-slate-700">
                         {checkedIds.size > 0
@@ -163,17 +210,21 @@ const CartPage = () => {
                         const colorName = colorMap.get(item.variant.colorId)?.name;
                         const sizeName = sizeMap.get(item.variant.sizeId)?.name;
                         const isChecked = checkedIds.has(item.id);
-
                         return (
                             <div
                                 key={item.id}
                                 className={`flex items-center gap-4 rounded-2xl border bg-white p-4 transition-colors ${isChecked ? "border-primary/40 bg-primary/2" : "border-slate-200"}`}
                             >
-                                <input
-                                    type="checkbox"
+                                <Checkbox
+                                    id={`cart-item-${item.id}`}
                                     checked={isChecked}
-                                    onChange={() => toggleCheck(item.id)}
-                                    className="size-4 shrink-0 cursor-pointer accent-primary"
+                                    onCheckedChange={(checked) => {
+                                        if (checked === "indeterminate") {
+                                            return;
+                                        }
+                                        toggleCheck(item.id);
+                                    }}
+                                    className="shrink-0 cursor-pointer"
                                 />
 
                                 {/* Image */}
@@ -223,7 +274,7 @@ const CartPage = () => {
                                         className="shrink-0"
                                     />
                                     <span className="w-24 text-right text-sm font-bold text-slate-900">
-                                        {formatCurrency(item.variant.price * item.quantity)}
+                                        {formatCurrency(item.variant.product.price * item.quantity)}
                                     </span>
                                     <button
                                         type="button"
@@ -241,28 +292,38 @@ const CartPage = () => {
                 </div>
 
                 {/* Order summary */}
-                <div className="h-fit rounded-2xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(15,23,42,0.06)]">
+                <div className="h-fit p-5 ">
                     <h2 className="mb-4 text-base font-semibold text-slate-900">Tóm tắt đơn hàng</h2>
 
                     <div className="space-y-3 text-sm">
                         <div className="flex items-center justify-between text-slate-600">
                             <span>Tạm tính</span>
-                            <span className="font-medium text-slate-800">{formatCurrency(subtotal)}</span>
+                            <span className="font-medium text-slate-800">
+                                {selectedItems.length > 0 ? formatCurrency(subtotal) : "--"}
+                            </span>
                         </div>
                         <div className="flex items-center justify-between text-slate-600">
                             <span>Phí vận chuyển</span>
-                            <span className="font-medium text-slate-800">{formatCurrency(SHIPPING_FEE)}</span>
+                            <span className="font-medium text-slate-800">
+                                {selectedItems.length > 0 ? formatCurrency(SHIPPING_FEE) : "--"}
+                            </span>
                         </div>
                     </div>
 
-                    <div className="my-4 h-px bg-slate-200" />
+                    <div className="my-4 h-[0.5px] bg-slate-200" />
 
                     <div className="flex items-center justify-between">
                         <span className="text-base font-bold text-slate-900">TỔNG CỘNG</span>
-                        <span className="text-xl font-black text-primary">{formatCurrency(total)}</span>
+                        <span className="text-xl font-black text-primary">
+                            {selectedItems.length > 0 ? formatCurrency(total) : "--"}
+                        </span>
                     </div>
 
-                    <Button className="mt-5 h-11 w-full text-sm font-semibold" disabled={items.length === 0}>
+                    <Button
+                        className="mt-5 h-11 w-full text-sm font-semibold"
+                        disabled={selectedItems.length === 0 || isMutating}
+                        onClick={handleCheckout}
+                    >
                         Thanh toán
                     </Button>
 

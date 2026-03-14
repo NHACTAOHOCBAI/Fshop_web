@@ -23,6 +23,7 @@ export type ProductVariant = {
     isActive: boolean;
     createdAt: string;
     updatedAt: string;
+    product: Product;
 };
 
 export type Product = {

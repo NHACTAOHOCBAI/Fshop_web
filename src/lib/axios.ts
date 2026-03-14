@@ -52,12 +52,13 @@ axiosInstance.interceptors.response.use(
         originalRequest._retry = true;
 
         try {
-            const { data } = await axios.post<RefreshTokenResponse>(
+            const response = await axios.post(
                 `${BE_URL}/auth/refresh-token`,
                 {},
                 { withCredentials: true }
             );
-
+            const data = response.data.data as RefreshTokenResponse;
+            console.log("Token refreshed successfully:", data);
             authStorage.setAccessToken(data.accessToken);
             originalRequest.headers = {
                 ...originalRequest.headers,

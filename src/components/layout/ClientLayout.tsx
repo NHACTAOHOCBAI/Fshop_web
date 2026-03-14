@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useParams } from "react-router";
+import { Link, NavLink, Outlet, useLocation, useParams } from "react-router";
 import { Heart, ShoppingCart, UserRound } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -12,15 +12,21 @@ const navItems = [
 
 const ClientLayout = () => {
     const params = useParams<{ department?: string }>();
+    const location = useLocation();
+    const pathname = location.pathname.toLowerCase();
     const currentDepartment = params.department?.toLowerCase();
     const breadcrumbDepartment = currentDepartment === "men" || currentDepartment === "women" || currentDepartment === "kids"
         ? currentDepartment
         : "men";
-    const breadcrumbDepartmentLabel = breadcrumbDepartment === "men"
-        ? "nam"
-        : breadcrumbDepartment === "women"
-            ? "nữ"
-            : "trẻ-em";
+    const breadcrumbDepartmentLabel = pathname.startsWith("/checkout")
+        ? "thanh toán"
+        : pathname.startsWith("/cart")
+            ? "giỏ hàng của tôi"
+            : breadcrumbDepartment === "men"
+                ? "nam"
+                : breadcrumbDepartment === "women"
+                    ? "nữ"
+                    : "trẻ-em";
 
     return (
         <div className="min-h-screen bg-white text-slate-900">
@@ -68,7 +74,7 @@ const ClientLayout = () => {
             </header>
             <div className="bg-gray-100 py-3.5">
                 <div className="px-4  md:px-8 mx-auto max-w-6xl text-sm text-slate-500">
-                    <span>cửa-hàng</span>
+                    <span>Fshop</span>
                     <span className="mx-2">/</span>
                     <span className="text-primary">{breadcrumbDepartmentLabel}</span>
                 </div>

@@ -17,8 +17,8 @@ export const useAddToCart = () => {
 
     return useMutation({
         mutationFn: addToCart,
-        onSuccess: (updatedCart) => {
-            queryClient.setQueryData(CART_QUERY_KEY, updatedCart);
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
         },
     });
 };
@@ -28,8 +28,8 @@ export const useRemoveFromCart = () => {
 
     return useMutation({
         mutationFn: removeFromCart,
-        onSuccess: (updatedCart) => {
-            queryClient.setQueryData(CART_QUERY_KEY, updatedCart);
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: CART_QUERY_KEY });
         },
     });
 };

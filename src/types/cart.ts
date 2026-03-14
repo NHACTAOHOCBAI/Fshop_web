@@ -9,14 +9,12 @@ export type CartVariant = {
     colorId: number;
     sizeId: number;
     isActive: boolean;
-    product?: Product;
+    product: Product;
 };
 
 export type CartItem = {
     id: number;
     quantity: number;
-    cartId: number;
-    variantId: number;
     variant: CartVariant;
 };
 

@@ -1,11 +1,14 @@
 import { ChevronLeft, Heart, ShoppingCart, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import QuantityStepper from "@/components/ui/quantity-stepper";
 import { useColors, useSizes } from "@/hooks/useAttributes";
+import { useAddToCart } from "@/hooks/useCart";
 import { useProductById, useRelatedProducts } from "@/hooks/useProducts";
+import { extractApiErrorMessage } from "@/lib/api-error";
 import { formatCurrency, formatDate, toAlias } from "@/lib/utils";
 import type { DepartmentType } from "@/types/category";
 import ProductCard from "../products/components/ProductCard";
@@ -69,6 +72,7 @@ const ProductDetailPage = () => {
     const productQuery = useProductById(productId, Number.isFinite(productId));
     const colorsQuery = useColors({ page: 1, limit: 200, sortBy: "name", sortOrder: "ASC" });
     const sizesQuery = useSizes({ page: 1, limit: 200, sortBy: "sortOrder", sortOrder: "ASC" });
+    const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
     const product = productQuery.data?.data;
 
     const colorMap = useMemo(() => {
@@ -91,24 +95,6 @@ const ProductDetailPage = () => {
 
         return Array.from(new Set([...productImages, ...variantImages]));
     }, [product]);
-
-    const selectedVariant = useMemo(() => {
-        if (!product?.variants || product.variants.length === 0) {
-            return undefined;
-        }
-
-        return product.variants.find((variant) => {
-            if (selectedColorId && variant.colorId !== selectedColorId) {
-                return false;
-            }
-
-            if (selectedSizeId && variant.sizeId !== selectedSizeId) {
-                return false;
-            }
-
-            return true;
-        }) ?? product.variants[0];
-    }, [product?.variants, selectedColorId, selectedSizeId]);
 
     const colorOptions = useMemo(() => {
         const variants = product?.variants ?? [];
@@ -137,16 +123,42 @@ const ProductDetailPage = () => {
         });
     }, [product?.variants, sizeMap]);
 
-    const minPrice = useMemo(() => {
-        if (!product?.variants || product.variants.length === 0) {
+    const canAddToCart = selectedColorId !== null && selectedSizeId !== null;
+
+    const selectedCartVariant = useMemo(() => {
+        if (!product?.variants || selectedColorId === null || selectedSizeId === null) {
             return null;
         }
 
-        return Math.min(...product.variants.map((variant) => variant.price));
-    }, [product?.variants]);
+        return (
+            product.variants.find(
+                (variant) => variant.colorId === selectedColorId && variant.sizeId === selectedSizeId
+            ) ?? null
+        );
+    }, [product?.variants, selectedColorId, selectedSizeId]);
 
-    const displayPrice = selectedVariant?.price ?? minPrice;
-    const canAddToCart = selectedColorId !== null && selectedSizeId !== null;
+    const handleAddToCart = () => {
+        if (!canAddToCart || !selectedCartVariant) {
+            toast.error("Vui lòng chọn đúng màu sắc và kích cỡ");
+            return;
+        }
+
+        addToCart(
+            {
+                variantId: selectedCartVariant.id,
+                quantity,
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Đã thêm sản phẩm vào giỏ hàng");
+                },
+                onError: (error) => {
+                    toast.error(extractApiErrorMessage(error, "Không thể thêm vào giỏ hàng"));
+                },
+            }
+        );
+    };
+
     const averageRating = useMemo(() => {
         if (mockReviews.length === 0) {
             return 0;
@@ -219,7 +231,7 @@ const ProductDetailPage = () => {
 
                     <div className="rounded-lg bg-sky-50 p-4">
                         <p className="text-sm text-slate-600">Giá</p>
-                        <p className="text-3xl font-black text-primary">{displayPrice ? formatCurrency(displayPrice) : "Liên hệ"}</p>
+                        <p className="text-3xl font-black text-primary">{formatCurrency(product.price)}</p>
                     </div>
 
                     <div className="grid gap-3 text-sm text-slate-600">
@@ -266,9 +278,17 @@ const ProductDetailPage = () => {
                     <div className="flex items-center gap-3">
                         <QuantityStepper value={quantity} onChange={setQuantity} />
 
-                        <Button className="h-10 flex-1 gap-2" disabled={!canAddToCart}>
+                        <Button
+                            className="h-10 flex-1 gap-2"
+                            disabled={!canAddToCart || !selectedCartVariant || isAddingToCart}
+                            onClick={handleAddToCart}
+                        >
                             <ShoppingCart className="size-4" />
-                            {canAddToCart ? "Thêm vào giỏ" : "Chọn màu và kích cỡ"}
+                            {isAddingToCart
+                                ? "Đang thêm..."
+                                : canAddToCart
+                                  ? "Thêm vào giỏ"
+                                  : "Chọn màu và kích cỡ"}
                         </Button>
                         <Button type="button" variant="outline" size="icon">
                             <Heart className="size-4" />
