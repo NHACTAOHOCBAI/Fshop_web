@@ -31,14 +31,22 @@ const ProductCard = ({ product, department }: { product: ShopCatalogProduct; dep
                     Mới
                 </span>
             </div>
+            <div className="p-3.5 space-y-2">
+                <p className="text-xs text-slate-400 font-medium">{product.brand?.name}</p>
+                <p className="line-clamp-2 text-sm font-semibold text-slate-800">
+                    {product.name}
+                </p>
+                <div className="flex items-baseline gap-2">
+                    <span className="text-base font-bold text-primary">
+                        {formatCurrency(product.price)}
+                    </span>
+                    {product.price && (
+                        <span className="text-xs text-slate-400 line-through">
+                            {formatCurrency(product.price)}
+                        </span>
+                    )}
 
-            <div className="p-3">
-                <p className="mb-1.5 line-clamp-2 text-sm font-medium leading-tight text-slate-800">{product.name}</p>
-
-                <p className="text-lg font-black text-primary">{formatCurrency(product.price)}</p>
-
-                <p className="mt-1.5 text-xs text-slate-500">{product.category?.name ?? "Khác"}</p>
-
+                </div>
                 <div className="mt-2 flex items-center gap-1 text-xs">
                     <Star className="size-3.5 fill-amber-400 text-amber-400" />
                     <span className="font-semibold text-slate-700">4.8</span>
