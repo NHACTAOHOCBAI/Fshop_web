@@ -18,15 +18,23 @@ const ClientLayout = () => {
     const breadcrumbDepartment = currentDepartment === "men" || currentDepartment === "women" || currentDepartment === "kids"
         ? currentDepartment
         : "men";
-    const breadcrumbDepartmentLabel = pathname.startsWith("/checkout")
-        ? "thanh toán"
-        : pathname.startsWith("/cart")
-            ? "giỏ hàng của tôi"
-            : breadcrumbDepartment === "men"
-                ? "nam"
-                : breadcrumbDepartment === "women"
-                    ? "nữ"
-                    : "trẻ-em";
+    const breadcrumbDepartmentLabel = pathname.startsWith("/my-account/orders")
+        ? "đơn hàng của tôi"
+        : pathname.startsWith("/my-account/wishlists")
+            ? "yêu thích"
+            : pathname.startsWith("/my-account/notifications")
+                ? "thông báo"
+                : pathname.startsWith("/my-account")
+                    ? "tài khoản"
+                    : pathname.startsWith("/checkout")
+                        ? "thanh toán"
+                        : pathname.startsWith("/cart")
+                            ? "giỏ hàng của tôi"
+                            : breadcrumbDepartment === "men"
+                                ? "nam"
+                                : breadcrumbDepartment === "women"
+                                    ? "nữ"
+                                    : "trẻ-em";
 
     return (
         <div className="min-h-screen bg-white text-slate-900">

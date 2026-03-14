@@ -17,6 +17,11 @@ import UsersPage from "@/pages/admin/users/UsersPage";
 import ProductDetailPage from "@/pages/shop/product-detail/ProductDetailPage";
 import CartPage from "@/pages/shop/cart/CartPage";
 import CheckoutPage from "@/pages/shop/checkout/CheckoutPage";
+import AccountLayout from "@/components/layout/AccountLayout";
+import ProfilePage from "@/pages/shop/my-account/ProfilePage";
+import MyOrdersPage from "@/pages/shop/my-account/MyOrdersPage";
+import WishlistsPage from "@/pages/shop/my-account/WishlistsPage";
+import NotificationsPage from "@/pages/shop/my-account/NotificationsPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
@@ -47,6 +52,32 @@ const router = createBrowserRouter([
       {
         path: "checkout",
         element: <CheckoutPage />,
+      },
+      {
+        path: "my-account",
+        element: <AccountLayout />,
+        children: [
+          {
+            index: true,
+            element: <Navigate to="profile" replace />,
+          },
+          {
+            path: "profile",
+            element: <ProfilePage />,
+          },
+          {
+            path: "orders",
+            element: <MyOrdersPage />,
+          },
+          {
+            path: "wishlists",
+            element: <WishlistsPage />,
+          },
+          {
+            path: "notifications",
+            element: <NotificationsPage />,
+          },
+        ],
       },
     ],
   },
