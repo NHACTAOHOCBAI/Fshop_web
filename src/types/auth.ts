@@ -21,3 +21,14 @@ export type LoginResponse = {
 export type RefreshTokenResponse = {
     accessToken: string;
 };
+
+export type UpdateProfilePayload = {
+    fullName?: string;
+    avatar?: File;
+};
+
+export type ChangePasswordPayload = {
+    currentPassword: string;
+    newPassword: string;
+    confirmPassword: string;
+};

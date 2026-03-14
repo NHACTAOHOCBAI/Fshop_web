@@ -1,7 +1,11 @@
 import { Bell, Heart, Package, UserRound } from "lucide-react";
 import { NavLink, Outlet } from "react-router";
 
+import { useMe } from "@/hooks/useAuth";
+import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import type { User } from "@/types/user";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 const sidebarItems = [
     { to: "/my-account/profile", icon: UserRound, label: "Thông tin cá nhân" },
@@ -11,21 +15,27 @@ const sidebarItems = [
 ];
 
 const AccountLayout = () => {
+    const cachedUser = authStorage.getUser<User>();
+    const { data } = useMe();
+    const user = data?.data ?? cachedUser;
+    const avatarFallback = user?.fullName?.trim().charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
+
     return (
         <div className="flex gap-6 items-start">
             {/* Sidebar */}
             <aside className="w-60 shrink-0 rounded-2xl border border-slate-200 bg-white overflow-hidden">
                 <div className="flex items-center gap-3 border-b border-slate-100 px-5 py-4">
-                    <div className="flex size-10 items-center justify-center rounded-full bg-primary text-white font-bold text-sm">
-                        U
-                    </div>
+                    <Avatar className="size-10">
+                        <AvatarImage src={user?.avatar ?? undefined} alt={user?.fullName ?? user?.email ?? "User avatar"} />
+                        <AvatarFallback className="bg-primary text-sm font-bold text-white">{avatarFallback}</AvatarFallback>
+                    </Avatar>
                     <div className="min-w-0">
-                        <p className="truncate text-sm font-semibold text-slate-800">Người dùng</p>
-                        <p className="truncate text-xs text-slate-500">user@fshop.vn</p>
+                        <p className="truncate text-sm font-semibold text-slate-800">{user?.fullName || "Người dùng"}</p>
+                        <p className="truncate text-xs text-slate-500">{user?.email || "Cập nhật hồ sơ của bạn"}</p>
                     </div>
                 </div>
 
-                <nav className="p-2">
+                <nav className="p-2 flex flex-col gap-1">
                     {sidebarItems.map((item) => (
                         <NavLink
                             key={item.to}

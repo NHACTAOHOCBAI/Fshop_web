@@ -1,4 +1,4 @@
-import { Link, NavLink, Outlet, useLocation, useParams } from "react-router";
+import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { Heart, ShoppingCart, UserRound } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -11,6 +11,7 @@ const navItems = [
 ];
 
 const ClientLayout = () => {
+    const router = useNavigate();
     const params = useParams<{ department?: string }>();
     const location = useLocation();
     const pathname = location.pathname.toLowerCase();
@@ -41,13 +42,13 @@ const ClientLayout = () => {
             <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center justify-end gap-3  border-slate-100 px-4 py-1 md:px-8">
                     <div className="flex items-center gap-2 text-slate-500">
-                        <button type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
+                        <button onClick={() => router("/my-account/wishlists")} type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
                             <Heart className="size-4" />
                         </button>
-                        <button type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
+                        <button onClick={() => router("/cart")} type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
                             <ShoppingCart className="size-4" />
                         </button>
-                        <button type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
+                        <button onClick={() => router("/my-account/profile")} type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
                             <UserRound className="size-4" />
                         </button>
                     </div>
