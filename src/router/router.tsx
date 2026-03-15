@@ -8,7 +8,9 @@ import BrandsPage from "@/pages/admin/brands/BrandsPage";
 import CategoriesPage from "@/pages/admin/categories/CategoriesPage";
 import CommunityPage from "@/pages/admin/community/CommunityPage";
 import CouponsPage from "@/pages/admin/coupons/CouponsPage";
+import CreateCouponPage from "@/pages/admin/coupons/CreateCouponPage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
+import EditCouponPage from "@/pages/admin/coupons/EditCouponPage";
 import LivestreamsPage from "@/pages/admin/livestreams/LivestreamsPage";
 import OrdersPage from "@/pages/admin/orders/OrdersPage";
 import CreateProductPage from "@/pages/admin/products/CreateProductPage";
@@ -149,6 +151,14 @@ const router = createBrowserRouter([
       {
         path: "coupons",
         element: <CouponsPage />,
+      },
+      {
+        path: "coupons/create",
+        element: <CreateCouponPage />,
+      },
+      {
+        path: "coupons/:couponId/edit",
+        element: <EditCouponPage />,
       },
       {
         path: "stocks",

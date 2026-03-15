@@ -6,11 +6,18 @@ import {
 } from "@/components/ui/sidebar"
 import { TooltipProvider } from "../ui/tooltip";
 import { AppSidebar } from "../app-sidebar";
+import type { CSSProperties } from "react";
 import { Outlet } from "react-router";
+
+const adminTheme = {
+    "--primary": "oklch(0.205 0 0)",
+    "--primary-foreground": "oklch(0.985 0 0)",
+} as CSSProperties;
+
 const AdminLayout = () => {
     return (
         <TooltipProvider>
-            <SidebarProvider>
+            <SidebarProvider style={adminTheme}>
                 <AppSidebar />
                 <SidebarInset>
                     <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
