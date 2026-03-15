@@ -110,7 +110,7 @@ const CartPage = () => {
                 imageUrl,
                 colorName,
                 sizeName,
-                unitPrice: item.variant.price,
+                unitPrice: item.variant.product.price,
                 quantity: item.quantity,
                 lineTotal,
             };

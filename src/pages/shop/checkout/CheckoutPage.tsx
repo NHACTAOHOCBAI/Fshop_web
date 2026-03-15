@@ -1,102 +1,97 @@
 import { Banknote, MapPin, Package, TicketPercent, Truck, Wallet } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, Navigate } from "react-router";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useMyAddresses } from "@/hooks/useAddresses";
+import { useCoupons } from "@/hooks/useCoupons";
+import { useCreateOrder } from "@/hooks/useOrders";
 import { clearCheckoutSession, getCheckoutSession } from "@/lib/checkout";
 import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
+import type { Coupon } from "@/types/coupon";
+import type { ShippingMethod } from "@/types/order";
 
-type ShippingMethod = {
+type ShippingOption = {
     id: string;
     name: string;
     description: string;
     fee: number;
 };
 
-type Coupon = {
-    id: string;
-    title: string;
-    code: string;
-    discount: number;
-    expiresAt: string;
-};
-
-const SHIPPING_METHODS: ShippingMethod[] = [
+const SHIPPING_METHODS: ShippingOption[] = [
     {
         id: "standard",
         name: "Tiêu chuẩn",
         description: "5 - 7 ngày",
-        fee: 20000,
+        fee: 10000,
     },
     {
-        id: "fast",
-        name: "Giao nhanh",
+        id: "express",
+        name: "Hỏa tốc",
         description: "2 - 3 ngày",
-        fee: 45000,
-    },
-];
-
-const MOCK_COUPONS: Coupon[] = [
-    {
-        id: "fshop2025",
-        title: "Giảm trực tiếp 25%",
-        code: "FSHOP2025",
-        discount: 30000,
-        expiresAt: "2026-03-30T23:59:59.000Z",
-    },
-    {
-        id: "freeship",
-        title: "Miễn phí vận chuyển",
-        code: "FREESHIP",
-        discount: 20000,
-        expiresAt: "2026-03-30T23:59:59.000Z",
-    },
-    {
-        id: "weekend",
-        title: "Cuối tuần",
-        code: "WEEKEND",
-        discount: 50000,
-        expiresAt: "2026-03-24T23:59:59.000Z",
-    },
-];
-
-const PRIVATE_COUPONS: Coupon[] = [
-    {
-        id: "private-vip30",
-        title: "Mã riêng khách VIP",
-        code: "VIP30",
-        discount: 70000,
-        expiresAt: "2026-03-31T23:59:59.000Z",
-    },
-    {
-        id: "private-friend",
-        title: "Mã riêng nội bộ",
-        code: "FRIEND50",
-        discount: 50000,
-        expiresAt: "2026-03-31T23:59:59.000Z",
+        fee: 20000,
     },
 ];
 
 const DEFAULT_VISIBLE_COUPONS = 2;
 
-const MOCK_ADDRESS = {
-    receiver: "Zabit Magomedsharipov",
-    phone: "0901 234 567",
-    line: "Dormitory B, VNU - HCMC, Dong Hoa Ward, Di An City, Binh Duong Province, Vietnam",
+const calculateCouponDiscount = (coupon: Coupon | null, subtotal: number, shippingFee: number) => {
+    if (!coupon) {
+        return 0;
+    }
+
+    if (subtotal < coupon.minOrderAmount) {
+        return 0;
+    }
+
+    if (coupon.type === "shipping") {
+        return shippingFee;
+    }
+
+    if (coupon.type === "fixed") {
+        return Math.min(subtotal, coupon.value);
+    }
+
+    const percentDiscount = (subtotal * coupon.value) / 100;
+    if (coupon.maxDiscountAmount > 0) {
+        return Math.min(percentDiscount, coupon.maxDiscountAmount);
+    }
+
+    return percentDiscount;
 };
 
 const CheckoutPage = () => {
     const session = useMemo(() => getCheckoutSession(), []);
     const [shippingMethodId, setShippingMethodId] = useState<string>(SHIPPING_METHODS[0].id);
-    const [selectedCouponId, setSelectedCouponId] = useState<string | null>(MOCK_COUPONS[0].id);
+    const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
+    const [addressDialogOpen, setAddressDialogOpen] = useState(false);
+    const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
     const [paymentMethod, setPaymentMethod] = useState<"paypal" | "cod">("cod");
+    const [orderNote, setOrderNote] = useState("");
     const [manualVoucherCode, setManualVoucherCode] = useState("");
     const [showAllCoupons, setShowAllCoupons] = useState(false);
     const [voucherFeedback, setVoucherFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
         null
     );
+    const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder();
+    const { data: addressesData, isLoading: isLoadingAddresses } = useMyAddresses();
+    const { data: couponsData } = useCoupons({
+        page: 1,
+        limit: 100,
+        sortBy: "endDate",
+        sortOrder: "ASC",
+    });
 
     if (!session || session.items.length === 0) {
         return <Navigate to="/cart" replace />;
@@ -104,9 +99,55 @@ const CheckoutPage = () => {
 
     const selectedShipping =
         SHIPPING_METHODS.find((shipping) => shipping.id === shippingMethodId) ?? SHIPPING_METHODS[0];
-    const allCoupons = [...MOCK_COUPONS, ...PRIVATE_COUPONS];
-    const selectedCoupon = allCoupons.find((coupon) => coupon.id === selectedCouponId) ?? null;
-    const visibleCoupons = showAllCoupons ? MOCK_COUPONS : MOCK_COUPONS.slice(0, DEFAULT_VISIBLE_COUPONS);
+    const addresses = addressesData?.data ?? [];
+    const selectedAddress = addresses.find((address) => address.id === selectedAddressId) ?? null;
+
+    const availableCoupons = useMemo(() => {
+        const now = new Date();
+        const allCoupons = couponsData?.data ?? [];
+
+        return allCoupons.filter((coupon) => {
+            if (!coupon.isActive || !coupon.isPublic || coupon.status !== "active") {
+                return false;
+            }
+
+            const startDate = new Date(coupon.startDate);
+            const endDate = new Date(coupon.endDate);
+            if (startDate > now || endDate <= now) {
+                return false;
+            }
+
+            if (coupon.minOrderAmount > session.subtotal) {
+                return false;
+            }
+
+            if (!coupon.applicableProduct) {
+                return true;
+            }
+
+            return session.items.some((item) => item.productId === coupon.applicableProduct);
+        });
+    }, [couponsData?.data, session.items, session.subtotal]);
+
+    const selectedCoupon = availableCoupons.find((coupon) => coupon.id === selectedCouponId) ?? null;
+    const visibleCoupons = showAllCoupons
+        ? availableCoupons
+        : availableCoupons.slice(0, DEFAULT_VISIBLE_COUPONS);
+
+    useEffect(() => {
+        if (selectedAddressId || addresses.length === 0) {
+            return;
+        }
+
+        const defaultAddress = addresses.find((address) => address.isDefault) ?? addresses[0];
+        setSelectedAddressId(defaultAddress.id);
+    }, [addresses, selectedAddressId]);
+
+    useEffect(() => {
+        if (selectedCouponId && !availableCoupons.some((coupon) => coupon.id === selectedCouponId)) {
+            setSelectedCouponId(null);
+        }
+    }, [availableCoupons, selectedCouponId]);
 
     const handleApplyManualVoucher = () => {
         const code = manualVoucherCode.trim().toUpperCase();
@@ -116,7 +157,7 @@ const CheckoutPage = () => {
             return;
         }
 
-        const foundCoupon = allCoupons.find((coupon) => coupon.code.toUpperCase() === code);
+        const foundCoupon = availableCoupons.find((coupon) => coupon.code.toUpperCase() === code);
 
         if (!foundCoupon) {
             setVoucherFeedback({ type: "error", message: "Mã không hợp lệ hoặc đã hết hạn." });
@@ -129,9 +170,42 @@ const CheckoutPage = () => {
         setVoucherFeedback({ type: "success", message: `Đã áp dụng mã ${foundCoupon.code}.` });
     };
 
+    const handlePlaceOrder = () => {
+        if (!selectedAddressId) {
+            toast.error("Vui lòng chọn địa chỉ giao hàng.");
+            return;
+        }
+
+        const noteParts = [orderNote.trim()];
+        noteParts.push(`Payment: ${paymentMethod}`);
+
+        createOrder(
+            {
+                addressId: selectedAddressId,
+                couponId: selectedCoupon?.id,
+                shippingMethod: shippingMethodId as ShippingMethod,
+                note: noteParts.filter(Boolean).join(" | ") || undefined,
+                items: session.items.map((item) => ({
+                    variantId: item.variantId,
+                    quantity: item.quantity,
+                })),
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Đặt hàng thành công.");
+                    clearCheckoutSession();
+                    window.location.href = "/my-account/orders";
+                },
+                onError: (error) => {
+                    toast.error(`Đặt hàng thất bại: ${error.message}`);
+                },
+            }
+        );
+    };
+
     const subtotal = session.subtotal;
     const shippingFee = selectedShipping.fee;
-    const discount = selectedCoupon?.discount ?? 0;
+    const discount = calculateCouponDiscount(selectedCoupon, subtotal, shippingFee);
     const total = Math.max(0, subtotal + shippingFee - discount);
 
     return (
@@ -151,23 +225,81 @@ const CheckoutPage = () => {
                                 <MapPin className="size-4" />
                                 Địa chỉ giao hàng
                             </h2>
-                            <Button variant="ghost" size="sm" className="h-8 px-3 text-primary">
+                            <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 px-3 text-primary"
+                                onClick={() => setAddressDialogOpen(true)}
+                                disabled={isLoadingAddresses || addresses.length === 0}
+                            >
                                 Thay đổi
                             </Button>
                         </div>
 
-                        <div className="mt-3 flex items-start gap-3 rounded-xl border border-slate-200 p-3">
-                            <RadioGroup value="default-address" className="shrink-0">
-                                <RadioGroupItem value="default-address" id="default-address" />
-                            </RadioGroup>
-                            <p className="text-sm text-slate-600">
-                                <span className="font-medium text-slate-800">{MOCK_ADDRESS.receiver}</span>
+                        {isLoadingAddresses ? (
+                            <p className="mt-3 text-sm text-slate-500">Đang tải địa chỉ...</p>
+                        ) : addresses.length === 0 ? (
+                            <div className="mt-3 rounded-xl border border-dashed border-slate-200 p-3 text-sm text-slate-500">
+                                Bạn chưa có địa chỉ giao hàng. Vui lòng thêm địa chỉ trước khi đặt hàng.
+                                <div className="mt-2">
+                                    <Button variant="outline" size="sm" asChild>
+                                        <Link to="/my-account/addresses">Thêm địa chỉ</Link>
+                                    </Button>
+                                </div>
+                            </div>
+                        ) : selectedAddress ? (
+                            <div className="mt-3 rounded-xl border border-slate-200 p-3 text-sm text-slate-600">
+                                <span className="font-medium text-slate-800">{selectedAddress.recipientName}</span>
                                 <span className="mx-2 text-slate-300">|</span>
-                                {MOCK_ADDRESS.phone}
+                                {selectedAddress.recipientPhone}
                                 <span className="mx-2 text-slate-300">-</span>
-                                {MOCK_ADDRESS.line}
-                            </p>
-                        </div>
+                                {`${selectedAddress.detailAddress}, ${selectedAddress.commune}, ${selectedAddress.district}, ${selectedAddress.province}`}
+                            </div>
+                        ) : null}
+
+                        <Dialog open={addressDialogOpen} onOpenChange={setAddressDialogOpen}>
+                            <DialogContent className="sm:max-w-xl">
+                                <DialogHeader>
+                                    <DialogTitle>Chọn địa chỉ giao hàng</DialogTitle>
+                                    <DialogDescription>
+                                        Chọn địa chỉ bạn muốn nhận hàng cho đơn này.
+                                    </DialogDescription>
+                                </DialogHeader>
+
+                                <RadioGroup
+                                    className="max-h-[50vh] space-y-2 overflow-y-auto pr-1"
+                                    value={selectedAddressId ? String(selectedAddressId) : ""}
+                                    onValueChange={(value) => setSelectedAddressId(Number(value))}
+                                >
+                                    {addresses.map((address) => (
+                                        <label
+                                            key={address.id}
+                                            className={cn(
+                                                "flex items-start gap-3 rounded-xl border p-3 transition-colors",
+                                                selectedAddressId === address.id
+                                                    ? "border-primary bg-primary/5"
+                                                    : "border-slate-200"
+                                            )}
+                                        >
+                                            <RadioGroupItem value={String(address.id)} id={`address-${address.id}`} />
+                                            <p className="text-sm text-slate-600">
+                                                <span className="font-medium text-slate-800">{address.recipientName}</span>
+                                                <span className="mx-2 text-slate-300">|</span>
+                                                {address.recipientPhone}
+                                                <span className="mx-2 text-slate-300">-</span>
+                                                {`${address.detailAddress}, ${address.commune}, ${address.district}, ${address.province}`}
+                                            </p>
+                                        </label>
+                                    ))}
+                                </RadioGroup>
+
+                                <DialogFooter>
+                                    <Button type="button" variant="outline" onClick={() => setAddressDialogOpen(false)}>
+                                        Xong
+                                    </Button>
+                                </DialogFooter>
+                            </DialogContent>
+                        </Dialog>
                     </article>
 
                     <article className="rounded-2xl border border-slate-200 bg-white p-4 sm:p-5">
@@ -221,53 +353,57 @@ const CheckoutPage = () => {
                         </h2>
 
                         <div className="mt-3 space-y-3">
-                            {session.items.map((item) => (
-                                <article
-                                    key={`${item.cartItemId}-${item.variantId}`}
-                                    className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4"
-                                >
-                                    <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
-                                        {item.imageUrl ? (
-                                            <img
-                                                src={item.imageUrl}
-                                                alt={item.productName}
-                                                className="h-full w-full object-cover"
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <div className="flex h-full items-center justify-center text-xs text-slate-400">
-                                                Không có ảnh
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    <div className="min-w-0 flex-1">
-                                        <p className="line-clamp-2 text-sm font-semibold text-slate-800">
-                                            {item.productName}
-                                        </p>
-
-                                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                                            {item.colorName ? (
-                                                <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                                                    {item.colorName}
-                                                </span>
-                                            ) : null}
-                                            {item.sizeName ? (
-                                                <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                                                    {item.sizeName}
-                                                </span>
-                                            ) : null}
-                                            <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
-                                                x{item.quantity}
-                                            </span>
+                            {session.items.map((item) => {
+                                return (
+                                    <article
+                                        key={`${item.cartItemId}-${item.variantId}`}
+                                        className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4"
+                                    >
+                                        <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                                            {item.imageUrl ? (
+                                                <img
+                                                    src={item.imageUrl}
+                                                    alt={item.productName}
+                                                    className="h-full w-full object-cover"
+                                                    loading="lazy"
+                                                />
+                                            ) : (
+                                                <div className="flex h-full items-center justify-center text-xs text-slate-400">
+                                                    Không có ảnh
+                                                </div>
+                                            )}
                                         </div>
-                                    </div>
 
-                                    <div className="w-24 text-right text-sm font-bold text-slate-900">
-                                        {formatCurrency(item.lineTotal)}
-                                    </div>
-                                </article>
-                            ))}
+                                        <div className="min-w-0 flex-1">
+                                            <p className="line-clamp-2 text-sm font-semibold text-slate-800">
+                                                {item.productName}
+                                            </p>
+
+                                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                                {item.colorName ? (
+                                                    <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                                                        {item.colorName}
+                                                    </span>
+                                                ) : null}
+                                                {item.sizeName ? (
+                                                    <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                                                        {item.sizeName}
+                                                    </span>
+                                                ) : null}
+                                                <span className="rounded-md border border-slate-200 bg-slate-100 px-2 py-0.5 text-xs text-slate-600">
+                                                    x{item.quantity}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="w-24 text-right text-sm font-bold text-slate-900">
+                                            {formatCurrency(item.unitPrice * item.quantity)}
+                                        </div>
+                                    </article>
+                                )
+                            }
+
+                            )}
                         </div>
                     </article>
 
@@ -278,7 +414,7 @@ const CheckoutPage = () => {
                                 Mã giảm giá
                             </h2>
 
-                            {!showAllCoupons && MOCK_COUPONS.length > DEFAULT_VISIBLE_COUPONS ? (
+                            {!showAllCoupons && availableCoupons.length > DEFAULT_VISIBLE_COUPONS ? (
                                 <Button
                                     variant="ghost"
                                     size="sm"
@@ -341,14 +477,18 @@ const CheckoutPage = () => {
                                         )}
                                     >
                                         <p className="text-xs font-medium uppercase tracking-wide text-primary">
-                                            {coupon.title}
+                                            {coupon.name || coupon.type}
                                         </p>
                                         <p className="mt-1 text-base font-bold text-slate-900">{coupon.code}</p>
                                         <p className="mt-1 text-xs text-slate-500">
-                                            Hạn dùng: {formatDate(coupon.expiresAt)}
+                                            Hạn dùng: {formatDate(coupon.endDate)}
                                         </p>
                                         <p className="mt-1 text-xs font-semibold text-emerald-600">
-                                            -{formatCurrency(coupon.discount)}
+                                            {coupon.type === "percent"
+                                                ? `-${coupon.value}%`
+                                                : coupon.type === "shipping"
+                                                    ? "Miễn phí vận chuyển"
+                                                    : `-${formatCurrency(coupon.value)}`}
                                         </p>
                                     </button>
                                 );
@@ -452,8 +592,19 @@ const CheckoutPage = () => {
                     </div>
 
                     <div className="mt-5 space-y-3">
-                        <Input placeholder="Ghi chú đơn hàng..." className="h-10" />
-                        <Button className="h-11 w-full text-sm font-semibold">Đặt hàng</Button>
+                        <Input
+                            placeholder="Ghi chú đơn hàng..."
+                            className="h-10"
+                            value={orderNote}
+                            onChange={(event) => setOrderNote(event.target.value)}
+                        />
+                        <Button
+                            className="h-11 w-full text-sm font-semibold"
+                            onClick={handlePlaceOrder}
+                            disabled={isCreatingOrder || !selectedAddressId || addresses.length === 0}
+                        >
+                            {isCreatingOrder ? "Đang đặt hàng..." : "Đặt hàng"}
+                        </Button>
                     </div>
 
                     <Button
