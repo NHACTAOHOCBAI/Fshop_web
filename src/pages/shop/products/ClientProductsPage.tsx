@@ -11,6 +11,7 @@ import {
     SelectValue,
 } from "@/components/ui/select";
 import { useShopCatalog, type ShopSortOption } from "@/hooks/useShopCatalog";
+import { buildPaginationItems } from "@/lib/utils";
 import type { DepartmentType } from "@/types/category";
 import ProductCard from "./components/ProductCard";
 
@@ -28,20 +29,6 @@ const departmentLabelMap = {
 } as const;
 
 const departmentList: DepartmentType[] = ["men", "women", "kids"];
-
-const buildPaginationItems = (currentPage: number, totalPages: number) => {
-    const pages = new Set<number>();
-    pages.add(1);
-    pages.add(totalPages);
-
-    for (let page = currentPage - 1; page <= currentPage + 1; page += 1) {
-        if (page > 1 && page < totalPages) {
-            pages.add(page);
-        }
-    }
-
-    return Array.from(pages).sort((a, b) => a - b);
-};
 
 type FilterItem = {
     id: number;
