@@ -17,6 +17,8 @@ export type ProductVariant = {
     publicId?: string;
     sku?: string;
     price: number;
+    stockQuantity?: number;
+    soldQuantity?: number;
     productId: number;
     colorId: number;
     sizeId: number;
@@ -33,6 +35,11 @@ export type Product = {
     brandId: number;
     categoryId: number;
     price: number;
+    averageRating?: number | string;
+    reviewCount?: number;
+    soldQuantity?: number;
+    maxCouponDiscount?: number | string;
+    bestCouponCode?: string | null;
     isActive: boolean;
     createdAt: string;
     updatedAt: string;

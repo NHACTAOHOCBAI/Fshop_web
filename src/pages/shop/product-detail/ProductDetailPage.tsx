@@ -142,6 +142,30 @@ const ProductDetailPage = () => {
         );
     }, [product?.variants, selectedColorId, selectedSizeId]);
 
+    const totalStockQuantity = useMemo(() => {
+        const variants = product?.variants ?? [];
+        return variants.reduce((sum, variant) => sum + (variant.stockQuantity ?? 0), 0);
+    }, [product?.variants]);
+
+    const totalSoldQuantity = useMemo(() => {
+        if (typeof product?.soldQuantity === "number") {
+            return product.soldQuantity;
+        }
+
+        const variants = product?.variants ?? [];
+        return variants.reduce((sum, variant) => sum + (variant.soldQuantity ?? 0), 0);
+    }, [product?.soldQuantity, product?.variants]);
+
+    const displayedStockQuantity = selectedCartVariant
+        ? (selectedCartVariant.stockQuantity ?? 0)
+        : totalStockQuantity;
+
+    const displayedSoldQuantity = selectedCartVariant
+        ? (selectedCartVariant.soldQuantity ?? 0)
+        : totalSoldQuantity;
+
+    const hasStock = selectedCartVariant ? (selectedCartVariant.stockQuantity ?? 0) > 0 : true;
+
     const handleAddToCart = () => {
         if (!canAddToCart || !selectedCartVariant) {
             toast.error("Vui lòng chọn đúng màu sắc và kích cỡ");
@@ -272,6 +296,12 @@ const ProductDetailPage = () => {
                     <div className="grid gap-3 text-sm text-slate-600">
                         <div>Thương hiệu: <span className="font-semibold text-slate-900">{product.brand?.name ?? "Đang cập nhật"}</span></div>
                         <div>Danh mục: <span className="font-semibold text-slate-900">{product.category?.name ?? "Đang cập nhật"}</span></div>
+                        <div>
+                            Còn lại: <span className="font-semibold text-slate-900">{displayedStockQuantity}</span>
+                        </div>
+                        <div>
+                            Đã bán: <span className="font-semibold text-slate-900">{displayedSoldQuantity}</span>
+                        </div>
                     </div>
 
                     <div className="space-y-2">
@@ -282,7 +312,7 @@ const ProductDetailPage = () => {
                                     key={colorOption.id}
                                     type="button"
                                     onClick={() => setSelectedColorId((current) => (current === colorOption.id ? null : colorOption.id))}
-                                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${selectedColorId === colorOption.id ? "border-primary bg-[#F6F7F8] text-primary font-medium" : "border-slate-200 hover:border-primary/50"}`}
+                                    className={`inline-flex items-center gap-2 rounded-lg border px-3 py-1.5 text-sm ${selectedColorId === colorOption.id ? "border-primary  bg-primary/5 text-primary font-medium" : "border-slate-200 hover:border-primary/50"}`}
                                 >
                                     <span
                                         className="size-3 rounded-full border border-black/10"
@@ -302,7 +332,7 @@ const ProductDetailPage = () => {
                                     key={sizeOption.id}
                                     type="button"
                                     onClick={() => setSelectedSizeId((current) => (current === sizeOption.id ? null : sizeOption.id))}
-                                    className={`rounded-lg border px-3 py-1.5 text-sm ${selectedSizeId === sizeOption.id ? "border-primary bg-[#F6F7F8] text-primary font-medium" : "border-slate-200 hover:border-primary/50"}`}
+                                    className={`rounded-lg border px-3 py-1.5 text-sm ${selectedSizeId === sizeOption.id ? "border-primary  bg-primary/5 text-primary font-medium" : "border-slate-200 hover:border-primary/50"}`}
                                 >
                                     {sizeOption.name}
                                 </button>
@@ -315,15 +345,17 @@ const ProductDetailPage = () => {
 
                         <Button
                             className="h-10 flex-1 gap-2"
-                            disabled={!canAddToCart || !selectedCartVariant || isAddingToCart}
+                            disabled={!canAddToCart || !selectedCartVariant || !hasStock || isAddingToCart}
                             onClick={handleAddToCart}
                         >
                             <ShoppingCart className="size-4" />
                             {isAddingToCart
                                 ? "Đang thêm..."
-                                : canAddToCart
-                                  ? "Thêm vào giỏ"
-                                  : "Chọn màu và kích cỡ"}
+                                : !hasStock && canAddToCart
+                                    ? "Hết hàng"
+                                    : canAddToCart
+                                        ? "Thêm vào giỏ"
+                                        : "Chọn màu và kích cỡ"}
                         </Button>
                         <Button
                             type="button"

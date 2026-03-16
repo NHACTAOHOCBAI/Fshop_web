@@ -4,10 +4,10 @@ import { Heart, ShoppingCart, UserRound } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const navItems = [
-    { to: "/", label: "Trang chủ" },
-    { to: "/men", label: "Nam" },
-    { to: "/women", label: "Nữ" },
-    { to: "/kids", label: "Trẻ em" },
+    { to: "/", label: "Trang chủ", end: true },
+    { to: "/men", label: "Nam", end: false },
+    { to: "/women", label: "Nữ", end: false },
+    { to: "/kids", label: "Trẻ em", end: false },
 ];
 
 const ClientLayout = () => {
@@ -23,21 +23,21 @@ const ClientLayout = () => {
         ? "đơn hàng của tôi"
         : pathname.startsWith("/my-account/addresses")
             ? "địa chỉ của tôi"
-        : pathname.startsWith("/my-account/wishlists")
-            ? "yêu thích"
-            : pathname.startsWith("/my-account/notifications")
-                ? "thông báo"
-                : pathname.startsWith("/my-account")
-                    ? "tài khoản"
-                    : pathname.startsWith("/checkout")
-                        ? "thanh toán"
-                        : pathname.startsWith("/cart")
-                            ? "giỏ hàng của tôi"
-                            : breadcrumbDepartment === "men"
-                                ? "nam"
-                                : breadcrumbDepartment === "women"
-                                    ? "nữ"
-                                    : "trẻ-em";
+            : pathname.startsWith("/my-account/wishlists")
+                ? "yêu thích"
+                : pathname.startsWith("/my-account/notifications")
+                    ? "thông báo"
+                    : pathname.startsWith("/my-account")
+                        ? "tài khoản"
+                        : pathname.startsWith("/checkout")
+                            ? "thanh toán"
+                            : pathname.startsWith("/cart")
+                                ? "giỏ hàng của tôi"
+                                : breadcrumbDepartment === "men"
+                                    ? "nam"
+                                    : breadcrumbDepartment === "women"
+                                        ? "nữ"
+                                        : "trẻ-em";
 
     return (
         <div className="min-h-screen bg-white text-slate-900">
@@ -59,7 +59,7 @@ const ClientLayout = () => {
 
                 </div>
                 <div className="mx-auto flex w-full max-w-6xl items-center  px-4 py-3 md:px-8">
-                    <Link to="/men" className="inline-flex items-center gap-2">
+                    <Link to="/" className="inline-flex items-center gap-2">
                         <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground shadow-sm">
                             F
                         </span>
@@ -70,6 +70,7 @@ const ClientLayout = () => {
                             <NavLink
                                 key={item.label}
                                 to={item.to}
+                                end={item.end}
                                 className={({ isActive }) =>
                                     cn(
                                         "uppercase tracking-wider text-slate-700 transition-colors hover:text-primary",
@@ -83,13 +84,15 @@ const ClientLayout = () => {
                     </nav>
                 </div>
             </header>
-            <div className="bg-gray-100 py-3.5">
-                <div className="px-4  md:px-8 mx-auto max-w-6xl text-sm text-slate-500">
-                    <span>Fshop</span>
-                    <span className="mx-2">/</span>
-                    <span className="text-primary">{breadcrumbDepartmentLabel}</span>
+            {pathname !== "/" && (
+                <div className="bg-gray-100 py-3.5">
+                    <div className="px-4  md:px-8 mx-auto max-w-6xl text-sm text-slate-500">
+                        <span>Fshop</span>
+                        <span className="mx-2">/</span>
+                        <span className="text-primary">{breadcrumbDepartmentLabel}</span>
+                    </div>
                 </div>
-            </div>
+            )}
             <main className=" mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
                 <Outlet />
             </main>
