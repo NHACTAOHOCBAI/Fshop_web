@@ -65,3 +65,16 @@ export type GetMyOrdersParams = {
     sortOrder?: "ASC" | "DESC";
     status?: OrderStatus;
 };
+
+export type GetAllOrdersParams = GetMyOrdersParams;
+
+export type UpdateOrderStatusPayload = {
+    status: OrderStatus;
+    reason?: string;
+};
+
+export type OrderStatusUpdateResponse = {
+    message: string;
+    from: OrderStatus;
+    to: OrderStatus;
+};

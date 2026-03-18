@@ -1,5 +1,6 @@
 import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, MessageCircle, Package, Search, Store, Truck, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import { Link } from "react-router";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -320,6 +321,16 @@ const MyOrdersPage = () => {
                                 </div>
 
                                 <div className="flex flex-wrap items-center gap-2 sm:justify-end">
+                                    <Button
+                                        type="button"
+                                        asChild
+                                        variant="outline"
+                                        size="sm"
+                                        className="h-9"
+                                    >
+                                        <Link to={`/my-account/orders/${order.id}`}>Chi tiết</Link>
+                                    </Button>
+
                                     <Button
                                         type="button"
                                         variant="outline"

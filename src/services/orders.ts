@@ -1,5 +1,12 @@
 import axiosInstance from "@/lib/axios";
-import type { CreateOrderPayload, GetMyOrdersParams, Order } from "@/types/order";
+import type {
+    CreateOrderPayload,
+    GetAllOrdersParams,
+    GetMyOrdersParams,
+    Order,
+    OrderStatusUpdateResponse,
+    UpdateOrderStatusPayload,
+} from "@/types/order";
 import type { ApiResponse } from "@/types/response";
 
 export const createOrder = async (payload: CreateOrderPayload) => {
@@ -11,6 +18,34 @@ export const getMyOrders = async (params?: GetMyOrdersParams) => {
     const { data } = await axiosInstance.get<ApiResponse<Order[]>>("/orders/me", {
         params,
     });
+    return data;
+};
+
+export const getMyOrderById = async (orderId: number) => {
+    const { data } = await axiosInstance.get<ApiResponse<Order>>(`/orders/me/${orderId}`);
+    return data;
+};
+
+export const getOrderById = async (orderId: number) => {
+    const { data } = await axiosInstance.get<ApiResponse<Order>>(`/orders/${orderId}`);
+    return data;
+};
+
+export const getAllOrders = async (params?: GetAllOrdersParams) => {
+    const { data } = await axiosInstance.get<ApiResponse<Order[]>>("/orders/all", {
+        params,
+    });
+    return data;
+};
+
+export const updateOrderStatus = async ({
+    id,
+    payload,
+}: {
+    id: number;
+    payload: UpdateOrderStatusPayload;
+}) => {
+    const { data } = await axiosInstance.patch<ApiResponse<OrderStatusUpdateResponse>>(`/orders/${id}/status`, payload);
     return data;
 };
 

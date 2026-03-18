@@ -13,6 +13,7 @@ import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
 import EditCouponPage from "@/pages/admin/coupons/EditCouponPage";
 import LivestreamsPage from "@/pages/admin/livestreams/LivestreamsPage";
 import OrdersPage from "@/pages/admin/orders/OrdersPage";
+import OrderDetailAdminPage from "@/pages/admin/orders/OrderDetailAdminPage";
 import CreateProductPage from "@/pages/admin/products/CreateProductPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
@@ -23,6 +24,7 @@ import AccountLayout from "@/components/layout/AccountLayout";
 import ProfilePage from "@/pages/shop/my-account/ProfilePage";
 import AddressesPage from "@/pages/shop/my-account/AddressesPage";
 import MyOrdersPage from "@/pages/shop/my-account/MyOrdersPage";
+import OrderDetailPage from "@/pages/shop/my-account/OrderDetailPage";
 import WishlistsPage from "@/pages/shop/my-account/WishlistsPage";
 import NotificationsPage from "@/pages/shop/my-account/NotificationsPage";
 import { createBrowserRouter, Navigate } from "react-router";
@@ -76,6 +78,10 @@ const router = createBrowserRouter([
           {
             path: "orders",
             element: <MyOrdersPage />,
+          },
+          {
+            path: "orders/:orderId",
+            element: <OrderDetailPage />,
           },
           {
             path: "wishlists",
@@ -136,6 +142,10 @@ const router = createBrowserRouter([
       {
         path: "orders",
         element: <OrdersPage />,
+      },
+      {
+        path: "orders/:orderId",
+        element: <OrderDetailAdminPage />,
       },
       {
         path: "products",
