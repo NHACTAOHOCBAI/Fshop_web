@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import type { Coupon, UpsertCouponPayload } from "@/types/coupon";
+import type { Coupon, GetBestPublicCouponPayload, UpsertCouponPayload } from "@/types/coupon";
 import type { QueryParams } from "@/types/query";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
 
@@ -8,6 +8,11 @@ export const getCoupons = async ({ limit, page, search, sortOrder, sortBy }: Que
         params: { limit, page, search, sortOrder, sortBy },
     });
 
+    return data;
+};
+
+export const getBestPublicCoupons = async (payload: GetBestPublicCouponPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<Coupon[]>>("/coupons/best-public", payload);
     return data;
 };
 

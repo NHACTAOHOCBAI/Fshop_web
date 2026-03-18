@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useMyAddresses } from "@/hooks/useAddresses";
-import { useCoupons } from "@/hooks/useCoupons";
+import { useBestPublicCoupons, useCoupons } from "@/hooks/useCoupons";
 import { useCreateOrder } from "@/hooks/useOrders";
 import { clearCheckoutSession, getCheckoutSession } from "@/lib/checkout";
 import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
@@ -81,6 +81,7 @@ const CheckoutPage = () => {
     const [orderNote, setOrderNote] = useState("");
     const [manualVoucherCode, setManualVoucherCode] = useState("");
     const [showAllCoupons, setShowAllCoupons] = useState(false);
+    const [isAutoCouponDisabled, setIsAutoCouponDisabled] = useState(false);
     const [voucherFeedback, setVoucherFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
         null
     );
@@ -92,6 +93,20 @@ const CheckoutPage = () => {
         sortBy: "endDate",
         sortOrder: "ASC",
     });
+    const sessionItems = session?.items ?? [];
+    const sessionSubtotal = session?.subtotal ?? 0;
+
+    const bestCouponPayload = useMemo(
+        () => ({
+            items: sessionItems.map((item) => ({
+                variantId: item.variantId,
+                quantity: item.quantity,
+            })),
+        }),
+        [sessionItems]
+    );
+
+    const { data: bestCouponsData } = useBestPublicCoupons(bestCouponPayload, sessionItems.length > 0);
 
     if (!session || session.items.length === 0) {
         return <Navigate to="/cart" replace />;
@@ -117,7 +132,7 @@ const CheckoutPage = () => {
                 return false;
             }
 
-            if (coupon.minOrderAmount > session.subtotal) {
+            if (coupon.minOrderAmount > sessionSubtotal) {
                 return false;
             }
 
@@ -125,14 +140,31 @@ const CheckoutPage = () => {
                 return true;
             }
 
-            return session.items.some((item) => item.productId === coupon.applicableProduct);
+            return sessionItems.some((item) => item.productId === coupon.applicableProduct);
         });
-    }, [couponsData?.data, session.items, session.subtotal]);
+    }, [couponsData?.data, sessionItems, sessionSubtotal]);
 
-    const selectedCoupon = availableCoupons.find((coupon) => coupon.id === selectedCouponId) ?? null;
+    const bestCoupons = bestCouponsData?.data ?? [];
+    const bestCouponIdSet = useMemo(() => new Set(bestCoupons.map((coupon) => coupon.id)), [bestCoupons]);
+
+    const couponPool = useMemo(() => {
+        const couponMap = new Map<number, Coupon>();
+
+        for (const coupon of bestCoupons) {
+            couponMap.set(coupon.id, coupon);
+        }
+
+        for (const coupon of availableCoupons) {
+            couponMap.set(coupon.id, coupon);
+        }
+
+        return Array.from(couponMap.values());
+    }, [availableCoupons, bestCoupons]);
+
+    const selectedCoupon = couponPool.find((coupon) => coupon.id === selectedCouponId) ?? null;
     const visibleCoupons = showAllCoupons
-        ? availableCoupons
-        : availableCoupons.slice(0, DEFAULT_VISIBLE_COUPONS);
+        ? couponPool
+        : couponPool.slice(0, DEFAULT_VISIBLE_COUPONS);
 
     useEffect(() => {
         if (selectedAddressId || addresses.length === 0) {
@@ -144,10 +176,29 @@ const CheckoutPage = () => {
     }, [addresses, selectedAddressId]);
 
     useEffect(() => {
-        if (selectedCouponId && !availableCoupons.some((coupon) => coupon.id === selectedCouponId)) {
+        if (selectedCouponId && !couponPool.some((coupon) => coupon.id === selectedCouponId)) {
             setSelectedCouponId(null);
         }
-    }, [availableCoupons, selectedCouponId]);
+    }, [couponPool, selectedCouponId]);
+
+    useEffect(() => {
+        if (isAutoCouponDisabled || selectedCouponId) {
+            return;
+        }
+
+        const bestCoupon = bestCoupons[0];
+        if (!bestCoupon) {
+            return;
+        }
+
+        setSelectedCouponId(bestCoupon.id);
+        setManualVoucherCode(bestCoupon.code);
+        setShowAllCoupons(true);
+        setVoucherFeedback({
+            type: "success",
+            message: `Đã tự động áp dụng mã tốt nhất: ${bestCoupon.code}.`,
+        });
+    }, [bestCoupons, isAutoCouponDisabled, selectedCouponId]);
 
     const handleApplyManualVoucher = () => {
         const code = manualVoucherCode.trim().toUpperCase();
@@ -157,7 +208,7 @@ const CheckoutPage = () => {
             return;
         }
 
-        const foundCoupon = availableCoupons.find((coupon) => coupon.code.toUpperCase() === code);
+        const foundCoupon = couponPool.find((coupon) => coupon.code.toUpperCase() === code);
 
         if (!foundCoupon) {
             setVoucherFeedback({ type: "error", message: "Mã không hợp lệ hoặc đã hết hạn." });
@@ -165,6 +216,7 @@ const CheckoutPage = () => {
         }
 
         setSelectedCouponId(foundCoupon.id);
+        setIsAutoCouponDisabled(true);
         setManualVoucherCode(foundCoupon.code);
         setShowAllCoupons(true);
         setVoucherFeedback({ type: "success", message: `Đã áp dụng mã ${foundCoupon.code}.` });
@@ -463,14 +515,19 @@ const CheckoutPage = () => {
                         <div className="mt-3 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
                             {visibleCoupons.map((coupon) => {
                                 const isChecked = coupon.id === selectedCouponId;
+                                const isBestCoupon = bestCouponIdSet.has(coupon.id);
 
                                 return (
                                     <button
                                         key={coupon.id}
                                         type="button"
-                                        onClick={() => setSelectedCouponId(coupon.id)}
+                                        onClick={() => {
+                                            setSelectedCouponId(coupon.id);
+                                            setIsAutoCouponDisabled(true);
+                                            setManualVoucherCode(coupon.code);
+                                        }}
                                         className={cn(
-                                            "rounded-xl border p-3 text-left transition-colors",
+                                            "relative rounded-xl border p-3 text-left transition-colors",
                                             isChecked
                                                 ? "border-primary bg-primary/5"
                                                 : "border-slate-200 hover:border-primary/40"
@@ -479,6 +536,11 @@ const CheckoutPage = () => {
                                         <p className="text-xs font-medium uppercase tracking-wide text-primary">
                                             {coupon.name || coupon.type}
                                         </p>
+                                        {isBestCoupon ? (
+                                            <span className="absolute right-2 top-2 rounded-full border border-red-200 bg-red-50 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-red-600">
+                                                Tốt nhất
+                                            </span>
+                                        ) : null}
                                         <p className="mt-1 text-base font-bold text-slate-900">{coupon.code}</p>
                                         <p className="mt-1 text-xs text-slate-500">
                                             Hạn dùng: {formatDate(coupon.endDate)}
@@ -499,7 +561,11 @@ const CheckoutPage = () => {
                             type="button"
                             variant="ghost"
                             className="mt-3 h-8 px-3 text-xs text-slate-500"
-                            onClick={() => setSelectedCouponId(null)}
+                            onClick={() => {
+                                setSelectedCouponId(null);
+                                setIsAutoCouponDisabled(true);
+                                setVoucherFeedback(null);
+                            }}
                         >
                             Bỏ chọn mã
                         </Button>

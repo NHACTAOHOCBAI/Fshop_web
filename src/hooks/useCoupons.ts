@@ -1,12 +1,21 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createCoupon, deleteCoupon, getCouponById, getCoupons, updateCoupon } from "@/services/coupons";
+import { createCoupon, deleteCoupon, getBestPublicCoupons, getCouponById, getCoupons, updateCoupon } from "@/services/coupons";
+import type { GetBestPublicCouponPayload } from "@/types/coupon";
 import type { QueryParams } from "@/types/query";
 
 export const useCoupons = (params?: QueryParams) => {
     return useQuery({
         queryKey: ["coupons", params],
         queryFn: () => getCoupons(params || { limit: 10, page: 1 }),
+    });
+};
+
+export const useBestPublicCoupons = (payload: GetBestPublicCouponPayload, enabled = true) => {
+    return useQuery({
+        queryKey: ["coupons", "best-public", payload],
+        queryFn: () => getBestPublicCoupons(payload),
+        enabled: enabled && payload.items.length > 0,
     });
 };
 

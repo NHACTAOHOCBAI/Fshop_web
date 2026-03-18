@@ -39,3 +39,12 @@ export type UpsertCouponPayload = {
     status?: CouponStatus;
     isPublic?: boolean;
 };
+
+export type BestCouponItemPayload = {
+    variantId: number;
+    quantity: number;
+};
+
+export type GetBestPublicCouponPayload = {
+    items: BestCouponItemPayload[];
+};
