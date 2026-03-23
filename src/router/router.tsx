@@ -6,7 +6,7 @@ import BackupRestorePage from "@/pages/admin/backup-restore/BackupRestorePage";
 import AttributesPage from "@/pages/admin/attributes/AttributesPage";
 import BrandsPage from "@/pages/admin/brands/BrandsPage";
 import CategoriesPage from "@/pages/admin/categories/CategoriesPage";
-import CommunityPage from "@/pages/admin/community/CommunityPage";
+import AdminCommunityPage from "@/pages/admin/community/CommunityPage";
 import CouponsPage from "@/pages/admin/coupons/CouponsPage";
 import CreateCouponPage from "@/pages/admin/coupons/CreateCouponPage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
@@ -33,6 +33,9 @@ import RegisterPage from "@/pages/auth/register/RegisterPage";
 import ClientProductsPage from "@/pages/shop/products/ClientProductsPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
 import HomePage from "@/pages/shop/home/HomePage";
+import PostDetailPage from "@/pages/shop/community/PostDetailPage";
+import CreatePostPage from "@/pages/shop/community/CreatePostPage";
+import CommunityPage from "@/pages/shop/community/CommunityPage";
 
 const router = createBrowserRouter([
   {
@@ -58,6 +61,18 @@ const router = createBrowserRouter([
       {
         path: "checkout",
         element: <CheckoutPage />,
+      },
+      {
+        path: "community",
+        element: <CommunityPage />,
+      },
+      {
+        path: "community/create",
+        element: <CreatePostPage />,
+      },
+      {
+        path: "community/:postId",
+        element: <PostDetailPage />,
       },
       {
         path: "my-account",
@@ -177,7 +192,7 @@ const router = createBrowserRouter([
       },
       {
         path: "community",
-        element: <CommunityPage />,
+        element: <AdminCommunityPage />,
       },
       {
         path: "livestreams",
