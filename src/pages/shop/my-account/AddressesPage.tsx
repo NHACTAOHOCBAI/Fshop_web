@@ -8,6 +8,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import {
     Select,
     SelectContent,
@@ -208,26 +209,26 @@ const AddressesPage = () => {
                     </div>
 
                     <div className="grid gap-4 md:grid-cols-2">
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Người nhận</label>
+                        <fieldset className="space-y-2">
+                            <Label>Người nhận</Label>
                             <Input disabled={isMutating} {...form.register("recipientName")} />
                             <p className="text-sm text-destructive">{form.formState.errors.recipientName?.message}</p>
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Số điện thoại</label>
+                        <fieldset className="space-y-2">
+                            <Label>Số điện thoại</Label>
                             <Input disabled={isMutating} {...form.register("recipientPhone")} />
                             <p className="text-sm text-destructive">{form.formState.errors.recipientPhone?.message}</p>
                         </fieldset>
 
-                        <fieldset className="space-y-1.5 md:col-span-2">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Địa chỉ chi tiết</label>
+                        <fieldset className="space-y-2 md:col-span-2">
+                            <Label>Địa chỉ chi tiết</Label>
                             <Input disabled={isMutating} {...form.register("detailAddress")} />
                             <p className="text-sm text-destructive">{form.formState.errors.detailAddress?.message}</p>
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Tỉnh/Thành</label>
+                        <fieldset className="space-y-2">
+                            <Label>Tỉnh/Thành</Label>
                             <Select
                                 value={selectedProvince}
                                 onValueChange={(value) => {
@@ -249,8 +250,8 @@ const AddressesPage = () => {
                             <p className="text-sm text-destructive">{form.formState.errors.province?.message}</p>
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Quận/Huyện</label>
+                        <fieldset className="space-y-2">
+                            <Label>Quận/Huyện</Label>
                             <Select
                                 value={selectedDistrict}
                                 onValueChange={(value) => {
@@ -279,8 +280,8 @@ const AddressesPage = () => {
                             <p className="text-sm text-destructive">{form.formState.errors.district?.message}</p>
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Phường/Xã</label>
+                        <fieldset className="space-y-2">
+                            <Label>Phường/Xã</Label>
                             <Select
                                 value={form.watch("commune")}
                                 onValueChange={(value) => {
@@ -308,8 +309,8 @@ const AddressesPage = () => {
                             <p className="text-sm text-destructive">{form.formState.errors.commune?.message}</p>
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">Loại địa chỉ</label>
+                        <fieldset className="space-y-2">
+                            <Label>Loại địa chỉ</Label>
                             <Select
                                 value={selectedType}
                                 onValueChange={(value) => form.setValue("type", value as AddressType, { shouldDirty: true })}
@@ -327,7 +328,7 @@ const AddressesPage = () => {
                         </fieldset>
                     </div>
 
-                    <label className="inline-flex items-center gap-2 text-sm text-slate-600">
+                    <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-700">
                         <Checkbox
                             checked={isDefaultChecked}
                             disabled={isMutating}

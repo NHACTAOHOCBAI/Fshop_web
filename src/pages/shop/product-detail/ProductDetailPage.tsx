@@ -1,4 +1,4 @@
-import { ChevronLeft, Heart, ShoppingCart, Star } from "lucide-react";
+import { ChevronLeft, Heart, Loader2, ShoppingCart, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";
@@ -8,6 +8,7 @@ import QuantityStepper from "@/components/ui/quantity-stepper";
 import { useColors, useSizes } from "@/hooks/useAttributes";
 import { useAddToCart } from "@/hooks/useCart";
 import { useProductById, useRelatedProducts } from "@/hooks/useProducts";
+import { useReviewSummary, useReviewsByProduct } from "@/hooks/useReviews";
 import { useToggleWishlist, useWishlists } from "@/hooks/useWishlists";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import { authStorage } from "@/lib/auth";
@@ -16,42 +17,6 @@ import type { DepartmentType } from "@/types/category";
 import ProductCard from "../products/components/ProductCard";
 
 const departmentList: DepartmentType[] = ["men", "women", "kids"];
-
-type MockReview = {
-    id: number;
-    author: string;
-    rating: number;
-    createdAt: string;
-    content: string;
-    avatarUrl?: string;
-};
-
-const mockReviews: MockReview[] = [
-    {
-        id: 1,
-        author: "Nguyen Minh Anh",
-        rating: 5,
-        createdAt: "2026-03-01",
-        content: "Form giày đẹp, dễ đi và nhìn ngoài rất xinh. Màu sắc đúng như hình, đóng gói cẩn thận.",
-        avatarUrl: "https://i.pravatar.cc/80?img=32",
-    },
-    {
-        id: 2,
-        author: "Tran Bao Chau",
-        rating: 4,
-        createdAt: "2026-02-24",
-        content: "Chất liệu ổn, nhẹ chân. Giao hàng nhanh. Nếu lót đệm dày hơn một chút thì sẽ rất tuyệt.",
-        avatarUrl: "https://i.pravatar.cc/80?img=47",
-    },
-    {
-        id: 3,
-        author: "Le Quoc Huy",
-        rating: 5,
-        createdAt: "2026-02-17",
-        content: "Đã mua lần thứ hai vì mang rất êm. Size chuẩn, phối đồ dễ, giá hợp lý.",
-        avatarUrl: "https://i.pravatar.cc/80?img=15",
-    },
-];
 
 const ProductDetailPage = () => {
     const params = useParams<{ department?: string; productId?: string }>();
@@ -72,6 +37,8 @@ const ProductDetailPage = () => {
 
     const productId = Number(params.productId);
     const productQuery = useProductById(productId, Number.isFinite(productId));
+    const reviewsQuery = useReviewsByProduct(productId, Number.isFinite(productId) && productId > 0);
+    const reviewSummaryQuery = useReviewSummary(productId, Number.isFinite(productId) && productId > 0);
     const colorsQuery = useColors({ page: 1, limit: 200, sortBy: "name", sortOrder: "ASC" });
     const sizesQuery = useSizes({ page: 1, limit: 200, sortBy: "sortOrder", sortOrder: "ASC" });
     const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
@@ -188,14 +155,10 @@ const ProductDetailPage = () => {
         );
     };
 
-    const averageRating = useMemo(() => {
-        if (mockReviews.length === 0) {
-            return 0;
-        }
-
-        const total = mockReviews.reduce((sum, review) => sum + review.rating, 0);
-        return total / mockReviews.length;
-    }, []);
+    const reviews = reviewsQuery.data?.data ?? [];
+    const reviewSummary = reviewSummaryQuery.data?.data;
+    const averageRating = Number(reviewSummary?.averageRating ?? 0);
+    const reviewCount = reviewSummary?.reviewCount ?? reviews.length;
     const roundedAverageRating = Math.round(averageRating);
 
     const { relatedProducts, isLoading: isRelatedLoading } = useRelatedProducts(product?.categoryId, product?.id);
@@ -284,7 +247,7 @@ const ProductDetailPage = () => {
                                 ))}
                             </div>
                             <span>{averageRating.toFixed(1)}</span>
-                            <span>({mockReviews.length} đánh giá)</span>
+                            <span>({reviewCount} đánh giá)</span>
                         </div>
                     </div>
 
@@ -387,7 +350,7 @@ const ProductDetailPage = () => {
                             onClick={() => setActiveTab("reviews")}
                             className={`relative pb-3 transition-colors ${activeTab === "reviews" ? "text-primary" : "text-slate-500 hover:text-slate-700"}`}
                         >
-                            Đánh giá ({mockReviews.length})
+                            Đánh giá ({reviewCount})
                             {activeTab === "reviews" ? <span className="absolute inset-x-0 -bottom-px h-0.5 bg-primary" /> : null}
                         </button>
                     </div>
@@ -399,39 +362,76 @@ const ProductDetailPage = () => {
                     </p>
                 ) : (
                     <div className="mt-5 space-y-4">
-                        {mockReviews.map((review) => (
-                            <article key={review.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
-                                <div className="flex flex-wrap items-center justify-between gap-2">
-                                    <div className="flex items-center gap-3">
-                                        {review.avatarUrl ? (
-                                            <img
-                                                src={review.avatarUrl}
-                                                alt={review.author}
-                                                className="size-10 rounded-full border border-slate-200 object-cover"
-                                                loading="lazy"
-                                            />
-                                        ) : (
-                                            <div className="inline-flex size-10 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
-                                                {toAlias(review.author)}
+                        {reviewsQuery.isLoading || reviewSummaryQuery.isLoading ? (
+                            <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">
+                                <Loader2 className="mb-2 size-4 animate-spin" />
+                                Đang tải đánh giá...
+                            </div>
+                        ) : reviewsQuery.isError || reviewSummaryQuery.isError ? (
+                            <div className="rounded-xl border border-red-200 bg-red-50 p-4 text-sm text-red-700">
+                                Không thể tải đánh giá sản phẩm.
+                            </div>
+                        ) : reviews.length === 0 ? (
+                            <div className="rounded-xl border border-dashed border-slate-200 bg-slate-50/50 p-5 text-sm text-slate-500">
+                                Chưa có đánh giá nào cho sản phẩm này.
+                            </div>
+                        ) : (
+                            reviews.map((review) => {
+                                const ratingValue = Math.max(0, Math.min(5, Number(review.rating) || 0));
+                                const roundedRating = Math.round(ratingValue);
+                                const author = review.user?.name || "Khách hàng";
+
+                                return (
+                                    <article key={review.id} className="rounded-xl border border-slate-200 bg-slate-50/60 p-4">
+                                        <div className="flex flex-wrap items-center justify-between gap-2">
+                                            <div className="flex items-center gap-3">
+                                                <div className="inline-flex size-10 items-center justify-center rounded-full bg-primary/15 text-xs font-semibold text-primary">
+                                                    {toAlias(author)}
+                                                </div>
+                                                <div>
+                                                    <p className="text-sm font-semibold text-slate-900">{author}</p>
+                                                    <p className="text-xs text-slate-500">{formatDate(review.createdAt)}</p>
+                                                </div>
                                             </div>
-                                        )}
-                                        <div>
-                                            <p className="text-sm font-semibold text-slate-900">{review.author}</p>
-                                            <p className="text-xs text-slate-500">{formatDate(review.createdAt)}</p>
+                                            <div className="inline-flex items-center gap-1 text-amber-500">
+                                                {Array.from({ length: 5 }).map((_, index) => (
+                                                    <Star
+                                                        key={index}
+                                                        className={`size-4 ${index < roundedRating ? "fill-amber-400 text-amber-400" : "fill-transparent text-slate-300"}`}
+                                                    />
+                                                ))}
+                                                <span className="ml-1 text-xs text-slate-500">{ratingValue.toFixed(1)}</span>
+                                            </div>
                                         </div>
-                                    </div>
-                                    <div className="inline-flex items-center gap-1 text-amber-500">
-                                        {Array.from({ length: 5 }).map((_, index) => (
-                                            <Star
-                                                key={index}
-                                                className={`size-4 ${index < review.rating ? "fill-amber-400 text-amber-400" : "fill-transparent text-slate-300"}`}
-                                            />
-                                        ))}
-                                    </div>
-                                </div>
-                                <p className="mt-3 text-sm leading-6 text-slate-600">{review.content}</p>
-                            </article>
-                        ))}
+
+                                        {review.comment ? (
+                                            <p className="mt-3 text-sm leading-6 text-slate-600">{review.comment}</p>
+                                        ) : null}
+
+                                        {review.images.length > 0 ? (
+                                            <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                                                {review.images.map((imageUrl, index) => (
+                                                    <a
+                                                        key={`${review.id}-image-${index}`}
+                                                        href={imageUrl}
+                                                        target="_blank"
+                                                        rel="noreferrer"
+                                                        className="block overflow-hidden rounded-lg border border-slate-200 bg-white"
+                                                    >
+                                                        <img
+                                                            src={imageUrl}
+                                                            alt={`review-${review.id}-${index + 1}`}
+                                                            className="h-24 w-full object-cover"
+                                                            loading="lazy"
+                                                        />
+                                                    </a>
+                                                ))}
+                                            </div>
+                                        ) : null}
+                                    </article>
+                                );
+                            })
+                        )}
                     </div>
                 )}
             </section>

@@ -9,6 +9,7 @@ import { z } from "zod";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { useChangePassword, useMe, useUpdateProfile } from "@/hooks/useAuth";
 import { useMyAddresses } from "@/hooks/useAddresses";
 import { extractApiErrorMessage } from "@/lib/api-error";
@@ -187,10 +188,8 @@ const ProfilePage = () => {
             <div className="grid gap-6 lg:grid-cols-[1fr_200px]">
                 <form onSubmit={form.handleSubmit(onSubmit)} className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
                     <div className="grid gap-5 sm:grid-cols-2">
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Họ và tên
-                            </label>
+                        <fieldset className="space-y-2">
+                            <Label>Họ và tên</Label>
                             <div className="relative">
                                 <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                                 <Input
@@ -202,37 +201,29 @@ const ProfilePage = () => {
                             <p className="text-sm text-destructive">{form.formState.errors.fullName?.message}</p>
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Email
-                            </label>
+                        <fieldset className="space-y-2">
+                            <Label>Email</Label>
                             <Input value={profile.email} disabled />
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Tham gia từ
-                            </label>
+                        <fieldset className="space-y-2">
+                            <Label>Tham gia từ</Label>
                             <Input
                                 value={formatDate(profile.createdAt)}
                                 disabled
                             />
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Trạng thái tài khoản
-                            </label>
+                        <fieldset className="space-y-2">
+                            <Label>Trạng thái tài khoản</Label>
                             <Input
                                 value={profile.isVerified ? "Đã xác minh" : "Chưa xác minh"}
                                 disabled
                             />
                         </fieldset>
 
-                        <fieldset className="space-y-1.5">
-                            <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                                Vai trò
-                            </label>
+                        <fieldset className="space-y-2">
+                            <Label>Vai trò</Label>
                             <Input
                                 value={profile.role}
                                 disabled
@@ -240,10 +231,8 @@ const ProfilePage = () => {
                         </fieldset>
                     </div>
 
-                    <fieldset className="space-y-1.5">
-                        <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Địa chỉ mặc định
-                        </label>
+                    <fieldset className="space-y-2">
+                        <Label>Địa chỉ mặc định</Label>
                         <div className="relative">
                             <MapPin className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                             <Input
@@ -330,10 +319,8 @@ const ProfilePage = () => {
                 </div>
 
                 <div className="grid gap-4 md:grid-cols-3">
-                    <fieldset className="space-y-1.5">
-                        <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Mật khẩu hiện tại
-                        </label>
+                    <fieldset className="space-y-2">
+                        <Label>Mật khẩu hiện tại</Label>
                         <Input
                             type="password"
                             autoComplete="current-password"
@@ -343,10 +330,8 @@ const ProfilePage = () => {
                         <p className="text-sm text-destructive">{passwordForm.formState.errors.currentPassword?.message}</p>
                     </fieldset>
 
-                    <fieldset className="space-y-1.5">
-                        <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Mật khẩu mới
-                        </label>
+                    <fieldset className="space-y-2">
+                        <Label>Mật khẩu mới</Label>
                         <Input
                             type="password"
                             autoComplete="new-password"
@@ -356,10 +341,8 @@ const ProfilePage = () => {
                         <p className="text-sm text-destructive">{passwordForm.formState.errors.newPassword?.message}</p>
                     </fieldset>
 
-                    <fieldset className="space-y-1.5">
-                        <label className="text-xs font-semibold uppercase tracking-wide text-slate-400">
-                            Xác nhận mật khẩu mới
-                        </label>
+                    <fieldset className="space-y-2">
+                        <Label>Xác nhận mật khẩu mới</Label>
                         <Input
                             type="password"
                             autoComplete="new-password"

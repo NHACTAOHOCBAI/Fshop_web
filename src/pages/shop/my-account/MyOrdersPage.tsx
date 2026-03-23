@@ -1,11 +1,22 @@
-import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, MessageCircle, Package, Search, Store, Truck, XCircle } from "lucide-react";
+import { CheckCircle2, ChevronLeft, ChevronRight, Loader2, MessageCircle, Package, Search, Star, Store, Truck, XCircle } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
 
+import { ImageUpload } from "@/components/image-upload/image-upload";
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { useCancelOrder, useConfirmDelivery, useMyOrders } from "@/hooks/useOrders";
+import { useCreateReview, useMyReviews } from "@/hooks/useReviews";
 import { buildPaginationItems, cn, formatCurrency } from "@/lib/utils";
 import type { Order, OrderStatus } from "@/types/order";
 
@@ -73,6 +84,19 @@ const MyOrdersPage = () => {
     const [searchValue, setSearchValue] = useState("");
     const [debouncedSearchValue, setDebouncedSearchValue] = useState("");
     const [page, setPage] = useState(1);
+    const [isReviewDialogOpen, setIsReviewDialogOpen] = useState(false);
+    const [reviewRating, setReviewRating] = useState(5);
+    const [hoverRating, setHoverRating] = useState(0);
+    const [reviewComment, setReviewComment] = useState("");
+    const [reviewImages, setReviewImages] = useState<File[]>([]);
+    const [reviewTarget, setReviewTarget] = useState<
+        | {
+              orderId: number;
+              variantId: number;
+              productName: string;
+          }
+        | null
+    >(null);
     const pageSize = 5;
 
     const activeStatus = useMemo(
@@ -102,10 +126,21 @@ const MyOrdersPage = () => {
     });
     const { mutate: cancelOrder, isPending: isCanceling } = useCancelOrder();
     const { mutate: confirmDelivery, isPending: isConfirming } = useConfirmDelivery();
+    const { mutate: createReview, isPending: isCreatingReview } = useCreateReview();
+    const myReviewsQuery = useMyReviews({
+        page: 1,
+        limit: 500,
+        sortBy: "id",
+        sortOrder: "DESC",
+    });
     const orders: Order[] = data?.data ?? [];
+    const myReviews = myReviewsQuery.data?.data ?? [];
     const totalOrders = data?.meta?.pagination?.total ?? orders.length;
     const totalPages = Math.max(1, Math.ceil(totalOrders / pageSize));
     const paginationItems = useMemo(() => buildPaginationItems(page, totalPages), [page, totalPages]);
+    const reviewedVariantKeys = useMemo(() => {
+        return new Set(myReviews.map((review) => `${review.orderId}-${review.variantId}`));
+    }, [myReviews]);
 
     const handleCancelOrder = (orderId: number) => {
         cancelOrder(
@@ -144,6 +179,60 @@ const MyOrdersPage = () => {
         } catch {
             toast.message(`Nhắn tin với shop cho đơn #${order.id}`);
         }
+    };
+
+    const resetReviewForm = () => {
+        setReviewRating(5);
+        setHoverRating(0);
+        setReviewComment("");
+        setReviewImages([]);
+        setReviewTarget(null);
+        setIsReviewDialogOpen(false);
+    };
+
+    const handleOpenReviewDialog = ({
+        orderId,
+        variantId,
+        productName,
+    }: {
+        orderId: number;
+        variantId: number;
+        productName: string;
+    }) => {
+        setReviewTarget({ orderId, variantId, productName });
+        setIsReviewDialogOpen(true);
+    };
+
+    const handleSubmitReview = () => {
+        if (!reviewTarget) {
+            return;
+        }
+
+        const normalizedRating = reviewRating;
+
+        if (!Number.isFinite(normalizedRating) || normalizedRating < 1 || normalizedRating > 5) {
+            toast.error("Điểm đánh giá phải trong khoảng từ 1 đến 5 sao.");
+            return;
+        }
+
+        createReview(
+            {
+                orderId: reviewTarget.orderId,
+                variantId: reviewTarget.variantId,
+                rating: normalizedRating,
+                comment: reviewComment.trim() || undefined,
+                reviewImages: reviewImages.length > 0 ? reviewImages : undefined,
+            },
+            {
+                onSuccess: () => {
+                    toast.success(`Đã gửi đánh giá cho ${reviewTarget.productName}.`);
+                    resetReviewForm();
+                },
+                onError: (reviewError: Error) => {
+                    toast.error(reviewError.message || "Không thể gửi đánh giá.");
+                },
+            }
+        );
     };
 
     return (
@@ -273,6 +362,8 @@ const MyOrdersPage = () => {
                                 {order.items.map((item) => {
                                     const imageUrl = item.variant?.imageUrl;
                                     const productName = item.variant?.product?.name || "Sản phẩm";
+                                    const reviewKey = `${order.id}-${item.variant.id}`;
+                                    const isReviewed = reviewedVariantKeys.has(reviewKey);
 
                                     return (
                                         <div
@@ -304,6 +395,24 @@ const MyOrdersPage = () => {
                                                 <p className="text-sm font-semibold text-slate-700">
                                                     {formatCurrency(Number(item.price) * item.quantity)}
                                                 </p>
+                                                {order.status === "delivered" ? (
+                                                    <Button
+                                                        type="button"
+                                                        variant="outline"
+                                                        size="sm"
+                                                        className="mt-2 h-8"
+                                                        disabled={isReviewed}
+                                                        onClick={() =>
+                                                            handleOpenReviewDialog({
+                                                                orderId: order.id,
+                                                                variantId: item.variant.id,
+                                                                productName,
+                                                            })
+                                                        }
+                                                    >
+                                                        {isReviewed ? "Đã đánh giá" : "Đánh giá"}
+                                                    </Button>
+                                                ) : null}
                                             </div>
                                         </div>
                                     );
@@ -425,6 +534,87 @@ const MyOrdersPage = () => {
                     </div>
                 </div>
             ) : null}
+
+            <Dialog open={isReviewDialogOpen} onOpenChange={(open) => (!open ? resetReviewForm() : setIsReviewDialogOpen(open))}>
+                <DialogContent className="sm:max-w-md max-h-[96vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle>Đánh giá sản phẩm</DialogTitle>
+                        <DialogDescription>
+                            {reviewTarget
+                                ? `Chia sẻ trải nghiệm của bạn với ${reviewTarget.productName}.`
+                                : "Chia sẻ trải nghiệm mua sắm của bạn."}
+                        </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div className="space-y-2">
+                            <Label>Điểm đánh giá</Label>
+                            <div className="flex items-center gap-2">
+                                {Array.from({ length: 5 }, (_, index) => {
+                                    const starValue = index + 1;
+                                    const activeValue = hoverRating || reviewRating;
+                                    const isActive = starValue <= activeValue;
+
+                                    return (
+                                        <button
+                                            key={starValue}
+                                            type="button"
+                                            onMouseEnter={() => setHoverRating(starValue)}
+                                            onMouseLeave={() => setHoverRating(0)}
+                                            onClick={() => setReviewRating(starValue)}
+                                            className="rounded-md p-1 transition-transform hover:scale-110"
+                                            aria-label={`Chọn ${starValue} sao`}
+                                        >
+                                            <Star
+                                                className={cn(
+                                                    "size-6 transition-colors",
+                                                    isActive ? "fill-amber-400 text-amber-400" : "text-slate-300"
+                                                )}
+                                            />
+                                        </button>
+                                    );
+                                })}
+                                <span className="text-sm font-medium text-slate-600">{reviewRating}.0/5</span>
+                            </div>
+                        </div>
+
+                        <div className="space-y-2">
+                            <Label htmlFor="review-comment">Nhận xét</Label>
+                            <Textarea
+                                id="review-comment"
+                                value={reviewComment}
+                                onChange={(event) => setReviewComment(event.target.value)}
+                                placeholder="Sản phẩm có đúng mô tả không, chất lượng và đóng gói như thế nào?"
+                                className="min-h-24"
+                            />
+                        </div>
+
+                        <ImageUpload
+                            value={reviewImages}
+                            onChange={setReviewImages}
+                            numOfImage={5}
+                            label="Ảnh đánh giá (tuỳ chọn)"
+                            disabled={isCreatingReview}
+                        />
+                    </div>
+
+                    <div className="flex flex-col gap-3">
+                        <Button type="button" onClick={handleSubmitReview} disabled={isCreatingReview || !reviewTarget} className="w-full">
+                            {isCreatingReview ? (
+                                <>
+                                    <Loader2 className="size-4 animate-spin" />
+                                    Đang gửi...
+                                </>
+                            ) : (
+                                "Gửi đánh giá"
+                            )}
+                        </Button>
+                        <Button type="button" variant="outline" onClick={resetReviewForm} disabled={isCreatingReview} className="w-full">
+                            Đóng
+                        </Button>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };
