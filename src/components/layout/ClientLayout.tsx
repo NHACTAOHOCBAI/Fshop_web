@@ -1,7 +1,11 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
-import { Heart, ShoppingCart, UserRound } from "lucide-react";
+import { Bell, Heart, Loader2, ShoppingCart, UserRound } from "lucide-react";
 
+import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useMarkNotificationAsRead, useMyNotifications, useNotificationRealtime } from "@/hooks/useNotifications";
+import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import type { Notification } from "@/types/notification";
 
 const navItems = [
     { to: "/", label: "Trang chủ", end: true },
@@ -9,6 +13,24 @@ const navItems = [
     { to: "/women", label: "Nữ", end: false },
     { to: "/kids", label: "Trẻ em", end: false },
 ];
+
+const formatNotificationTime = (value: string) => {
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) {
+        return "Vừa xong";
+    }
+
+    return date.toLocaleString("vi-VN", {
+        hour: "2-digit",
+        minute: "2-digit",
+        day: "2-digit",
+        month: "2-digit",
+    });
+};
+
+const getNotificationTitle = (notification: Notification) => {
+    return notification.title?.trim() || "Thông báo mới";
+};
 
 const ClientLayout = () => {
     const router = useNavigate();
@@ -38,12 +60,95 @@ const ClientLayout = () => {
                                     : breadcrumbDepartment === "women"
                                         ? "nữ"
                                         : "trẻ-em";
+    const isAuthenticated = Boolean(authStorage.getAccessToken());
+
+    useNotificationRealtime(isAuthenticated);
+
+    const { data: notificationsData, isFetching: isFetchingNotifications } = useMyNotifications({
+        page: 1,
+        limit: 5,
+        sortBy: "createdAt",
+        sortOrder: "DESC",
+    });
+    const { mutate: markOneAsRead } = useMarkNotificationAsRead();
+
+    const notifications = notificationsData?.data ?? [];
+    const unreadCount = notifications.filter((item) => !item.isRead).length;
+
+    const handleOpenNotification = (notification: Notification) => {
+        if (!notification.isRead) {
+            markOneAsRead(notification.id);
+        }
+
+        router("/my-account/notifications");
+    };
 
     return (
         <div className="min-h-screen bg-white text-slate-900">
             <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
                 <div className="mx-auto flex w-full max-w-6xl items-center justify-end gap-3  border-slate-100 px-4 py-1 md:px-8">
                     <div className="flex items-center gap-2 text-slate-500">
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <button type="button" className="relative rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
+                                    <Bell className="size-4" />
+                                    {unreadCount > 0 && (
+                                        <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-white">
+                                            {unreadCount > 9 ? "9+" : unreadCount}
+                                        </span>
+                                    )}
+                                </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-96 rounded-xl p-0">
+                                <div className="border-b border-slate-100 px-4 py-3">
+                                    <p className="text-sm font-semibold text-slate-900">Thông báo</p>
+                                    <p className="text-xs text-slate-500">
+                                        {unreadCount > 0 ? `${unreadCount} chưa đọc` : "Bạn đã đọc hết"}
+                                    </p>
+                                </div>
+
+                                <div className="max-h-80 overflow-y-auto">
+                                    {isFetchingNotifications ? (
+                                        <div className="flex items-center justify-center gap-2 px-4 py-6 text-xs text-slate-500">
+                                            <Loader2 className="size-3 animate-spin" />
+                                            Đang tải...
+                                        </div>
+                                    ) : notifications.length === 0 ? (
+                                        <div className="px-4 py-6 text-center text-xs text-slate-500">Chưa có thông báo nào</div>
+                                    ) : (
+                                        notifications.map((notification) => (
+                                            <button
+                                                key={notification.id}
+                                                type="button"
+                                                onClick={() => handleOpenNotification(notification)}
+                                                className={cn(
+                                                    "w-full border-b border-slate-100 px-4 py-3 text-left transition-colors last:border-none hover:bg-slate-50",
+                                                    !notification.isRead && "bg-primary/5"
+                                                )}
+                                            >
+                                                <div className="flex items-start justify-between gap-3">
+                                                    <p className="line-clamp-1 text-sm font-medium text-slate-800">{getNotificationTitle(notification)}</p>
+                                                    <span className="shrink-0 text-[11px] text-slate-400">{formatNotificationTime(notification.createdAt)}</span>
+                                                </div>
+                                                {notification.message && (
+                                                    <p className="mt-1 line-clamp-2 text-xs text-slate-500">{notification.message}</p>
+                                                )}
+                                            </button>
+                                        ))
+                                    )}
+                                </div>
+
+                                <div className="border-t border-slate-100 px-4 py-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => router("/my-account/notifications")}
+                                        className="w-full rounded-md py-1.5 text-xs font-medium text-primary transition-colors hover:bg-primary/5"
+                                    >
+                                        Xem tất cả thông báo
+                                    </button>
+                                </div>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
                         <button onClick={() => router("/my-account/wishlists")} type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
                             <Heart className="size-4" />
                         </button>
