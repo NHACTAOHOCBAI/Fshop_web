@@ -26,8 +26,8 @@ export const getPosts = async (params: GetPostsParams = {}) => {
  * Get single post by ID
  */
 export const getPostById = async (id: number) => {
-    const response = await axiosInstance.get<Post>(`${API_BASE}/${id}`);
-    return response.data;
+    const response = await axiosInstance.get(`${API_BASE}/${id}`) as { data: { data: Post } };
+    return response.data.data;
 };
 
 /**

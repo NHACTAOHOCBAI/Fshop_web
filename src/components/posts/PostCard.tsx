@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, MoreVertical, Trash2 } from "lucide-react";
+import { Bookmark, Heart, MessageCircle, MoreVertical, Trash2 } from "lucide-react";
 import { Link } from "react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -40,6 +40,7 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
 
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isUserLiked, setIsUserLiked] = useState(false);
+    const [isSaved, setIsSaved] = useState(false);
 
     const displayImages = useMemo(() => post.images.slice(0, 4), [post.images]);
     const remainingImages = Math.max(0, post.images.length - 4);
@@ -72,29 +73,29 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
     return (
         <>
             <Link to={`/community/${post.id}`} className="block">
-                <div className="bg-white rounded-lg shadow hover:shadow-lg transition-shadow overflow-hidden">
+                <div className="overflow-hidden rounded-xl border border-[#EAF0FF] bg-white transition-shadow ">
                     {/* Author Header */}
-                    <div className="px-6 py-4 border-b border-slate-100 flex items-center justify-between">
+                    <div className="flex items-center justify-between border-b border-[#F1F5F9] px-4 py-3">
                         <div className="flex items-center gap-3">
-                            {post.user.avatar && (
+                            <div className="rounded-full bg-[#40BFFF] p-[2px]">
                                 <img
-                                    src={post.user.avatar}
+                                    src={post.user.avatar || "https://via.placeholder.com/80"}
                                     alt={post.user.fullName}
-                                    className="w-10 h-10 rounded-full object-cover"
+                                    className="h-9 w-9 rounded-full border-2 border-white object-cover"
                                 />
-                            )}
+                            </div>
                             <div>
-                                <p className="font-semibold text-slate-900 text-sm">
+                                <p className="text-sm font-bold text-[#223263]">
                                     {post.user.fullName}
                                 </p>
-                                <p className="text-xs text-slate-500">{formatDate(post.createdAt)}</p>
+                                <p className="text-xs text-[#9098B1]">{formatDate(post.createdAt)}</p>
                             </div>
                         </div>
 
                         {isOwner && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
+                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[#9098B1]">
                                         <MoreVertical className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -114,35 +115,11 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                         )}
                     </div>
 
-                    {/* Content */}
-                    <div className="px-6 py-4">
-                        {post.content && (
-                            <p className="text-slate-700 mb-3 line-clamp-3 text-sm leading-relaxed">
-                                {post.content}
-                            </p>
-                        )}
-
-                        {/* Hashtags */}
-                        {post.postHashtags.length > 0 && (
-                            <div className="flex flex-wrap gap-1.5 mb-3">
-                                {post.postHashtags.map((ph) => (
-                                    <span
-                                        key={ph.id}
-                                        className="text-xs text-blue-600 font-medium"
-                                        onClick={(e) => e.preventDefault()}
-                                    >
-                                        #{ph.hashtag.name}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
                     {/* Images Grid */}
                     {displayImages.length > 0 && (
-                        <div className="px-6 pb-4">
+                        <div>
                             <div
-                                className={`grid gap-2 ${
+                                className={`grid gap-px bg-[#F1F5F9] ${
                                     displayImages.length === 1
                                         ? "grid-cols-1"
                                         : displayImages.length === 2
@@ -154,16 +131,16 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                                 {displayImages.map((image, idx) => (
                                     <div
                                         key={image.id}
-                                        className="relative bg-slate-200 rounded overflow-hidden aspect-square group"
+                                        className={`relative overflow-hidden bg-slate-200 group ${displayImages.length === 1 ? "aspect-[4/5]" : "aspect-square"}`}
                                     >
                                         <img
                                             src={image.imageUrl}
                                             alt="post"
-                                            className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                            className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]"
                                         />
                                         {remainingImages > 0 && idx === 3 && (
-                                            <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                                                <span className="text-white font-semibold text-sm">
+                                            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                                                <span className="text-sm font-semibold text-white">
                                                     +{remainingImages}
                                                 </span>
                                             </div>
@@ -174,26 +151,62 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                         </div>
                     )}
 
-                    {/* Actions Footer */}
-                    <div
-                        className="px-6 py-3 border-t border-slate-100 flex items-center gap-4 bg-slate-50"
-                        onClick={(e) => e.preventDefault()}
-                    >
-                        <button
-                            onClick={handleLike}
-                            disabled={isLikingPost}
-                            className="flex items-center gap-2 text-slate-600 hover:text-red-600 transition-colors text-sm font-medium disabled:opacity-50"
-                        >
-                            <Heart
-                                className={`h-4 w-4 ${
-                                    isUserLiked ? "fill-red-600 text-red-600" : ""
-                                }`}
-                            />
-                            <span>{post.totalLikes}</span>
-                        </button>
-                        <div className="flex items-center gap-2 text-slate-600 text-sm font-medium">
-                            <MessageCircle className="h-4 w-4" />
-                            <span>{post.totalComments}</span>
+                    {/* Content */}
+                    <div className="px-4 py-3">
+                        <div className="mb-2 flex items-center justify-between" onClick={(e) => e.preventDefault()}>
+                            <div className="flex items-center gap-5">
+                                <button
+                                    onClick={handleLike}
+                                    disabled={isLikingPost}
+                                    className="text-[#223263] transition-colors hover:text-red-500 disabled:opacity-50"
+                                >
+                                    <Heart
+                                        className={`h-6 w-6 ${
+                                            isUserLiked ? "fill-[#FF4858] text-[#FF4858]" : ""
+                                        }`}
+                                    />
+                                </button>
+                                <div className="text-[#223263]">
+                                    <MessageCircle className="h-6 w-6" />
+                                </div>
+                            </div>
+
+                            <button
+                                onClick={() => setIsSaved((prev) => !prev)}
+                                className="text-[#223263] transition-colors hover:text-primary"
+                            >
+                                <Bookmark
+                                    className={`h-6 w-6 ${
+                                        isSaved ? "fill-primary text-primary" : ""
+                                    }`}
+                                />
+                            </button>
+                        </div>
+
+                        <div className="space-y-1">
+                            <p className="text-sm font-bold text-[#223263]">{post.totalLikes.toLocaleString()} lượt thích</p>
+                            {post.content ? (
+                                <p className="line-clamp-2 text-sm leading-6 text-[#223263]">
+                                    <span className="mr-1 font-bold">{post.user.fullName}</span>
+                                    {post.content}
+                                </p>
+                            ) : null}
+
+                            {post.postHashtags.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 pt-0.5">
+                                    {post.postHashtags.map((ph) => (
+                                        <span
+                                            key={ph.id}
+                                            className="text-xs font-semibold text-[#40BFFF]"
+                                            onClick={(e) => e.preventDefault()}
+                                        >
+                                            #{ph.hashtag.name}
+                                        </span>
+                                    ))}
+                                </div>
+                            )}
+
+                            <p className="pt-0.5 text-sm text-[#9098B1]">Xem tất cả {post.totalComments.toLocaleString()} bình luận</p>
                         </div>
                     </div>
                 </div>

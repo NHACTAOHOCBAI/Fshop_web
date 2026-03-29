@@ -8,8 +8,12 @@ import { usePosts } from "@/hooks/usePosts";
 const CommunityPage = () => {
     const [page, setPage] = useState(1);
     const limit = 10;
-
-    const postsQuery = usePosts({ page, limit, sortBy: "createdAt", sortOrder: "DESC" });
+    const postsQuery = usePosts({
+        page,
+        limit,
+        sortBy: "createdAt",
+        sortOrder: "DESC",
+    });
     const posts = postsQuery.data?.data ?? [];
     const total = postsQuery.data?.pagination?.total ?? 0;
     const totalPages = Math.ceil(total / limit);
@@ -30,86 +34,100 @@ const CommunityPage = () => {
     }, [postsQuery]);
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="max-w-3xl mx-auto px-4">
-                {/* Header */}
-                <div className="flex items-center justify-between mb-8">
-                    <div>
-                        <h1 className="text-4xl font-bold text-slate-900">Cộng đồng</h1>
-                        <p className="text-slate-600 mt-1">
-                            {total > 0 ? `${total} bài viết` : "Chưa có bài viết nào"}
-                        </p>
-                    </div>
-                    <Link to="/community/create">
-                        <Button>
-                            <Plus className="mr-2 h-4 w-4" />
-                            Tạo bài viết
-                        </Button>
-                    </Link>
-                </div>
+        <div >
 
-                {/* Posts List */}
-                {postsQuery.isLoading && page === 1 ? (
-                    <div className="flex items-center justify-center py-24">
-                        <div className="text-center">
-                            <Loader2 className="h-8 w-8 animate-spin text-slate-400 mx-auto mb-3" />
+            <main className="w-full gap-8 flex justify-between">
+                <section className="flex-5">
+                    {postsQuery.isLoading && page === 1 ? (
+                        <div className="rounded-2xl border border-[#EAF0FF] bg-white px-6 py-20 text-center ">
+                            <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-slate-400" />
                             <p className="text-slate-600">Đang tải bài viết...</p>
                         </div>
-                    </div>
-                ) : postsQuery.isError ? (
-                    <div className="bg-white rounded-lg shadow p-8 text-center">
-                        <p className="text-slate-600 mb-4">Đã xảy ra lỗi khi tải bài viết</p>
-                        <Button onClick={() => postsQuery.refetch()}>Thử lại</Button>
-                    </div>
-                ) : posts.length === 0 ? (
-                    <div className="bg-white rounded-lg shadow p-12 text-center">
-                        <p className="text-slate-600 mb-4">Chưa có bài viết nào. Hãy làm cái đầu tiên!</p>
-                        <Link to="/community/create">
-                            <Button>
-                                <Plus className="mr-2 h-4 w-4" />
-                                Tạo bài viết
-                            </Button>
-                        </Link>
-                    </div>
-                ) : (
-                    <>
-                        <div className="space-y-4">
-                            {posts.map((post) => (
-                                <PostCard
-                                    key={post.id}
-                                    post={post}
-                                    onPostDeleted={handlePostDeleted}
-                                />
-                            ))}
+                    ) : postsQuery.isError ? (
+                        <div className="rounded-2xl border border-[#EAF0FF] bg-white p-8 text-center ">
+                            <p className="mb-4 text-slate-600">Đã xảy ra lỗi khi tải bài viết</p>
+                            <Button onClick={() => postsQuery.refetch()}>Thử lại</Button>
+                        </div>
+                    ) : posts.length === 0 ? (
+                        <div className="rounded-2xl border border-[#EAF0FF] bg-white p-12 text-center ">
+                            <Link to="/community/create">
+                                <Button>
+                                    <Plus className="mr-2 h-4 w-4" />
+                                    Tạo bài viết
+                                </Button>
+                            </Link>
+                        </div>
+                    ) : (
+                        <>
+                            <div className="space-y-5">
+                                {posts.map((post) => (
+                                    <PostCard
+                                        key={post.id}
+                                        post={post}
+                                        onPostDeleted={handlePostDeleted}
+                                    />
+                                ))}
+                            </div>
+
+                            {totalPages > 1 && (
+                                <div className="mt-6 flex items-center justify-center gap-3 rounded-xl border border-[#EAF0FF] bg-white px-4 py-4 shadow-sm">
+                                    <Button
+                                        variant="outline"
+                                        onClick={handlePreviousPage}
+                                        disabled={page === 1 || postsQuery.isLoading}
+                                    >
+                                        Trước
+                                    </Button>
+
+                                    <div className="text-sm text-slate-600">
+                                        Trang <span className="font-semibold">{page}</span> / {totalPages}
+                                    </div>
+
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleNextPage}
+                                        disabled={page >= totalPages || postsQuery.isLoading}
+                                    >
+                                        Sau
+                                    </Button>
+                                </div>
+                            )}
+                        </>
+                    )}
+                </section>
+
+                <aside className="flex-2">
+                    <div className="sticky top-24 space-y-4">
+                        <div className="rounded-2xl border border-[#EAF0FF] bg-white p-4 ">
+                            <p className="text-base font-bold text-[#223263]">Cộng đồng FShop</p>
+                            <p className="mt-1 text-sm text-[#9098B1]">
+                                {total > 0 ? `${total} bài viết đang hoạt động` : "Chưa có bài viết nào"}
+                            </p>
                         </div>
 
-                        {/* Pagination */}
-                        {totalPages > 1 && (
-                            <div className="flex items-center justify-center gap-3 mt-8 pt-8 border-t border-slate-200">
-                                <Button
-                                    variant="outline"
-                                    onClick={handlePreviousPage}
-                                    disabled={page === 1 || postsQuery.isLoading}
-                                >
-                                    Trước
-                                </Button>
+                        <div className="rounded-2xl border border-[#EAF0FF] bg-white p-4 ">
+                            <p className="text-sm font-semibold text-[#223263]">Mẹo nhanh</p>
+                            <p className="mt-2 text-sm leading-6 text-[#64748B]">
+                                Đăng ảnh rõ nét, thêm hashtag ngắn gọn để bài viết dễ được khám phá hơn.
+                            </p>
+                            <Link
+                                to="/community/create"
+                                className="mt-3 inline-flex rounded-lg bg-[#40BFFF] px-3 py-2 text-sm font-semibold text-white hover:bg-[#24B4FF]"
+                            >
+                                <Plus className="mr-1.5 h-4 w-4" />
+                                Tạo bài viết mới
+                            </Link>
+                        </div>
+                    </div>
+                </aside>
+            </main>
 
-                                <div className="text-sm text-slate-600">
-                                    Trang <span className="font-semibold">{page}</span> / {totalPages}
-                                </div>
-
-                                <Button
-                                    variant="outline"
-                                    onClick={handleNextPage}
-                                    disabled={page >= totalPages || postsQuery.isLoading}
-                                >
-                                    Sau
-                                </Button>
-                            </div>
-                        )}
-                    </>
-                )}
-            </div>
+            <Link
+                to="/community/create"
+                className="fixed bottom-6 right-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#40BFFF] text-white shadow-lg shadow-sky-300/50 md:hidden"
+            >
+                <Plus className="h-7 w-7" />
+            </Link>
         </div>
     );
 };
