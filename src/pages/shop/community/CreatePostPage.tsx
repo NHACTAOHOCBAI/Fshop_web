@@ -1,4 +1,4 @@
-import { ArrowLeft, Image, X, AlertCircle } from "lucide-react";
+import { Image, X, AlertCircle } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useNavigate } from "react-router";
 import { useForm } from "react-hook-form";
@@ -28,7 +28,11 @@ const createPostSchema = z.object({
 
 type CreatePostFormData = z.infer<typeof createPostSchema>;
 
-const CreatePostPage = () => {
+type CreatePostPageProps = {
+    onClose?: () => void;
+};
+
+const CreatePostPage = ({ onClose }: CreatePostPageProps) => {
     const navigate = useNavigate();
     const { mutate: createPost, isPending: isCreating } = useCreatePost();
 
@@ -142,6 +146,11 @@ const CreatePostPage = () => {
         );
     }, [contentValue, images.length, hashtags.length]);
 
+    const closeCreateView = useCallback(() => {
+        onClose?.();
+        navigate("/community");
+    }, [navigate, onClose]);
+
     // Handle form submission
     const onSubmit = (data: CreatePostFormData) => {
         if (!hasContent) {
@@ -158,7 +167,7 @@ const CreatePostPage = () => {
             {
                 onSuccess: () => {
                     toast.success("Bài viết đã được tạo");
-                    navigate("/community");
+                    closeCreateView();
                 },
                 onError: (error) => {
                     toast.error(extractApiErrorMessage(error));
@@ -172,31 +181,23 @@ const CreatePostPage = () => {
         if (isDirty) {
             setShowExitDialog(true);
         } else {
-            navigate(-1);
+            closeCreateView();
         }
     };
 
     return (
         <>
-            <div className="min-h-screen bg-gray-50 py-8">
-                <div className="max-w-2xl mx-auto px-4">
+            <div className="max-h-[86vh] overflow-y-auto px-1">
+                <div className="w-full">
                     {/* Header */}
-                    <div className="flex items-center gap-4 mb-6">
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={handleBack}
-                            className="h-8 w-8 p-0"
-                        >
-                            <ArrowLeft className="h-5 w-5" />
-                        </Button>
-                        <h1 className="text-3xl font-bold text-slate-900">Tạo bài viết</h1>
+                    <div className="mb-4">
+                        <h1 className="text-xl font-bold text-slate-900">Tạo bài viết</h1>
                     </div>
 
                     {/* Form */}
-                    <form onSubmit={handleSubmit(onSubmit)} className="bg-white rounded-lg shadow p-6">
+                    <form onSubmit={handleSubmit(onSubmit)} className="p-1">
                         {/* Content */}
-                        <div className="mb-6">
+                        <div className="mb-4">
                             <Label htmlFor="content">Nội dung</Label>
                             <Textarea
                                 id="content"
@@ -221,7 +222,7 @@ const CreatePostPage = () => {
                         </div>
 
                         {/* Hashtags */}
-                        <div className="mb-6">
+                        <div className="mb-4">
                             <Label htmlFor="hashtag">Hashtags</Label>
                             <div className="flex gap-2 mt-2">
                                 <Input
@@ -263,7 +264,7 @@ const CreatePostPage = () => {
                         </div>
 
                         {/* Image Upload */}
-                        <div className="mb-6">
+                        <div className="mb-4">
                             <Label>Ảnh</Label>
                             <div className="mt-2 border-2 border-dashed border-slate-300 rounded-lg p-6 text-center hover:border-slate-400 transition-colors">
                                 <input
@@ -312,7 +313,7 @@ const CreatePostPage = () => {
                         {/* Validation message */}
                         {!hasContent && (
                             <div className="mb-6 p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
-                                <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                                <AlertCircle className="mt-0.5 h-5 w-5 shrink-0 text-yellow-600" />
                                 <p className="text-sm text-yellow-700">Vui lòng nhập nội dung hoặc chọn ảnh</p>
                             </div>
                         )}
@@ -344,7 +345,7 @@ const CreatePostPage = () => {
                             Bạn có những thay đổi chưa được lưu. Nếu bạn rời đi, những thay đổi này sẽ bị mất.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <AlertDialogAction onClick={() => navigate(-1)}>Rời đi</AlertDialogAction>
+                    <AlertDialogAction onClick={closeCreateView}>Rời đi</AlertDialogAction>
                     <AlertDialogCancel>Quay lại</AlertDialogCancel>
                 </AlertDialogContent>
             </AlertDialog>

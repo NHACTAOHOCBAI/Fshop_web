@@ -1,15 +1,17 @@
 import { Loader2, Plus } from "lucide-react";
 import { useState, useCallback } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useMatch, useNavigate, useParams } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PostCard from "@/components/posts/PostCard";
 import { usePosts } from "@/hooks/usePosts";
 import PostDetailPage from "./PostDetailPage";
+import CreatePostPage from "./CreatePostPage";
 const CommunityPage = () => {
     const navigate = useNavigate();
     const { postId } = useParams<{ postId: string }>();
+    const createRouteMatch = useMatch("/community/create");
     const [page, setPage] = useState(1);
     const limit = 10;
     const postsQuery = usePosts({
@@ -23,6 +25,7 @@ const CommunityPage = () => {
     const totalPages = Math.ceil(total / limit);
     const selectedPostId = Number(postId);
     const isDetailOpen = Number.isFinite(selectedPostId) && selectedPostId > 0;
+    const isCreateOpen = !!createRouteMatch;
 
     const handlePreviousPage = useCallback(() => {
         setPage((p) => Math.max(1, p - 1));
@@ -40,6 +43,15 @@ const CommunityPage = () => {
     }, [postsQuery]);
 
     const handleDetailDialogChange = useCallback(
+        (open: boolean) => {
+            if (!open) {
+                navigate("/community");
+            }
+        },
+        [navigate],
+    );
+
+    const handleCreateDialogChange = useCallback(
         (open: boolean) => {
             if (!open) {
                 navigate("/community");
@@ -150,6 +162,15 @@ const CommunityPage = () => {
                         <DialogTitle>Chi tiet bai viet cong dong</DialogTitle>
                     </DialogHeader>
                     {isDetailOpen ? <PostDetailPage /> : null}
+                </DialogContent>
+            </Dialog>
+
+            <Dialog open={isCreateOpen} onOpenChange={handleCreateDialogChange}>
+                <DialogContent className="max-h-[92vh] overflow-hidden p-4 sm:max-w-3xl [&>button]:hidden">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Tao bai viet moi</DialogTitle>
+                    </DialogHeader>
+                    {isCreateOpen ? <CreatePostPage onClose={() => navigate("/community")} /> : null}
                 </DialogContent>
             </Dialog>
         </div>
