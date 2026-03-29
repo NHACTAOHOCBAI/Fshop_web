@@ -20,7 +20,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTogglePostLike, useDeletePost } from "@/hooks/usePosts";
-import { formatDate } from "@/lib/utils";
+import { formatRelativeTime } from "@/lib/utils";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import { authStorage } from "@/lib/auth";
 import type { Post } from "@/types/post";
@@ -29,9 +29,10 @@ import type { User } from "@/types/user";
 interface PostCardProps {
     post: Post;
     onPostDeleted?: () => void;
+    compact?: boolean;
 }
 
-const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
+const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
     const currentUserId = authStorage.getUser<User>()?.id;
     const isOwner = currentUserId === post.userId;
 
@@ -71,23 +72,23 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
 
     return (
         <>
-            <Link to={`/community/${post.id}`} className="mx-auto block max-w-2xl">
+            <Link to={`/community/${post.id}`} className={`mx-auto block ${compact ? "max-w-none" : "max-w-2xl"}`}>
                 <div className="overflow-hidden rounded-3xl border border-[#EAF0FF] bg-white  transition-shadow hover:shadow-sm">
                     {/* Author Header */}
-                    <div className="flex items-center justify-between border-b border-[#F1F5F9] px-3 py-2.5">
+                    <div className={`flex items-center justify-between border-b border-[#F1F5F9] ${compact ? "px-2.5 py-2" : "px-3 py-2.5"}`}>
                         <div className="flex items-center gap-3">
-                            <div className="rounded-full bg-app-primary p-0.1">
+                            <div className="rounded-full bg-app-primary p-0.5">
                                 <img
                                     src={post.user.avatar || "https://via.placeholder.com/80"}
                                     alt={post.user.fullName}
-                                    className="h-8 w-8 rounded-full border-2 border-white object-cover"
+                                    className={`${compact ? "h-7 w-7" : "h-8 w-8"} rounded-full border-2 border-white object-cover`}
                                 />
                             </div>
                             <div>
                                 <p className="text-sm font-bold text-[#223263]">
                                     {post.user.fullName}
                                 </p>
-                                <p className="text-xs text-[#9098B1]">{formatDate(post.createdAt)}</p>
+                                <p className="text-xs text-[#9098B1]">{formatRelativeTime(post.createdAt)}</p>
                             </div>
                         </div>
 
@@ -125,7 +126,6 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                                           ? "grid-cols-2"
                                           : "grid-cols-2"
                                 }`}
-                                onClick={(e) => e.preventDefault()}
                             >
                                 {displayImages.map((image, idx) => (
                                     <div
@@ -151,7 +151,7 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                     )}
 
                     {/* Content */}
-                    <div className="px-3 py-2.5">
+                    <div className={compact ? "px-2.5 py-2" : "px-3 py-2.5"}>
                         <div className="mb-1.5 flex items-center justify-between" onClick={(e) => e.preventDefault()}>
                             <div className="flex items-center gap-4">
                                 <button
@@ -177,7 +177,7 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                         <div className="space-y-1">
                             <p className="text-sm font-bold text-[#223263]">{post.totalLikes.toLocaleString()} lượt thích</p>
                             {post.content ? (
-                                <p className="line-clamp-2 text-sm leading-5 text-[#223263]">
+                                <p className={`line-clamp-2 text-sm text-[#223263] ${compact ? "leading-5" : "leading-5"}`}>
                                     <span className="mr-1 font-bold">{post.user.fullName}</span>
                                     {post.content}
                                 </p>
@@ -197,7 +197,9 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                                 </div>
                             )}
 
-                            <p className="pt-0.5 text-sm text-[#9098B1]">Xem tất cả {post.totalComments.toLocaleString()} bình luận</p>
+                            {!compact ? (
+                                <p className="pt-0.5 text-sm text-[#9098B1]">Xem tất cả {post.totalComments.toLocaleString()} bình luận</p>
+                            ) : null}
                         </div>
                     </div>
                 </div>

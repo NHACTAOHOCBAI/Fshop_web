@@ -8,7 +8,7 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { formatDate } from "@/lib/utils";
+import { formatRelativeTime, toAlias } from "@/lib/utils";
 import { authStorage } from "@/lib/auth";
 import type { PostComment } from "@/types/post";
 import type { User } from "@/types/user";
@@ -37,23 +37,27 @@ const CommentItem = ({
     return (
         <div className={`flex gap-3 ${depth > 0 ? "ml-6" : ""} py-3`}>
             {/* Avatar */}
-            {comment.user.avatar && (
+            {comment.user.avatar ? (
                 <img
                     src={comment.user.avatar}
                     alt={comment.user.fullName}
-                    className="w-8 h-8 rounded-full object-cover flex-shrink-0 mt-1"
+                    className="mt-1 h-8 w-8 shrink-0 rounded-full object-cover"
                 />
+            ) : (
+                <div className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-200 text-[11px] font-semibold text-slate-700">
+                    {toAlias(comment.user.fullName || "U")}
+                </div>
             )}
 
             {/* Comment Content */}
-            <div className="flex-grow min-w-0">
+            <div className="grow min-w-0">
                 {/* Header */}
                 <div className="flex items-center justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2">
                         <p className="font-semibold text-slate-900 text-sm">
                             {comment.user.fullName}
                         </p>
-                        <p className="text-xs text-slate-500">{formatDate(comment.createdAt)}</p>
+                        <p className="text-xs text-slate-500">{formatRelativeTime(comment.createdAt)}</p>
                     </div>
 
                     {isOwner && (
@@ -90,7 +94,7 @@ const CommentItem = ({
                 </div>
 
                 {/* Comment Text */}
-                <p className="text-slate-700 text-sm mb-2 break-words">{comment.content}</p>
+                <p className="mb-2 text-sm text-slate-700 wrap-break-word">{comment.content}</p>
 
                 {/* Actions */}
                 <div className="flex items-center gap-3 -ml-2">

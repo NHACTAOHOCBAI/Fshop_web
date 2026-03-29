@@ -176,10 +176,16 @@ export const useDeletePostComment = () => {
 /**
  * Get replies for a comment
  */
-export const useCommentReplies = (postId: number, commentId: number, params?: GetPostsParams) => {
+export const useCommentReplies = (
+    postId: number,
+    commentId: number,
+    params?: GetPostsParams,
+    enabled = true,
+) => {
     return useQuery({
         queryKey: [...POSTS_QUERY_KEY, postId, "comments", commentId, "replies", params],
         queryFn: () => postsService.getCommentReplies(postId, commentId, params),
+        enabled,
     });
 };
 
@@ -204,6 +210,12 @@ export const useAddCommentReply = () => {
             queryClient.invalidateQueries({
                 queryKey: [...POSTS_QUERY_KEY, data.postId, "comments", data.parentCommentId, "replies"],
             });
+
+            // Also refresh comment list and post detail to sync reply count immediately
+            queryClient.invalidateQueries({
+                queryKey: [...POSTS_QUERY_KEY, data.postId, "comments"],
+            });
+            queryClient.invalidateQueries({ queryKey: [...POSTS_QUERY_KEY, data.postId] });
         },
     });
 };

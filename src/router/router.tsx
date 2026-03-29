@@ -33,7 +33,6 @@ import RegisterPage from "@/pages/auth/register/RegisterPage";
 import ClientProductsPage from "@/pages/shop/products/ClientProductsPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
 import HomePage from "@/pages/shop/home/HomePage";
-import PostDetailPage from "@/pages/shop/community/PostDetailPage";
 import CreatePostPage from "@/pages/shop/community/CreatePostPage";
 import CommunityPage from "@/pages/shop/community/CommunityPage";
 
@@ -72,7 +71,7 @@ const router = createBrowserRouter([
       },
       {
         path: "community/:postId",
-        element: <PostDetailPage />,
+        element: <CommunityPage />,
       },
       {
         path: "my-account",

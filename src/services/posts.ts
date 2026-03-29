@@ -122,7 +122,7 @@ export const getPostComments = async (postId: number, params: GetPostsParams = {
  */
 export const addPostComment = async (postId: number, payload: CreateCommentPayload) => {
     const response = await axiosInstance.post<PostComment>(
-        `${API_BASE}/${postId}/comments`,
+        `${API_BASE}/${postId}/comment`,
         payload
     );
     return response.data;

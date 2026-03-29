@@ -1,11 +1,15 @@
 import { Loader2, Plus } from "lucide-react";
 import { useState, useCallback } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import PostCard from "@/components/posts/PostCard";
 import { usePosts } from "@/hooks/usePosts";
+import PostDetailPage from "./PostDetailPage";
 const CommunityPage = () => {
+    const navigate = useNavigate();
+    const { postId } = useParams<{ postId: string }>();
     const [page, setPage] = useState(1);
     const limit = 10;
     const postsQuery = usePosts({
@@ -17,6 +21,8 @@ const CommunityPage = () => {
     const posts = postsQuery.data?.data ?? [];
     const total = postsQuery.data?.pagination?.total ?? 0;
     const totalPages = Math.ceil(total / limit);
+    const selectedPostId = Number(postId);
+    const isDetailOpen = Number.isFinite(selectedPostId) && selectedPostId > 0;
 
     const handlePreviousPage = useCallback(() => {
         setPage((p) => Math.max(1, p - 1));
@@ -32,6 +38,15 @@ const CommunityPage = () => {
         // Refetch posts when post is deleted
         postsQuery.refetch();
     }, [postsQuery]);
+
+    const handleDetailDialogChange = useCallback(
+        (open: boolean) => {
+            if (!open) {
+                navigate("/community");
+            }
+        },
+        [navigate],
+    );
 
     return (
         <div >
@@ -112,7 +127,7 @@ const CommunityPage = () => {
                             </p>
                             <Link
                                 to="/community/create"
-                                className="mt-3 inline-flex rounded-lg bg-[#40BFFF] px-3 py-2 text-sm font-semibold text-white hover:bg-[#24B4FF]"
+                                className="mt-3 inline-flex rounded-lg bg-app-primary px-3 py-2 text-sm font-semibold text-white hover:bg-app-primary/90"
                             >
                                 <Plus className="mr-1.5 h-4 w-4" />
                                 Tạo bài viết mới
@@ -124,10 +139,19 @@ const CommunityPage = () => {
 
             <Link
                 to="/community/create"
-                className="fixed bottom-6 right-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-[#40BFFF] text-white shadow-lg shadow-sky-300/50 md:hidden"
+                className="fixed bottom-6 right-6 inline-flex h-14 w-14 items-center justify-center rounded-full bg-app-primary text-white shadow-lg shadow-sky-300/50 md:hidden"
             >
                 <Plus className="h-7 w-7" />
             </Link>
+
+            <Dialog open={isDetailOpen} onOpenChange={handleDetailDialogChange}>
+                <DialogContent className="max-h-[92vh] overflow-hidden p-4 sm:max-w-5xl [&>button]:hidden">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Chi tiet bai viet cong dong</DialogTitle>
+                    </DialogHeader>
+                    {isDetailOpen ? <PostDetailPage /> : null}
+                </DialogContent>
+            </Dialog>
         </div>
     );
 };

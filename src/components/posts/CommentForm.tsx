@@ -1,5 +1,5 @@
 import { Loader2, Send, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -19,6 +19,24 @@ const CommentForm = ({
     onCancelReply,
 }: CommentFormProps) => {
     const [content, setContent] = useState("");
+    const textareaRef = useRef<HTMLTextAreaElement | null>(null);
+
+    const resizeTextarea = () => {
+        if (!textareaRef.current) return;
+
+        textareaRef.current.style.height = "auto";
+        textareaRef.current.style.height = `${Math.min(textareaRef.current.scrollHeight, 180)}px`;
+    };
+
+    useEffect(() => {
+        if (replyingTo) {
+            textareaRef.current?.focus();
+        }
+    }, [replyingTo]);
+
+    useEffect(() => {
+        resizeTextarea();
+    }, [content]);
 
     const handleSubmit = () => {
         if (!content.trim()) return;
@@ -26,18 +44,25 @@ const CommentForm = ({
         setContent("");
     };
 
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+            e.preventDefault();
+            handleSubmit();
+        }
+    };
+
     return (
-        <div className="bg-slate-50 rounded-lg p-4 border border-slate-100">
+        <div className="rounded-xl border border-slate-200 bg-white p-3 ">
             {/* Reply To Info */}
             {replyingTo && (
-                <div className="flex items-center justify-between mb-3 pb-3 border-b border-slate-200">
-                    <p className="text-xs text-slate-600">
+                <div className="mb-2 flex items-center justify-between rounded-lg bg-sky-50 px-2.5 py-1.5">
+                    <p className="text-xs text-slate-700">
                         Trả lời: <span className="font-semibold">{replyingTo.user.fullName}</span>
                     </p>
                     <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 w-6 p-0"
+                        className="h-6 w-6 p-0 text-slate-500 hover:text-slate-800"
                         onClick={onCancelReply}
                     >
                         <X className="h-4 w-4" />
@@ -46,12 +71,14 @@ const CommentForm = ({
             )}
 
             {/* Form */}
-            <div className="space-y-3">
+            <div className="space-y-2">
                 <Textarea
+                    ref={textareaRef}
                     value={content}
                     onChange={(e) => setContent(e.target.value)}
+                    onKeyDown={handleKeyDown}
                     placeholder={replyingTo ? "Viết câu trả lời..." : "Viết bình luận..."}
-                    className="min-h-[80px] resize-none focus-visible:ring-1"
+                    className="min-h-14 max-h-45 resize-none border-slate-200 bg-slate-50 focus-visible:ring-1"
                     maxLength={1000}
                 />
 
