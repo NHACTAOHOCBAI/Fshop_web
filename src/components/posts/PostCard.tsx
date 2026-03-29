@@ -1,4 +1,4 @@
-import { Bookmark, Heart, MessageCircle, MoreVertical, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, MoreVertical, Trash2 } from "lucide-react";
 import { Link } from "react-router";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -40,7 +40,6 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
 
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
     const [isUserLiked, setIsUserLiked] = useState(false);
-    const [isSaved, setIsSaved] = useState(false);
 
     const displayImages = useMemo(() => post.images.slice(0, 4), [post.images]);
     const remainingImages = Math.max(0, post.images.length - 4);
@@ -72,16 +71,16 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
 
     return (
         <>
-            <Link to={`/community/${post.id}`} className="block">
-                <div className="overflow-hidden rounded-xl border border-[#EAF0FF] bg-white transition-shadow ">
+            <Link to={`/community/${post.id}`} className="mx-auto block max-w-2xl">
+                <div className="overflow-hidden rounded-3xl border border-[#EAF0FF] bg-white  transition-shadow hover:shadow-sm">
                     {/* Author Header */}
-                    <div className="flex items-center justify-between border-b border-[#F1F5F9] px-4 py-3">
+                    <div className="flex items-center justify-between border-b border-[#F1F5F9] px-3 py-2.5">
                         <div className="flex items-center gap-3">
-                            <div className="rounded-full bg-[#40BFFF] p-[2px]">
+                            <div className="rounded-full bg-app-primary p-0.1">
                                 <img
                                     src={post.user.avatar || "https://via.placeholder.com/80"}
                                     alt={post.user.fullName}
-                                    className="h-9 w-9 rounded-full border-2 border-white object-cover"
+                                    className="h-8 w-8 rounded-full border-2 border-white object-cover"
                                 />
                             </div>
                             <div>
@@ -95,7 +94,7 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                         {isOwner && (
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0 text-[#9098B1]">
+                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-[#9098B1]">
                                         <MoreVertical className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -131,12 +130,12 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                                 {displayImages.map((image, idx) => (
                                     <div
                                         key={image.id}
-                                        className={`relative overflow-hidden bg-slate-200 group ${displayImages.length === 1 ? "aspect-[4/5]" : "aspect-square"}`}
+                                        className={`group relative overflow-hidden bg-slate-200 ${displayImages.length === 1 ? "aspect-5/4" : "aspect-6/5"}`}
                                     >
                                         <img
                                             src={image.imageUrl}
                                             alt="post"
-                                            className="h-full w-full object-cover transition-transform group-hover:scale-[1.03]"
+                                            className="h-full w-full object-cover transition-transform"
                                         />
                                         {remainingImages > 0 && idx === 3 && (
                                             <div className="absolute inset-0 flex items-center justify-center bg-black/50">
@@ -152,41 +151,33 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                     )}
 
                     {/* Content */}
-                    <div className="px-4 py-3">
-                        <div className="mb-2 flex items-center justify-between" onClick={(e) => e.preventDefault()}>
-                            <div className="flex items-center gap-5">
+                    <div className="px-3 py-2.5">
+                        <div className="mb-1.5 flex items-center justify-between" onClick={(e) => e.preventDefault()}>
+                            <div className="flex items-center gap-4">
                                 <button
                                     onClick={handleLike}
                                     disabled={isLikingPost}
                                     className="text-[#223263] transition-colors hover:text-red-500 disabled:opacity-50"
                                 >
                                     <Heart
-                                        className={`h-6 w-6 ${
-                                            isUserLiked ? "fill-[#FF4858] text-[#FF4858]" : ""
+                                        className={`h-5 w-5 ${
+                                            isUserLiked ? "fill-app-secondary text-app-secondary" : ""
                                         }`}
                                     />
                                 </button>
-                                <div className="text-[#223263]">
-                                    <MessageCircle className="h-6 w-6" />
-                                </div>
+                                <button
+                                    type="button"
+                                    className="text-[#223263] transition-colors hover:text-primary"
+                                >
+                                    <MessageCircle className="h-5 w-5" />
+                                </button>
                             </div>
-
-                            <button
-                                onClick={() => setIsSaved((prev) => !prev)}
-                                className="text-[#223263] transition-colors hover:text-primary"
-                            >
-                                <Bookmark
-                                    className={`h-6 w-6 ${
-                                        isSaved ? "fill-primary text-primary" : ""
-                                    }`}
-                                />
-                            </button>
                         </div>
 
                         <div className="space-y-1">
                             <p className="text-sm font-bold text-[#223263]">{post.totalLikes.toLocaleString()} lượt thích</p>
                             {post.content ? (
-                                <p className="line-clamp-2 text-sm leading-6 text-[#223263]">
+                                <p className="line-clamp-2 text-sm leading-5 text-[#223263]">
                                     <span className="mr-1 font-bold">{post.user.fullName}</span>
                                     {post.content}
                                 </p>
@@ -197,7 +188,7 @@ const PostCard = ({ post, onPostDeleted }: PostCardProps) => {
                                     {post.postHashtags.map((ph) => (
                                         <span
                                             key={ph.id}
-                                            className="text-xs font-semibold text-[#40BFFF]"
+                                            className="text-xs font-semibold text-app-primary"
                                             onClick={(e) => e.preventDefault()}
                                         >
                                             #{ph.hashtag.name}
