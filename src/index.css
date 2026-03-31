@@ -1,7 +1,7 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-@import "@fontsource-variable/geist";
+@import "@fontsource/be-vietnam-pro";
 
 @custom-variant dark (&:is(.dark *));
 
@@ -75,7 +75,7 @@
 }
 
 @theme inline {
-  --font-sans: 'Geist Variable', sans-serif;
+  --font-sans: 'Be Vietnam Pro', sans-serif;
   --color-app-primary: #40BFFF;
   --color-app-secondary: #FF4858;
   --color-sidebar-ring: var(--sidebar-ring);

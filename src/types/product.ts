@@ -65,3 +65,14 @@ export type CreateProductPayload = {
     productImages: File[];
     variants: CreateProductVariantPayload[];
 };
+
+export type ImageSearchResult = {
+    product_id: number;
+    score: number;
+    image_url?: string;
+};
+
+export type VoiceSearchResponse = {
+    transcribed_text: string;
+    products: ImageSearchResult[];
+};

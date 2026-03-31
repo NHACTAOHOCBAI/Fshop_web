@@ -1,5 +1,5 @@
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal } from "lucide-react";
-import { useMemo } from "react";
+import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Camera, Mic } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,9 +10,13 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import { ImageSearchDialog } from "@/components/image-search-dialog";
+import { VoiceSearchDialog } from "@/components/voice-search-dialog";
 import { useShopCatalog, type ShopSortOption } from "@/hooks/useShopCatalog";
 import { buildPaginationItems } from "@/lib/utils";
 import type { DepartmentType } from "@/types/category";
+import type { ImageSearchResult, Product, VoiceSearchResponse } from "@/types/product";
+import { getProductById } from "@/services/products";
 import ProductCard from "./components/ProductCard";
 
 const sortOptions: { value: ShopSortOption; label: string }[] = [
@@ -76,6 +80,14 @@ const FilterPanel = ({ title, name, items, selectedId, onSelect, onClear }: Filt
 
 const ClientProductsPage = () => {
     const params = useParams<{ department?: string }>();
+    const [isImageSearchDialogOpen, setIsImageSearchDialogOpen] = useState(false);
+    const [isVoiceSearchDialogOpen, setIsVoiceSearchDialogOpen] = useState(false);
+    const [imageSearchProducts, setImageSearchProducts] = useState<Product[]>([]);
+    const [voiceSearchProducts, setVoiceSearchProducts] = useState<Product[]>([]);
+    const [voiceTranscription, setVoiceTranscription] = useState("");
+    const [isLoadingImageResults, setIsLoadingImageResults] = useState(false);
+    const [isLoadingVoiceResults, setIsLoadingVoiceResults] = useState(false);
+
     const department = useMemo<DepartmentType>(() => {
         const rawDepartment = params.department?.toLowerCase();
         if (rawDepartment && departmentList.includes(rawDepartment as DepartmentType)) {
@@ -90,7 +102,6 @@ const ClientProductsPage = () => {
     const {
         page,
         totalPages,
-        totalItems,
         searchInput,
         sortOption,
         selectedCategoryId,
@@ -111,6 +122,66 @@ const ClientProductsPage = () => {
     } = useShopCatalog(department);
 
     const pageItems = buildPaginationItems(page, totalPages);
+
+    const hydrateProductsFromHits = async (results: ImageSearchResult[]) => {
+        const productPromises = results.map((result) =>
+            getProductById(result.product_id)
+                .then((response) => response.data)
+                .catch(() => null)
+        );
+
+        const productDetails = await Promise.all(productPromises);
+        return productDetails.filter((product): product is Product => product !== null);
+    };
+
+    const handleImageSearchSuccess = async (results: ImageSearchResult[]) => {
+        setIsLoadingImageResults(true);
+        try {
+            const productDetails = await hydrateProductsFromHits(results);
+            setImageSearchProducts(productDetails);
+            setVoiceSearchProducts([]);
+            setVoiceTranscription("");
+        } catch (error) {
+            console.error("Failed to fetch image search product details:", error);
+        } finally {
+            setIsLoadingImageResults(false);
+        }
+    };
+
+    const handleVoiceSearchSuccess = async (payload: VoiceSearchResponse) => {
+        setIsLoadingVoiceResults(true);
+        try {
+            const productDetails = await hydrateProductsFromHits(payload.products);
+            setVoiceSearchProducts(productDetails);
+            setVoiceTranscription(payload.transcribed_text);
+            setImageSearchProducts([]);
+
+            if (payload.transcribed_text) {
+                onSearchChange(payload.transcribed_text);
+            }
+        } catch (error) {
+            console.error("Failed to fetch voice search product details:", error);
+        } finally {
+            setIsLoadingVoiceResults(false);
+        }
+    };
+
+    const handleClearImageSearch = () => {
+        setImageSearchProducts([]);
+        setVoiceSearchProducts([]);
+        setVoiceTranscription("");
+    };
+
+    const hasVoiceResults = voiceSearchProducts.length > 0;
+    const hasImageResults = imageSearchProducts.length > 0;
+    const isShowingAiResults = hasVoiceResults || hasImageResults;
+
+    const displayProducts = hasVoiceResults
+        ? voiceSearchProducts
+        : hasImageResults
+            ? imageSearchProducts
+            : products;
+    const displayTotalItems = displayProducts.length;
 
     return (
 
@@ -148,9 +219,27 @@ const ClientProductsPage = () => {
                                 value={searchInput}
                                 onChange={(event) => onSearchChange(event.target.value)}
                                 placeholder="Tìm kiếm sản phẩm..."
-                                className="p-5 rounded-[24px]"
+                                className="p-5 rounded-[24px] pl-23 pr-10"
                             />
-                            <Search className="pointer-events-none absolute right-4 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                            <button
+                                type="button"
+                                onClick={() => setIsImageSearchDialogOpen(true)}
+                                className="absolute left-4 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary"
+                                title="Tìm kiếm bằng hình ảnh"
+                            >
+                                <Camera className="size-4" />
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsVoiceSearchDialogOpen(true)}
+                                className="absolute left-12 top-1/2 -translate-y-1/2 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-100 hover:text-primary"
+                                title="Tìm kiếm bằng giọng nói"
+                            >
+                                <Mic className="size-4" />
+                            </button>
+                            <div className="pointer-events-none absolute right-4 top-1/2 flex gap-2 -translate-y-1/2">
+                                <Search className="size-4 text-slate-400" />
+                            </div>
                         </div>
 
                         <Select value={sortOption} onValueChange={(value) => onSortChange(value as ShopSortOption)}>
@@ -167,10 +256,28 @@ const ClientProductsPage = () => {
                         </Select>
                     </div>
 
-                    <p className="mt-3 text-sm text-slate-600">
-                        Tìm thấy <span className="font-semibold text-primary">{totalItems}</span> sản phẩm
-                        {isFetching ? " (đang cập nhật...)" : ""}
-                    </p>
+                    <div className="mt-3 flex items-center justify-between">
+                        <p className="text-sm text-slate-600">
+                            Tìm thấy <span className="font-semibold text-primary">{displayTotalItems}</span> sản phẩm
+                            {isFetching && !isShowingAiResults ? " (đang cập nhật...)" : ""}
+                            {isLoadingImageResults ? " (đang tải...)" : ""}
+                            {isLoadingVoiceResults ? " (đang xử lý giọng nói...)" : ""}
+                        </p>
+                        {isShowingAiResults && (
+                            <button
+                                type="button"
+                                onClick={handleClearImageSearch}
+                                className="text-xs font-medium text-primary hover:underline"
+                            >
+                                Xóa kết quả tìm kiếm AI
+                            </button>
+                        )}
+                    </div>
+                    {voiceTranscription ? (
+                        <p className="mt-2 text-xs text-slate-500">
+                            Bạn vừa nói: <span className="font-medium text-slate-700">"{voiceTranscription}"</span>
+                        </p>
+                    ) : null}
                 </div>
 
                 <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-linear-to-r from-primary/95 via-primary/85 to-cyan-400 p-5 text-white md:p-6">
@@ -188,7 +295,7 @@ const ClientProductsPage = () => {
                     </div>
                 ) : null}
 
-                {isLoading ? (
+                {isLoading || isLoadingImageResults || isLoadingVoiceResults ? (
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         {Array.from({ length: 6 }).map((_, index) => (
                             <div key={index} className="h-67.5 animate-pulse rounded-2xl bg-slate-200" />
@@ -197,53 +304,68 @@ const ClientProductsPage = () => {
                 ) : (
                     <>
                         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-                            {products.map((product) => (
+                            {displayProducts.map((product) => (
                                 <ProductCard key={product.id} product={product} department={department} />
                             ))}
                         </div>
 
-                        {products.length === 0 ? (
+                        {displayProducts.length === 0 ? (
                             <div className="rounded-2xl border border-slate-200 bg-white p-6 text-center text-sm text-slate-500">
-                                Không có sản phẩm phù hợp với bộ lọc hiện tại.
+                                {isShowingAiResults
+                                    ? "Không tìm thấy sản phẩm phù hợp từ tìm kiếm AI."
+                                    : "Không có sản phẩm phù hợp với bộ lọc hiện tại."}
                             </div>
                         ) : null}
                     </>
                 )}
 
-                <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                    <Button variant="outline" size="icon-sm" onClick={() => updatePage(page - 1)} disabled={page <= 1}>
-                        <ChevronLeft className="size-4" />
-                    </Button>
+                {!isShowingAiResults && (
+                    <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+                        <Button variant="outline" size="icon-sm" onClick={() => updatePage(page - 1)} disabled={page <= 1}>
+                            <ChevronLeft className="size-4" />
+                        </Button>
 
-                    {pageItems.map((item, index) => {
-                        const previous = pageItems[index - 1];
-                        const shouldRenderEllipsis = previous !== undefined && item - previous > 1;
+                        {pageItems.map((item, index) => {
+                            const previous = pageItems[index - 1];
+                            const shouldRenderEllipsis = previous !== undefined && item - previous > 1;
 
-                        return (
-                            <div key={item} className="flex items-center gap-2">
-                                {shouldRenderEllipsis ? <span className="px-1 text-slate-400">...</span> : null}
-                                <Button
-                                    variant={item === page ? "default" : "outline"}
-                                    size="sm"
-                                    onClick={() => updatePage(item)}
-                                    className={item === page ? "bg-primary text-white" : ""}
-                                >
-                                    {item}
-                                </Button>
-                            </div>
-                        );
-                    })}
+                            return (
+                                <div key={item} className="flex items-center gap-2">
+                                    {shouldRenderEllipsis ? <span className="px-1 text-slate-400">...</span> : null}
+                                    <Button
+                                        variant={item === page ? "default" : "outline"}
+                                        size="sm"
+                                        onClick={() => updatePage(item)}
+                                        className={item === page ? "bg-primary text-white" : ""}
+                                    >
+                                        {item}
+                                    </Button>
+                                </div>
+                            );
+                        })}
 
-                    <Button
-                        variant="outline"
-                        size="icon-sm"
-                        onClick={() => updatePage(page + 1)}
-                        disabled={page >= totalPages}
-                    >
-                        <ChevronRight className="size-4" />
-                    </Button>
-                </div>
+                        <Button
+                            variant="outline"
+                            size="icon-sm"
+                            onClick={() => updatePage(page + 1)}
+                            disabled={page >= totalPages}
+                        >
+                            <ChevronRight className="size-4" />
+                        </Button>
+                    </div>
+                )}
             </section>
+
+            <ImageSearchDialog
+                open={isImageSearchDialogOpen}
+                onOpenChange={setIsImageSearchDialogOpen}
+                onSuccess={handleImageSearchSuccess}
+            />
+            <VoiceSearchDialog
+                open={isVoiceSearchDialogOpen}
+                onOpenChange={setIsVoiceSearchDialogOpen}
+                onSuccess={handleVoiceSearchSuccess}
+            />
         </div>
     );
 };

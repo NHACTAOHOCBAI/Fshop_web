@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import type { CreateProductPayload, Product } from "@/types/product";
+import type { CreateProductPayload, Product, ImageSearchResult, VoiceSearchResponse } from "@/types/product";
 import type { QueryParams } from "@/types/query";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
 
@@ -51,4 +51,31 @@ export const createProduct = async (payload: CreateProductPayload) => {
             "Content-Type": "multipart/form-data",
         },
     });
+};
+
+export const searchByImage = async (file: File, topK: number = 12) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("topK", String(topK));
+
+    const { data } = await axiosInstance.post<ImageSearchResult[]>("/products/search/image", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+
+    return data;
+};
+
+export const searchByVoice = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const { data } = await axiosInstance.post<VoiceSearchResponse>("/products/search/voice", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+
+    return data;
 };
