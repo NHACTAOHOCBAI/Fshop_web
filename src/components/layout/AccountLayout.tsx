@@ -1,11 +1,14 @@
-import { Bell, Heart, MapPinHouse, Package, UserRound } from "lucide-react";
-import { NavLink, Outlet } from "react-router";
+import { useState } from "react";
+import { Bell, Heart, LogOutIcon, MapPinHouse, MessageCircle, Package, UserRound } from "lucide-react";
+import { NavLink, Outlet, useNavigate } from "react-router";
+import { toast } from "sonner";
 
-import { useMe } from "@/hooks/useAuth";
+import { useLogout, useMe } from "@/hooks/useAuth";
 import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import type { User } from "@/types/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import AccountSupportChatPanel from "@/components/layout/AccountSupportChatPanel";
 
 const sidebarItems = [
     { to: "/my-account/profile", icon: UserRound, label: "Thông tin cá nhân" },
@@ -16,10 +19,23 @@ const sidebarItems = [
 ];
 
 const AccountLayout = () => {
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const navigate = useNavigate();
+    const { mutate: logout, isPending: isLoggingOut } = useLogout();
     const cachedUser = authStorage.getUser<User>();
     const { data } = useMe();
     const user = data?.data ?? cachedUser;
     const avatarFallback = user?.fullName?.trim().charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
+
+    const handleLogout = () => {
+        logout(undefined, {
+            onSettled: () => {
+                authStorage.clear();
+                toast.success("Đã đăng xuất");
+                navigate("/login", { replace: true });
+            },
+        });
+    };
 
     return (
         <div className="flex gap-6 items-start">
@@ -41,6 +57,7 @@ const AccountLayout = () => {
                         <NavLink
                             key={item.to}
                             to={item.to}
+                            onClick={() => setIsChatOpen(false)}
                             className={({ isActive }) =>
                                 cn(
                                     "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
@@ -54,12 +71,34 @@ const AccountLayout = () => {
                             {item.label}
                         </NavLink>
                     ))}
+
+                    <button
+                        type="button"
+                        onClick={() => setIsChatOpen(true)}
+                        className={cn(
+                            "flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
+                            isChatOpen ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                        )}
+                    >
+                        <MessageCircle className="size-4 shrink-0" />
+                        Chat
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        <LogOutIcon className="size-4 shrink-0" />
+                        {isLoggingOut ? "Đang đăng xuất..." : "Logout"}
+                    </button>
                 </nav>
             </aside>
 
             {/* Main content */}
             <div className="min-w-0 flex-1">
-                <Outlet />
+                {isChatOpen ? <AccountSupportChatPanel /> : <Outlet />}
             </div>
         </div>
     );
