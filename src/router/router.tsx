@@ -7,6 +7,7 @@ import AttributesPage from "@/pages/admin/attributes/AttributesPage";
 import BrandsPage from "@/pages/admin/brands/BrandsPage";
 import CategoriesPage from "@/pages/admin/categories/CategoriesPage";
 import AdminCommunityPage from "@/pages/admin/community/CommunityPage";
+import SupportInboxPage from "@/pages/admin/support/SupportInboxPage";
 import CouponsPage from "@/pages/admin/coupons/CouponsPage";
 import CreateCouponPage from "@/pages/admin/coupons/CreateCouponPage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
@@ -191,6 +192,10 @@ const router = createBrowserRouter([
       {
         path: "community",
         element: <AdminCommunityPage />,
+      },
+      {
+        path: "support",
+        element: <SupportInboxPage />,
       },
       {
         path: "livestreams",

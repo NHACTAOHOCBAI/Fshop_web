@@ -1,21 +1,9 @@
 import { io, type Socket } from "socket.io-client";
 
 import axiosInstance from "@/lib/axios";
+import { resolveSocketBaseUrl } from "@/lib/socket";
 import type { Notification, GetMyNotificationsParams } from "@/types/notification";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
-
-const resolveSocketBaseUrl = () => {
-    const apiUrl = import.meta.env.VITE_API_URL as string | undefined;
-    if (!apiUrl) {
-        return window.location.origin;
-    }
-
-    try {
-        return new URL(apiUrl).origin;
-    } catch {
-        return apiUrl;
-    }
-};
 
 export const getMyNotifications = async (params?: GetMyNotificationsParams) => {
     const { data } = await axiosInstance.get<PaginatedApiResponse<Notification>>("/notifications/me", {
