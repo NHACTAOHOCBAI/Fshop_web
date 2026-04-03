@@ -30,6 +30,7 @@ import {
   LayoutDashboardIcon,
   MessageSquareIcon,
   PackageCheckIcon,
+  Phone,
   RulerIcon,
   ShoppingBagIcon,
   TagsIcon,
@@ -84,7 +85,7 @@ const adminMenuItems = [
   { title: "Mã giảm giá", url: "/admin/coupons", icon: <BadgePercentIcon /> },
   { title: "Kho hàng", url: "/admin/stocks", icon: <PackageCheckIcon /> },
   { title: "Cộng đồng", url: "/admin/community", icon: <MessageSquareIcon /> },
-  { title: "Hỗ trợ khách hàng", url: "/admin/support", icon: <MessageSquareIcon /> },
+  { title: "Hỗ trợ khách hàng", url: "/admin/support", icon: <Phone /> },
   { title: "Livestream", url: "/admin/livestreams", icon: <VideoIcon /> },
   { title: "Sao lưu & Khôi phục", url: "/admin/backup-restore", icon: <ArchiveRestoreIcon /> },
 ]
