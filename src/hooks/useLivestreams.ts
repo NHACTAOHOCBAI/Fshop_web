@@ -1,0 +1,469 @@
+import { useEffect, useRef } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+
+import { authStorage } from "@/lib/auth";
+import {
+    connectLivestreamSocket,
+    createLivestream,
+    createLivestreamComment,
+    endLivestream,
+    getLivestreamById,
+    getLivestreamComments,
+    getLivestreams,
+    issueLivestreamAgoraToken,
+    LIVESTREAMS_QUERY_KEY,
+    livestreamByIdQueryKey,
+    livestreamCommentsQueryKey,
+    pinLivestreamProduct,
+    startLivestream,
+    unpinLivestreamProduct,
+    updateLivestream,
+} from "@/services/livestreams";
+import type { GetLivestreamsParams, Livestream, LivestreamComment, LivestreamDetail } from "@/types/livestream";
+import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
+
+const livestreamCommentsPrefixQueryKey = (id: number) => [...LIVESTREAMS_QUERY_KEY, id, "comments"] as const;
+
+const applyViewerCountToCaches = (
+    queryClient: ReturnType<typeof useQueryClient>,
+    livestreamId: number,
+    nextViewerCount: number,
+) => {
+    queryClient.setQueryData<ApiResponse<LivestreamDetail>>(livestreamByIdQueryKey(livestreamId), (old) => {
+        if (!old) return old;
+        return {
+            ...old,
+            data: {
+                ...old.data,
+                viewerCount: nextViewerCount,
+                totalViewers: Math.max(old.data.totalViewers, nextViewerCount),
+            },
+        };
+    });
+
+    queryClient.setQueriesData<PaginatedApiResponse<Livestream>>(
+        { queryKey: LIVESTREAMS_QUERY_KEY },
+        (old) => {
+            if (!old) return old;
+            if (!Array.isArray(old.data)) return old;
+
+            const isLivestreamList = old.data.every(
+                (item) =>
+                    item &&
+                    typeof item === "object" &&
+                    typeof (item as Partial<Livestream>).viewerCount === "number" &&
+                    typeof (item as Partial<Livestream>).totalViewers === "number",
+            );
+            if (!isLivestreamList) return old;
+
+            return {
+                ...old,
+                data: old.data.map((item) =>
+                    item.id === livestreamId
+                        ? {
+                              ...item,
+                              viewerCount: nextViewerCount,
+                              totalViewers: Math.max(item.totalViewers, nextViewerCount),
+                          }
+                        : item,
+                ),
+            };
+        },
+    );
+};
+
+const sortCommentsAsc = (comments: LivestreamComment[]) => {
+    return comments.slice().sort((a, b) => {
+        const timeDiff = new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+        if (timeDiff !== 0) return timeDiff;
+        return a.id - b.id;
+    });
+};
+
+const upsertComment = (comments: LivestreamComment[], incoming: LivestreamComment) => {
+    const existingComment = comments.find((item) => item.id === incoming.id);
+    const normalizedIncoming =
+        incoming.user || !existingComment?.user
+            ? incoming
+            : {
+                  ...incoming,
+                  user: existingComment.user,
+              };
+    const exists = Boolean(existingComment);
+    if (exists) {
+        return {
+            exists,
+            data: sortCommentsAsc(
+                comments.map((item) => (item.id === normalizedIncoming.id ? normalizedIncoming : item)),
+            ),
+        };
+    }
+
+    return {
+        exists,
+        data: sortCommentsAsc([...comments, normalizedIncoming]),
+    };
+};
+
+export const useLivestreams = (params?: GetLivestreamsParams) => {
+    return useQuery({
+        queryKey: [...LIVESTREAMS_QUERY_KEY, params],
+        queryFn: () => getLivestreams(params),
+    });
+};
+
+export const useLivestreamById = (id: number | null, enabled = true) => {
+    return useQuery({
+        queryKey: id ? livestreamByIdQueryKey(id) : [...LIVESTREAMS_QUERY_KEY, "none"],
+        queryFn: () => getLivestreamById(id as number),
+        enabled: enabled && Boolean(id),
+    });
+};
+
+export const useCreateLivestream = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: createLivestream,
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: LIVESTREAMS_QUERY_KEY });
+        },
+    });
+};
+
+export const useUpdateLivestream = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof updateLivestream>[1] }) =>
+            updateLivestream(id, payload),
+        onSuccess: (response, variables) => {
+            queryClient.invalidateQueries({ queryKey: LIVESTREAMS_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: livestreamByIdQueryKey(variables.id) });
+
+            queryClient.setQueryData<ApiResponse<LivestreamDetail>>(livestreamByIdQueryKey(variables.id), (old) => {
+                if (!old) return old;
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        ...response.data,
+                    },
+                };
+            });
+        },
+    });
+};
+
+export const useStartLivestream = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: startLivestream,
+        onSuccess: (response, id) => {
+            queryClient.invalidateQueries({ queryKey: LIVESTREAMS_QUERY_KEY });
+            queryClient.setQueryData<ApiResponse<LivestreamDetail>>(livestreamByIdQueryKey(id), (old) => {
+                if (!old) return old;
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        ...response.data,
+                    },
+                };
+            });
+        },
+    });
+};
+
+export const useEndLivestream = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: endLivestream,
+        onSuccess: (response, id) => {
+            queryClient.invalidateQueries({ queryKey: LIVESTREAMS_QUERY_KEY });
+            queryClient.setQueryData<ApiResponse<LivestreamDetail>>(livestreamByIdQueryKey(id), (old) => {
+                if (!old) return old;
+                return {
+                    ...old,
+                    data: {
+                        ...old.data,
+                        ...response.data,
+                    },
+                };
+            });
+        },
+    });
+};
+
+export const usePinLivestreamProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof pinLivestreamProduct>[1] }) =>
+            pinLivestreamProduct(id, payload),
+        onSuccess: (_response, { id }) => {
+            queryClient.invalidateQueries({ queryKey: livestreamByIdQueryKey(id) });
+        },
+    });
+};
+
+export const useUnpinLivestreamProduct = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, productId }: { id: number; productId: number }) =>
+            unpinLivestreamProduct(id, productId),
+        onSuccess: (_response, { id }) => {
+            queryClient.invalidateQueries({ queryKey: livestreamByIdQueryKey(id) });
+        },
+    });
+};
+
+export const useLivestreamComments = (id: number | null, params?: GetLivestreamsParams, enabled = true) => {
+    return useQuery({
+        queryKey: id ? livestreamCommentsQueryKey(id, params) : [...LIVESTREAMS_QUERY_KEY, "comments", "none"],
+        queryFn: () => getLivestreamComments(id as number, params),
+        enabled: enabled && Boolean(id),
+    });
+};
+
+export const useCreateLivestreamComment = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof createLivestreamComment>[1] }) =>
+            createLivestreamComment(id, payload),
+        onMutate: async ({ id, payload }) => {
+            await queryClient.cancelQueries({ queryKey: livestreamCommentsPrefixQueryKey(id) });
+
+            const currentUser = authStorage.getUser<{
+                id: number;
+                fullName: string | null;
+                avatar: string | null;
+                role: "admin" | "user";
+            }>();
+
+            const tempId = -Date.now();
+            const optimisticComment: LivestreamComment = {
+                id: tempId,
+                livestreamId: id,
+                userId: currentUser?.id ?? 0,
+                content: payload.content,
+                likeCount: 0,
+                isActive: true,
+                createdAt: new Date().toISOString(),
+                user: currentUser
+                    ? {
+                          id: currentUser.id,
+                          fullName: currentUser.fullName,
+                          avatar: currentUser.avatar,
+                          role: currentUser.role,
+                      }
+                    : undefined,
+            };
+
+            queryClient.setQueriesData<PaginatedApiResponse<LivestreamComment>>(
+                { queryKey: livestreamCommentsPrefixQueryKey(id) },
+                (old) => {
+                    if (!old) return old;
+
+                    const { data, exists } = upsertComment(old.data, optimisticComment);
+                    const nextMeta =
+                        old.meta?.pagination && typeof old.meta.pagination.total === "number" && !exists
+                            ? {
+                                  ...old.meta,
+                                  pagination: {
+                                      ...old.meta.pagination,
+                                      total: old.meta.pagination.total + 1,
+                                  },
+                              }
+                            : old.meta;
+
+                    return {
+                        ...old,
+                        data,
+                        meta: nextMeta,
+                    };
+                },
+            );
+
+            return { livestreamId: id, tempId };
+        },
+        onError: (_error, _variables, context) => {
+            if (!context) return;
+
+            queryClient.setQueriesData<PaginatedApiResponse<LivestreamComment>>(
+                { queryKey: livestreamCommentsPrefixQueryKey(context.livestreamId) },
+                (old) => {
+                    if (!old) return old;
+
+                    const existed = old.data.some((item) => item.id === context.tempId);
+                    const nextData = old.data.filter((item) => item.id !== context.tempId);
+                    const nextMeta =
+                        old.meta?.pagination && typeof old.meta.pagination.total === "number" && existed
+                            ? {
+                                  ...old.meta,
+                                  pagination: {
+                                      ...old.meta.pagination,
+                                      total: Math.max(0, old.meta.pagination.total - 1),
+                                  },
+                              }
+                            : old.meta;
+
+                    return {
+                        ...old,
+                        data: nextData,
+                        meta: nextMeta,
+                    };
+                },
+            );
+        },
+        onSuccess: (response, variables, context) => {
+            queryClient.setQueriesData<PaginatedApiResponse<LivestreamComment>>(
+                { queryKey: livestreamCommentsPrefixQueryKey(variables.id) },
+                (old) => {
+                    if (!old) return old;
+
+                    const commentFromServer = response.data;
+                    const hasOptimistic =
+                        context?.tempId !== undefined &&
+                        old.data.some((item) => item.id === context.tempId);
+                    const optimisticComment =
+                        context?.tempId !== undefined
+                            ? old.data.find((item) => item.id === context.tempId)
+                            : undefined;
+                    const resolvedServerComment =
+                        commentFromServer.user || !optimisticComment?.user
+                            ? commentFromServer
+                            : {
+                                  ...commentFromServer,
+                                  user: optimisticComment.user,
+                              };
+
+                    const withoutOptimistic = hasOptimistic
+                        ? old.data.filter((item) => item.id !== context.tempId)
+                        : old.data;
+
+                    const { data, exists } = upsertComment(withoutOptimistic, resolvedServerComment);
+                    const nextMeta =
+                        old.meta?.pagination && typeof old.meta.pagination.total === "number" && !exists && !hasOptimistic
+                            ? {
+                                  ...old.meta,
+                                  pagination: {
+                                      ...old.meta.pagination,
+                                      total: old.meta.pagination.total + 1,
+                                  },
+                              }
+                            : old.meta;
+
+                    return {
+                        ...old,
+                        data,
+                        meta: nextMeta,
+                    };
+                },
+            );
+        },
+    });
+};
+
+export const useIssueLivestreamAgoraToken = () => {
+    return useMutation({
+        mutationFn: issueLivestreamAgoraToken,
+    });
+};
+
+type UseLivestreamRealtimeOptions = {
+    livestreamId?: number;
+    enabled?: boolean;
+    onViewerCountUpdated?: (count: number) => void;
+};
+
+export const useLivestreamRealtime = ({
+    livestreamId,
+    enabled = true,
+    onViewerCountUpdated,
+}: UseLivestreamRealtimeOptions) => {
+    const queryClient = useQueryClient();
+    const onViewerCountUpdatedRef = useRef(onViewerCountUpdated);
+
+    useEffect(() => {
+        onViewerCountUpdatedRef.current = onViewerCountUpdated;
+    }, [onViewerCountUpdated]);
+
+    useEffect(() => {
+        if (!enabled || !livestreamId) {
+            return;
+        }
+
+        const accessToken = authStorage.getAccessToken();
+        if (!accessToken) {
+            return;
+        }
+
+        const socket = connectLivestreamSocket(accessToken);
+
+        const joinRoom = () => {
+            socket.emit("joinLivestream", { livestreamId });
+        };
+
+        socket.on("connect", joinRoom);
+        joinRoom();
+
+        const handleViewerCountUpdated = (payload: { livestreamId: number; viewerCount: number }) => {
+            if (payload.livestreamId !== livestreamId) return;
+
+            onViewerCountUpdatedRef.current?.(payload.viewerCount);
+            applyViewerCountToCaches(queryClient, livestreamId, payload.viewerCount);
+        };
+
+        const handleNewComment = (incoming: LivestreamComment) => {
+            if (incoming.livestreamId !== livestreamId) return;
+
+            queryClient.setQueriesData<PaginatedApiResponse<LivestreamComment>>(
+                { queryKey: livestreamCommentsPrefixQueryKey(livestreamId) },
+                (old) => {
+                    if (!old) return old;
+
+                    const { data: nextData, exists } = upsertComment(old.data, incoming);
+
+                    const nextMeta =
+                        old.meta?.pagination && typeof old.meta.pagination.total === "number" && !exists
+                            ? {
+                                  ...old.meta,
+                                  pagination: {
+                                      ...old.meta.pagination,
+                                      total: old.meta.pagination.total + 1,
+                                  },
+                              }
+                            : old.meta;
+
+                    return {
+                        ...old,
+                        data: nextData,
+                        meta: nextMeta,
+                    };
+                },
+            );
+        };
+
+        socket.on("viewerCountUpdated", handleViewerCountUpdated);
+        socket.on("newLivestreamComment", handleNewComment);
+
+        return () => {
+            const detailCache = queryClient.getQueryData<ApiResponse<LivestreamDetail>>(
+                livestreamByIdQueryKey(livestreamId),
+            );
+            const fallbackNextCount = Math.max((detailCache?.data.viewerCount ?? 0) - 1, 0);
+            applyViewerCountToCaches(queryClient, livestreamId, fallbackNextCount);
+
+            socket.emit("leaveLivestream", { livestreamId });
+            socket.off("connect", joinRoom);
+            socket.off("viewerCountUpdated", handleViewerCountUpdated);
+            socket.off("newLivestreamComment", handleNewComment);
+            socket.disconnect();
+        };
+    }, [enabled, livestreamId, queryClient]);
+};

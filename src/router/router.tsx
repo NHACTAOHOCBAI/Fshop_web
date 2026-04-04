@@ -35,6 +35,8 @@ import ClientProductsPage from "@/pages/shop/products/ClientProductsPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
 import HomePage from "@/pages/shop/home/HomePage";
 import CommunityPage from "@/pages/shop/community/CommunityPage";
+import LivestreamListPage from "@/pages/shop/livestreams/LivestreamListPage";
+import LivestreamDetailPage from "@/pages/shop/livestreams/LivestreamDetailPage";
 
 const router = createBrowserRouter([
   {
@@ -72,6 +74,14 @@ const router = createBrowserRouter([
       {
         path: "community/:postId",
         element: <CommunityPage />,
+      },
+      {
+        path: "livestreams",
+        element: <LivestreamListPage />,
+      },
+      {
+        path: "livestreams/:id",
+        element: <LivestreamDetailPage />,
       },
       {
         path: "my-account",

@@ -12,6 +12,7 @@ const navItems = [
     { to: "/men", label: "Nam", end: false },
     { to: "/women", label: "Nữ", end: false },
     { to: "/kids", label: "Trẻ em", end: false },
+    { to: "/livestreams", label: "Live", end: false },
 ];
 
 const formatNotificationTime = (value: string) => {
