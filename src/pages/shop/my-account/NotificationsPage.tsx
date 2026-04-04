@@ -8,13 +8,15 @@ import {
     useMyNotifications,
 } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
-import type { Notification, NotificationType } from "@/types/notification";
+import type { Notification, NotificationTypeExtended } from "@/types/notification";
 
-const TYPE_CONFIG: Record<NotificationType, { icon: ElementType; className: string }> = {
+const TYPE_CONFIG: Record<NotificationTypeExtended, { icon: ElementType; className: string }> = {
     ORDER: { icon: Package, className: "bg-blue-50 text-blue-600" },
     DISCOUNT: { icon: Tag, className: "bg-amber-50 text-amber-600" },
     REVIEW: { icon: Star, className: "bg-emerald-50 text-emerald-600" },
     POST: { icon: Megaphone, className: "bg-slate-100 text-slate-600" },
+    LIVESTREAM: { icon: Megaphone, className: "bg-rose-50 text-rose-600" },
+    ADMIN_BROADCAST: { icon: Megaphone, className: "bg-violet-50 text-violet-600" },
 };
 
 const formatDateTime = (value: string) => {

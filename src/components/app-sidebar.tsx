@@ -24,6 +24,7 @@ import {
   ArchiveRestoreIcon,
   AudioLinesIcon,
   BadgePercentIcon,
+  BellIcon,
   BoxesIcon,
   FolderTreeIcon,
   GalleryVerticalEndIcon,
@@ -87,6 +88,7 @@ const adminMenuItems = [
   { title: "Cộng đồng", url: "/admin/community", icon: <MessageSquareIcon /> },
   { title: "Hỗ trợ khách hàng", url: "/admin/support", icon: <Phone /> },
   { title: "Livestream", url: "/admin/livestreams", icon: <VideoIcon /> },
+  { title: "Thông báo", url: "/admin/notifications", icon: <BellIcon /> },
   { title: "Sao lưu & Khôi phục", url: "/admin/backup-restore", icon: <ArchiveRestoreIcon /> },
 ]
 

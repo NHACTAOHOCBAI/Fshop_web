@@ -2,7 +2,12 @@ import { io, type Socket } from "socket.io-client";
 
 import axiosInstance from "@/lib/axios";
 import { resolveSocketBaseUrl } from "@/lib/socket";
-import type { Notification, GetMyNotificationsParams } from "@/types/notification";
+import type {
+    CreateAdminBroadcastPayload,
+    GetAdminNotificationsParams,
+    GetMyNotificationsParams,
+    Notification,
+} from "@/types/notification";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
 
 export const getMyNotifications = async (params?: GetMyNotificationsParams) => {
@@ -20,6 +25,22 @@ export const markNotificationAsRead = async (id: number) => {
 
 export const markAllNotificationsAsRead = async () => {
     const { data } = await axiosInstance.patch<ApiResponse<unknown>>("/notifications/read-all");
+    return data;
+};
+
+export const getAdminNotifications = async (params?: GetAdminNotificationsParams) => {
+    const { data } = await axiosInstance.get<PaginatedApiResponse<Notification>>("/notifications/admin", {
+        params,
+    });
+
+    return data;
+};
+
+export const createAdminBroadcast = async (payload: CreateAdminBroadcastPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<{ success: boolean; totalRecipients: number }>>(
+        "/notifications/admin/broadcast",
+        payload,
+    );
     return data;
 };
 
