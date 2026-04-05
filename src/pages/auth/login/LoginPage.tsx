@@ -9,6 +9,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { GoogleSignInButton } from "@/components/auth/GoogleSignInButton";
 import { useLogin } from "@/hooks/useAuth";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import { authStorage } from "@/lib/auth";
@@ -115,12 +116,12 @@ export default function LoginPage() {
                         <div className="h-px flex-1 bg-slate-300" />
                     </div>
 
-                    <div >
-                        <Button type="button" variant="outline" disabled className="w-full">
-                            <span className="grid size-5 place-items-center rounded-full bg-white text-xs font-bold text-red-500">G</span>
-                            Đăng nhập với Google
-                        </Button>
-                    </div>
+                    <GoogleSignInButton
+                        onSuccess={() => {
+                            navigate("/admin/dashboard", { replace: true });
+                        }}
+                        disabled={isPending}
+                    />
 
                     <p className="mt-4 text-center text-sm text-slate-600">
                         Chưa có tài khoản?{" "}
@@ -132,7 +133,7 @@ export default function LoginPage() {
 
             </div>
             <div className=" flex-1 flex flex-col items-center justify-center">
-                <img className="h-[700px]" src={thumbnail} alt="image" />
+                <img className="h-96" src={thumbnail} alt="image" />
             </div>
         </main>
     );

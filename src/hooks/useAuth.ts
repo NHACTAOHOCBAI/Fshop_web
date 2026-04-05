@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { authStorage } from "@/lib/auth";
-import { changePassword, getMe, login, logout, register, updateProfile } from "@/services/auth";
+import { changePassword, getMe, linkGoogleAccount, login, loginWithGoogle, logout, register, unlinkGoogleAccount, updateProfile } from "@/services/auth";
 
 export const AUTH_ME_QUERY_KEY = ["auth", "me"] as const;
 
@@ -54,5 +54,37 @@ export const useUpdateProfile = () => {
 export const useChangePassword = () => {
     return useMutation({
         mutationFn: changePassword,
+    });
+};
+
+export const useLoginWithGoogle = () => {
+    return useMutation({
+        mutationFn: loginWithGoogle,
+    });
+};
+
+export const useLinkGoogleAccount = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: linkGoogleAccount,
+        onSuccess: (response) => {
+            authStorage.setUser(response.user);
+            queryClient.setQueryData(AUTH_ME_QUERY_KEY, response);
+            queryClient.invalidateQueries({ queryKey: AUTH_ME_QUERY_KEY });
+        },
+    });
+};
+
+export const useUnlinkGoogleAccount = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: unlinkGoogleAccount,
+        onSuccess: (response) => {
+            authStorage.setUser(response.user);
+            queryClient.setQueryData(AUTH_ME_QUERY_KEY, response);
+            queryClient.invalidateQueries({ queryKey: AUTH_ME_QUERY_KEY });
+        },
     });
 };

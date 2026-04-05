@@ -5,6 +5,10 @@ export type LoginPayload = {
     password: string;
 };
 
+export type GoogleLoginPayload = {
+    idToken: string;
+};
+
 export type RegisterPayload = {
     fullName: string;
     email: string;
@@ -31,4 +35,13 @@ export type ChangePasswordPayload = {
     currentPassword: string;
     newPassword: string;
     confirmPassword: string;
+};
+
+export type LinkGooglePayload = {
+    idToken: string;
+};
+
+export type LinkGoogleResponse = {
+    message: string;
+    user: Omit<User, "password" | "publicId">;
 };

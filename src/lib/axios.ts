@@ -40,8 +40,14 @@ axiosInstance.interceptors.response.use(
             return Promise.reject(normalizeAxiosErrorMessage(error));
         }
 
+        // Never try refresh flow for authentication endpoints that don't require existing session.
+        const requestUrl = String(originalRequest.url || "");
+        if (requestUrl.includes("/auth/login") || requestUrl.includes("/auth/google/login")) {
+            return Promise.reject(normalizeAxiosErrorMessage(error));
+        }
+
         // Avoid infinite loop when refresh endpoint itself returns 401.
-        if (String(originalRequest.url || "").includes("/auth/refresh-token")) {
+        if (requestUrl.includes("/auth/refresh-token")) {
             authStorage.clear();
             // if (window.location.pathname !== "/login") {
             //     window.location.href = "/login";

@@ -1,6 +1,9 @@
 import axiosInstance from "@/lib/axios";
 import type {
     ChangePasswordPayload,
+    GoogleLoginPayload,
+    LinkGooglePayload,
+    LinkGoogleResponse,
     LoginPayload,
     LoginResponse,
     RefreshTokenResponse,
@@ -13,6 +16,26 @@ import type { User } from "@/types/user";
 export const login = async (payload: LoginPayload) => {
     const { data } = await axiosInstance.post("/auth/login", payload);
     return data.data as LoginResponse;
+};
+
+export const loginWithGoogle = async (payload: GoogleLoginPayload) => {
+    const { data } = await axiosInstance.post("/auth/google/login", payload);
+    return data.data as LoginResponse;
+};
+
+export const linkGoogleAccount = async (payload: LinkGooglePayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<LinkGoogleResponse>>(
+        "/auth/google/link",
+        payload
+    );
+    return data.data;
+};
+
+export const unlinkGoogleAccount = async () => {
+    const { data } = await axiosInstance.delete<ApiResponse<{ message: string; user: Omit<User, "password" | "publicId"> }>>(
+        "/auth/google/unlink"
+    );
+    return data.data;
 };
 
 export const register = async (payload: RegisterPayload) => {
