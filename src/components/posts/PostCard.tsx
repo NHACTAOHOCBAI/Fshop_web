@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, MoreVertical, Trash2 } from "lucide-react";
+import { Heart, MessageCircle, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 import { Link } from "react-router";
 import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -19,7 +19,11 @@ import {
     DropdownMenuItem,
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { useTogglePostLike, useDeletePost } from "@/hooks/usePosts";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useTogglePostLike, useDeletePost, useUpdatePost } from "@/hooks/usePosts";
 import { formatRelativeTime } from "@/lib/utils";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import { authStorage } from "@/lib/auth";
@@ -42,14 +46,24 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
 
     const { mutate: toggleLike, isPending: isLikingPost } = useTogglePostLike();
     const { mutate: deletePost, isPending: isDeletingPost } = useDeletePost();
+    const { mutate: updatePost, isPending: isUpdatingPost } = useUpdatePost();
 
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+    const [showEditDialog, setShowEditDialog] = useState(false);
     const [isUserLiked, setIsUserLiked] = useState(Boolean(post.isLiked));
     const [likeCount, setLikeCount] = useState(() => toSafeLikeCount(post.totalLikes, 0));
+    const [editContent, setEditContent] = useState(post.content ?? "");
+    const [editHashtags, setEditHashtags] = useState<string[]>(
+        post.postHashtags.map((item) => item.hashtag.name)
+    );
+    const [hashtagInput, setHashtagInput] = useState("");
 
     useEffect(() => {
         setIsUserLiked(Boolean(post.isLiked));
         setLikeCount(toSafeLikeCount(post.totalLikes, 0));
+        setEditContent(post.content ?? "");
+        setEditHashtags(post.postHashtags.map((item) => item.hashtag.name));
+        setHashtagInput("");
     }, [post.id, post.isLiked, post.totalLikes]);
 
     const displayImages = useMemo(() => post.images.slice(0, 4), [post.images]);
@@ -100,6 +114,65 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
         });
     };
 
+    const handleOpenEditDialog = (e: React.MouseEvent) => {
+        e.preventDefault();
+        setEditContent(post.content ?? "");
+        setEditHashtags(post.postHashtags.map((item) => item.hashtag.name));
+        setHashtagInput("");
+        setShowEditDialog(true);
+    };
+
+    const handleAddHashtag = () => {
+        const normalizedTag = hashtagInput.trim().replace(/^#/, "").toLowerCase();
+
+        if (!normalizedTag) {
+            return;
+        }
+
+        if (normalizedTag.length > 50) {
+            toast.error("Hashtag không được vượt quá 50 ký tự");
+            return;
+        }
+
+        if (editHashtags.includes(normalizedTag)) {
+            toast.error("Hashtag này đã có");
+            return;
+        }
+
+        if (editHashtags.length >= 10) {
+            toast.error("Tối đa 10 hashtags cho một bài viết");
+            return;
+        }
+
+        setEditHashtags((prev) => [...prev, normalizedTag]);
+        setHashtagInput("");
+    };
+
+    const handleRemoveHashtag = (index: number) => {
+        setEditHashtags((prev) => prev.filter((_, itemIndex) => itemIndex !== index));
+    };
+
+    const handleEditSubmit = () => {
+        updatePost(
+            {
+                id: post.id,
+                payload: {
+                    content: editContent.trim() || undefined,
+                    hashtags: editHashtags,
+                },
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Đã cập nhật bài viết");
+                    setShowEditDialog(false);
+                },
+                onError: (error) => {
+                    toast.error(extractApiErrorMessage(error));
+                },
+            },
+        );
+    };
+
     return (
         <>
             <Link to={`/community/${post.id}`} className={` block ${compact ? "max-w-none" : "max-w-2xl"}`}>
@@ -130,6 +203,13 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuItem
+                                        onClick={handleOpenEditDialog}
+                                        className="cursor-pointer"
+                                    >
+                                        <Pencil className="mr-2 h-4 w-4" />
+                                        Sửa bài viết
+                                    </DropdownMenuItem>
                                     <DropdownMenuItem
                                         onClick={(e) => {
                                             e.preventDefault();
@@ -256,6 +336,79 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
                     </div>
                 </AlertDialogContent>
             </AlertDialog>
+
+            <Dialog open={showEditDialog} onOpenChange={setShowEditDialog}>
+                <DialogContent className="sm:max-w-xl">
+                    <DialogHeader>
+                        <DialogTitle>Sửa bài viết</DialogTitle>
+                    </DialogHeader>
+
+                    <div className="space-y-4">
+                        <div>
+                            <Label htmlFor={`edit-content-${post.id}`}>Nội dung</Label>
+                            <Textarea
+                                id={`edit-content-${post.id}`}
+                                value={editContent}
+                                onChange={(event) => setEditContent(event.target.value)}
+                                className="mt-2 min-h-28"
+                                maxLength={5000}
+                                placeholder="Cập nhật nội dung bài viết..."
+                            />
+                            <p className="mt-1 text-right text-xs text-slate-500">{editContent.length} / 5000</p>
+                        </div>
+
+                        <div>
+                            <Label htmlFor={`edit-hashtag-${post.id}`}>Hashtags</Label>
+                            <div className="mt-2 flex gap-2">
+                                <Input
+                                    id={`edit-hashtag-${post.id}`}
+                                    value={hashtagInput}
+                                    onChange={(event) => setHashtagInput(event.target.value)}
+                                    onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                            event.preventDefault();
+                                            handleAddHashtag();
+                                        }
+                                    }}
+                                    placeholder="Thêm hashtag..."
+                                />
+                                <Button type="button" variant="outline" onClick={handleAddHashtag}>
+                                    Thêm
+                                </Button>
+                            </div>
+
+                            {editHashtags.length > 0 ? (
+                                <div className="mt-3 flex flex-wrap gap-2">
+                                    {editHashtags.map((tag, index) => (
+                                        <span
+                                            key={`${tag}-${index}`}
+                                            className="inline-flex items-center gap-1 rounded-full bg-slate-100 px-3 py-1 text-xs font-medium text-slate-700"
+                                        >
+                                            #{tag}
+                                            <button
+                                                type="button"
+                                                onClick={() => handleRemoveHashtag(index)}
+                                                className="text-slate-500 hover:text-slate-700"
+                                            >
+                                                <X className="h-3 w-3" />
+                                            </button>
+                                        </span>
+                                    ))}
+                                </div>
+                            ) : null}
+                        </div>
+
+                        <div className="flex items-center justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={() => setShowEditDialog(false)} disabled={isUpdatingPost}>
+                                Hủy
+                            </Button>
+                            <Button type="button" onClick={handleEditSubmit} disabled={isUpdatingPost}>
+                                {isUpdatingPost ? "Đang lưu..." : "Lưu thay đổi"}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </>
     );
 };

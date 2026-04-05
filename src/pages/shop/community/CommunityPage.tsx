@@ -5,6 +5,7 @@ import { Link, useMatch, useNavigate, useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import ClientPagination from "@/components/pagination/ClientPagination";
 import PostCard from "@/components/posts/PostCard";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types/post";
@@ -79,15 +80,10 @@ const CommunityPage = () => {
         setSelectedHashtag("");
     }, []);
 
-    const handlePreviousPage = useCallback(() => {
-        setPage((p) => Math.max(1, p - 1));
+    const handlePageChange = useCallback((nextPage: number) => {
+        setPage(nextPage);
         window.scrollTo({ top: 0, behavior: "smooth" });
     }, []);
-
-    const handleNextPage = useCallback(() => {
-        setPage((p) => (p < totalPages ? p + 1 : p));
-        window.scrollTo({ top: 0, behavior: "smooth" });
-    }, [totalPages]);
 
     const handlePostDeleted = useCallback(() => {
         // Refetch posts when post is deleted
@@ -174,7 +170,7 @@ const CommunityPage = () => {
                 )}
             </div>
 
-            <main className="w-full gap-8 flex justify-between">
+            <main className="w-full flex justify-between">
                 <section className="flex-5">
                     {postsQuery.isLoading && page === 1 ? (
                         <div className="rounded-2xl border border-[#EAF0FF] bg-white px-6 py-20 text-center ">
@@ -216,35 +212,20 @@ const CommunityPage = () => {
                                 ))}
                             </div>
 
-                            {totalPages > 1 && (
-                                <div className="mt-6 flex items-center justify-center gap-3 rounded-xl border border-[#EAF0FF] bg-white px-4 py-4 shadow-sm">
-                                    <Button
-                                        variant="outline"
-                                        onClick={handlePreviousPage}
-                                        disabled={page === 1 || postsQuery.isLoading}
-                                    >
-                                        Trước
-                                    </Button>
-
-                                    <div className="text-sm text-slate-600">
-                                        Trang <span className="font-semibold">{page}</span> / {totalPages}
-                                    </div>
-
-                                    <Button
-                                        variant="outline"
-                                        onClick={handleNextPage}
-                                        disabled={page >= totalPages || postsQuery.isLoading}
-                                    >
-                                        Sau
-                                    </Button>
-                                </div>
-                            )}
+                            <ClientPagination
+                                page={page}
+                                totalPages={totalPages}
+                                onPageChange={handlePageChange}
+                                disabled={postsQuery.isLoading}
+                                className="mt-6"
+                            />
                         </>
                     )}
                 </section>
 
                 <aside className="flex-2">
                     <div className="sticky top-24 space-y-4">
+
 
                         {hashtagOptions.length > 0 && (
                             <div className="rounded-2xl border border-[#EAF0FF] bg-white p-4 ">

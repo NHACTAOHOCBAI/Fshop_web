@@ -1,4 +1,4 @@
-import { ChevronLeft, ChevronRight, Search, SlidersHorizontal, Camera, Mic } from "lucide-react";
+import { Search, SlidersHorizontal, Camera, Mic } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
@@ -12,8 +12,8 @@ import {
 } from "@/components/ui/select";
 import { ImageSearchDialog } from "@/components/image-search-dialog";
 import { VoiceSearchDialog } from "@/components/voice-search-dialog";
+import ClientPagination from "@/components/pagination/ClientPagination";
 import { useShopCatalog, type ShopSortOption } from "@/hooks/useShopCatalog";
-import { buildPaginationItems } from "@/lib/utils";
 import type { DepartmentType } from "@/types/category";
 import type { ImageSearchResult, Product, VoiceSearchResponse } from "@/types/product";
 import { getProductById } from "@/services/products";
@@ -120,8 +120,6 @@ const ClientProductsPage = () => {
         onBrandChange,
         clearFilters,
     } = useShopCatalog(department);
-
-    const pageItems = buildPaginationItems(page, totalPages);
 
     const hydrateProductsFromHits = async (results: ImageSearchResult[]) => {
         const productPromises = results.map((result) =>
@@ -320,39 +318,12 @@ const ClientProductsPage = () => {
                 )}
 
                 {!isShowingAiResults && (
-                    <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
-                        <Button variant="outline" size="icon-sm" onClick={() => updatePage(page - 1)} disabled={page <= 1}>
-                            <ChevronLeft className="size-4" />
-                        </Button>
-
-                        {pageItems.map((item, index) => {
-                            const previous = pageItems[index - 1];
-                            const shouldRenderEllipsis = previous !== undefined && item - previous > 1;
-
-                            return (
-                                <div key={item} className="flex items-center gap-2">
-                                    {shouldRenderEllipsis ? <span className="px-1 text-slate-400">...</span> : null}
-                                    <Button
-                                        variant={item === page ? "default" : "outline"}
-                                        size="sm"
-                                        onClick={() => updatePage(item)}
-                                        className={item === page ? "bg-primary text-white" : ""}
-                                    >
-                                        {item}
-                                    </Button>
-                                </div>
-                            );
-                        })}
-
-                        <Button
-                            variant="outline"
-                            size="icon-sm"
-                            onClick={() => updatePage(page + 1)}
-                            disabled={page >= totalPages}
-                        >
-                            <ChevronRight className="size-4" />
-                        </Button>
-                    </div>
+                    <ClientPagination
+                        page={page}
+                        totalPages={totalPages}
+                        onPageChange={updatePage}
+                        className="pt-2"
+                    />
                 )}
             </section>
 
