@@ -102,7 +102,7 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
 
     return (
         <>
-            <Link to={`/community/${post.id}`} className={`mx-auto block ${compact ? "max-w-none" : "max-w-2xl"}`}>
+            <Link to={`/community/${post.id}`} className={` block ${compact ? "max-w-none" : "max-w-2xl"}`}>
                 <div className="overflow-hidden rounded-3xl border border-[#EAF0FF] bg-white  transition-shadow hover:shadow-sm">
                     {/* Author Header */}
                     <div className={`flex items-center justify-between border-b border-[#F1F5F9] ${compact ? "px-2.5 py-2" : "px-3 py-2.5"}`}>

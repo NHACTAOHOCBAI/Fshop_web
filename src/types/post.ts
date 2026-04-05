@@ -60,6 +60,7 @@ export type GetPostsParams = {
     page?: number;
     limit?: number;
     search?: string;
+    hashtag?: string;
     sortBy?: string;
     sortOrder?: "ASC" | "DESC";
 };

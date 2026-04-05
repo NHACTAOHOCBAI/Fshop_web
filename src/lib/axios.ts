@@ -3,7 +3,7 @@ import { authStorage } from "@/lib/auth";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import type { RefreshTokenResponse } from "@/types/auth";
 
-const BE_URL = import.meta.env.VITE_API_URL || "https://api.example.com";
+const BE_URL = import.meta.env.VITE_API_URL || "http://localhost:4000/api/v1";
 
 const axiosInstance = axios.create({
     baseURL: BE_URL,
