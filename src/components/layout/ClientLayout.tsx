@@ -13,6 +13,7 @@ const navItems = [
     { to: "/women", label: "Nữ", end: false },
     { to: "/kids", label: "Trẻ em", end: false },
     { to: "/livestreams", label: "Live", end: false },
+    { to: "/community", label: "Community", end: false },
 ];
 
 const formatNotificationTime = (value: string) => {
@@ -52,6 +53,8 @@ const ClientLayout = () => {
                     ? "thông báo"
                     : pathname.startsWith("/my-account")
                         ? "tài khoản"
+                        : pathname.startsWith("/community")
+                            ? "community"
                         : pathname.startsWith("/checkout")
                             ? "thanh toán"
                             : pathname.startsWith("/cart")

@@ -1,6 +1,6 @@
 import { Heart, MessageCircle, MoreVertical, Trash2 } from "lucide-react";
 import { Link } from "react-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,10 @@ interface PostCardProps {
     compact?: boolean;
 }
 
+const toSafeLikeCount = (value: unknown, fallback = 0) => {
+    return typeof value === "number" && Number.isFinite(value) ? value : fallback;
+};
+
 const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
     const currentUserId = authStorage.getUser<User>()?.id;
     const isOwner = currentUserId === post.userId;
@@ -40,7 +44,13 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
     const { mutate: deletePost, isPending: isDeletingPost } = useDeletePost();
 
     const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-    const [isUserLiked, setIsUserLiked] = useState(false);
+    const [isUserLiked, setIsUserLiked] = useState(Boolean(post.isLiked));
+    const [likeCount, setLikeCount] = useState(() => toSafeLikeCount(post.totalLikes, 0));
+
+    useEffect(() => {
+        setIsUserLiked(Boolean(post.isLiked));
+        setLikeCount(toSafeLikeCount(post.totalLikes, 0));
+    }, [post.id, post.isLiked, post.totalLikes]);
 
     const displayImages = useMemo(() => post.images.slice(0, 4), [post.images]);
     const remainingImages = Math.max(0, post.images.length - 4);
@@ -48,8 +58,28 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
     const handleLike = (e: React.MouseEvent) => {
         e.preventDefault();
         toggleLike(post.id, {
-            onSuccess: () => {
-                setIsUserLiked(!isUserLiked);
+            onSuccess: (result) => {
+                setLikeCount((prev) => {
+                    const next = toSafeLikeCount(result?.totalLikes, prev);
+                    return next;
+                });
+
+                if (typeof result.isLiked === "boolean") {
+                    setIsUserLiked(result.isLiked);
+                    return;
+                }
+
+                if (result.message === "Post liked") {
+                    setIsUserLiked(true);
+                    return;
+                }
+
+                if (result.message === "Post unliked") {
+                    setIsUserLiked(false);
+                    return;
+                }
+
+                setIsUserLiked((prev) => !prev);
             },
             onError: (error) => {
                 toast.error(extractApiErrorMessage(error));
@@ -175,7 +205,7 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
                         </div>
 
                         <div className="space-y-1">
-                            <p className="text-sm font-bold text-[#223263]">{post.totalLikes.toLocaleString()} lượt thích</p>
+                            <p className="text-sm font-bold text-[#223263]">{toSafeLikeCount(likeCount, 0).toLocaleString()} lượt thích</p>
                             {post.content ? (
                                 <p className={`line-clamp-2 text-sm text-[#223263] ${compact ? "leading-5" : "leading-5"}`}>
                                     <span className="mr-1 font-bold">{post.user.fullName}</span>

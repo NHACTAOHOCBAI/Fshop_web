@@ -98,7 +98,7 @@ export const deletePost = async (id: number) => {
  * Toggle like on a post
  */
 export const togglePostLike = async (postId: number) => {
-    const response = await axiosInstance.post<{ isLiked: boolean; totalLikes: number }>(
+    const response = await axiosInstance.post<{ message: string; totalLikes: number; isLiked?: boolean }>(
         `${API_BASE}/${postId}/like`
     );
     return response.data;

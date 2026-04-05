@@ -32,6 +32,7 @@ export type Post = {
     userId: number;
     user: PostUser;
     content?: string;
+    isLiked?: boolean;
     totalLikes: number;
     totalComments: number;
     images: PostImage[];
