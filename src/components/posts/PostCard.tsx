@@ -1,6 +1,6 @@
 import { Heart, MessageCircle, MoreVertical, Pencil, Trash2, X } from "lucide-react";
 import { Link } from "react-router";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -34,13 +34,25 @@ interface PostCardProps {
     post: Post;
     onPostDeleted?: () => void;
     compact?: boolean;
+    className?: string;
+    disableLink?: boolean;
+    showOwnerActions?: boolean;
+    rightActions?: ReactNode;
 }
 
 const toSafeLikeCount = (value: unknown, fallback = 0) => {
     return typeof value === "number" && Number.isFinite(value) ? value : fallback;
 };
 
-const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
+const PostCard = ({
+    post,
+    onPostDeleted,
+    compact = false,
+    className,
+    disableLink = false,
+    showOwnerActions = true,
+    rightActions,
+}: PostCardProps) => {
     const currentUserId = authStorage.getUser<User>()?.id;
     const isOwner = currentUserId === post.userId;
 
@@ -64,7 +76,7 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
         setEditContent(post.content ?? "");
         setEditHashtags(post.postHashtags.map((item) => item.hashtag.name));
         setHashtagInput("");
-    }, [post.id, post.isLiked, post.totalLikes]);
+    }, [post.id, post.isLiked, post.totalLikes, post.content, post.postHashtags]);
 
     const displayImages = useMemo(() => post.images.slice(0, 4), [post.images]);
     const remainingImages = Math.max(0, post.images.length - 4);
@@ -173,149 +185,135 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
         );
     };
 
-    return (
-        <>
-            <Link to={`/community/${post.id}`} className={` block ${compact ? "max-w-none" : "max-w-2xl"}`}>
-                <div className="overflow-hidden rounded-3xl border border-[#EAF0FF] bg-white  transition-shadow hover:shadow-sm">
-                    {/* Author Header */}
-                    <div className={`flex items-center justify-between border-b border-[#F1F5F9] ${compact ? "px-2.5 py-2" : "px-3 py-2.5"}`}>
-                        <div className="flex items-center gap-3">
-                            <div className="rounded-full bg-app-primary p-0.5">
-                                <img
-                                    src={post.user.avatar || "https://via.placeholder.com/80"}
-                                    alt={post.user.fullName}
-                                    className={`${compact ? "h-7 w-7" : "h-8 w-8"} rounded-full border-2 border-white object-cover`}
-                                />
-                            </div>
-                            <div>
-                                <p className="text-sm font-bold text-[#223263]">
-                                    {post.user.fullName}
-                                </p>
-                                <p className="text-xs text-[#9098B1]">{formatRelativeTime(post.createdAt)}</p>
-                            </div>
-                        </div>
-
-                        {isOwner && (
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                                    <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-[#9098B1]">
-                                        <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end" className="w-48">
-                                    <DropdownMenuItem
-                                        onClick={handleOpenEditDialog}
-                                        className="cursor-pointer"
-                                    >
-                                        <Pencil className="mr-2 h-4 w-4" />
-                                        Sửa bài viết
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                        onClick={(e) => {
-                                            e.preventDefault();
-                                            setShowDeleteDialog(true);
-                                        }}
-                                        className="text-destructive cursor-pointer"
-                                    >
-                                        <Trash2 className="mr-2 h-4 w-4" />
-                                        Xóa bài viết
-                                    </DropdownMenuItem>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        )}
+    const cardContent = (
+        <div className="overflow-hidden rounded-3xl border border-[#EAF0FF] bg-white transition-shadow hover:shadow-sm">
+            <div className={`flex items-center justify-between border-b border-[#F1F5F9] ${compact ? "px-2.5 py-2" : "px-3 py-2.5"}`}>
+                <div className="flex items-center gap-3">
+                    <div className="rounded-full bg-app-primary p-0.5">
+                        <img
+                            src={post.user.avatar || "https://via.placeholder.com/80"}
+                            alt={post.user.fullName}
+                            className={`${compact ? "h-7 w-7" : "h-8 w-8"} rounded-full border-2 border-white object-cover`}
+                        />
                     </div>
-
-                    {/* Images Grid */}
-                    {displayImages.length > 0 && (
-                        <div>
-                            <div
-                                className={`grid gap-px bg-[#F1F5F9] ${
-                                    displayImages.length === 1
-                                        ? "grid-cols-1"
-                                        : displayImages.length === 2
-                                          ? "grid-cols-2"
-                                          : "grid-cols-2"
-                                }`}
-                            >
-                                {displayImages.map((image, idx) => (
-                                    <div
-                                        key={image.id}
-                                        className={`group relative overflow-hidden bg-slate-200 ${displayImages.length === 1 ? "aspect-5/4" : "aspect-6/5"}`}
-                                    >
-                                        <img
-                                            src={image.imageUrl}
-                                            alt="post"
-                                            className="h-full w-full object-cover transition-transform"
-                                        />
-                                        {remainingImages > 0 && idx === 3 && (
-                                            <div className="absolute inset-0 flex items-center justify-center bg-black/50">
-                                                <span className="text-sm font-semibold text-white">
-                                                    +{remainingImages}
-                                                </span>
-                                            </div>
-                                        )}
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-                    )}
-
-                    {/* Content */}
-                    <div className={compact ? "px-2.5 py-2" : "px-3 py-2.5"}>
-                        <div className="mb-1.5 flex items-center justify-between" onClick={(e) => e.preventDefault()}>
-                            <div className="flex items-center gap-4">
-                                <button
-                                    onClick={handleLike}
-                                    disabled={isLikingPost}
-                                    className="text-[#223263] transition-colors hover:text-red-500 disabled:opacity-50"
-                                >
-                                    <Heart
-                                        className={`h-5 w-5 ${
-                                            isUserLiked ? "fill-app-secondary text-app-secondary" : ""
-                                        }`}
-                                    />
-                                </button>
-                                <button
-                                    type="button"
-                                    className="text-[#223263] transition-colors hover:text-primary"
-                                >
-                                    <MessageCircle className="h-5 w-5" />
-                                </button>
-                            </div>
-                        </div>
-
-                        <div className="space-y-1">
-                            <p className="text-sm font-bold text-[#223263]">{toSafeLikeCount(likeCount, 0).toLocaleString()} lượt thích</p>
-                            {post.content ? (
-                                <p className={`line-clamp-2 text-sm text-[#223263] ${compact ? "leading-5" : "leading-5"}`}>
-                                    <span className="mr-1 font-bold">{post.user.fullName}</span>
-                                    {post.content}
-                                </p>
-                            ) : null}
-
-                            {post.postHashtags.length > 0 && (
-                                <div className="flex flex-wrap gap-1.5 pt-0.5">
-                                    {post.postHashtags.map((ph) => (
-                                        <span
-                                            key={ph.id}
-                                            className="text-xs font-semibold text-app-primary"
-                                            onClick={(e) => e.preventDefault()}
-                                        >
-                                            #{ph.hashtag.name}
-                                        </span>
-                                    ))}
-                                </div>
-                            )}
-
-                            {!compact ? (
-                                <p className="pt-0.5 text-sm text-[#9098B1]">Xem tất cả {post.totalComments.toLocaleString()} bình luận</p>
-                            ) : null}
-                        </div>
+                    <div>
+                        <p className="text-sm font-bold text-[#223263]">{post.user.fullName}</p>
+                        <p className="text-xs text-[#9098B1]">{formatRelativeTime(post.createdAt)}</p>
                     </div>
                 </div>
-            </Link>
 
-            {/* Delete Confirmation Dialog */}
+                <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>
+                    {rightActions}
+                    {showOwnerActions && isOwner ? (
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-[#9098B1]">
+                                    <MoreVertical className="h-4 w-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                                <DropdownMenuItem onClick={handleOpenEditDialog} className="cursor-pointer">
+                                    <Pencil className="mr-2 h-4 w-4" />
+                                    Sửa bài viết
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                    onClick={() => setShowDeleteDialog(true)}
+                                    className="cursor-pointer text-destructive"
+                                >
+                                    <Trash2 className="mr-2 h-4 w-4" />
+                                    Xóa bài viết
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    ) : null}
+                </div>
+            </div>
+
+            {displayImages.length > 0 ? (
+                <div>
+                    <div
+                        className={`grid gap-px bg-[#F1F5F9] ${
+                            displayImages.length === 1
+                                ? "grid-cols-1"
+                                : displayImages.length === 2
+                                  ? "grid-cols-2"
+                                  : "grid-cols-2"
+                        }`}
+                    >
+                        {displayImages.map((image, idx) => (
+                            <div
+                                key={image.id}
+                                className={`group relative overflow-hidden bg-slate-200 ${displayImages.length === 1 ? "aspect-5/4" : "aspect-6/5"}`}
+                            >
+                                <img src={image.imageUrl} alt="post" className="h-full w-full object-cover transition-transform" />
+                                {remainingImages > 0 && idx === 3 ? (
+                                    <div className="absolute inset-0 flex items-center justify-center bg-black/50">
+                                        <span className="text-sm font-semibold text-white">+{remainingImages}</span>
+                                    </div>
+                                ) : null}
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            ) : null}
+
+            <div className={compact ? "px-2.5 py-2" : "px-3 py-2.5"}>
+                <div className="mb-1.5 flex items-center justify-between" onClick={(e) => e.preventDefault()}>
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={handleLike}
+                            disabled={isLikingPost}
+                            className="text-[#223263] transition-colors hover:text-red-500 disabled:opacity-50"
+                        >
+                            <Heart className={`h-5 w-5 ${isUserLiked ? "fill-app-secondary text-app-secondary" : ""}`} />
+                        </button>
+                        <button type="button" className="text-[#223263] transition-colors hover:text-primary">
+                            <MessageCircle className="h-5 w-5" />
+                        </button>
+                    </div>
+                </div>
+
+                <div className="space-y-1">
+                    <p className="text-sm font-bold text-[#223263]">{toSafeLikeCount(likeCount, 0).toLocaleString()} lượt thích</p>
+                    {post.content ? (
+                        <p className={`line-clamp-2 text-sm text-[#223263] ${compact ? "leading-5" : "leading-5"}`}>
+                            <span className="mr-1 font-bold">{post.user.fullName}</span>
+                            {post.content}
+                        </p>
+                    ) : null}
+
+                    {post.postHashtags.length > 0 ? (
+                        <div className="flex flex-wrap gap-1.5 pt-0.5">
+                            {post.postHashtags.map((ph) => (
+                                <span
+                                    key={ph.id}
+                                    className="text-xs font-semibold text-app-primary"
+                                    onClick={(e) => e.preventDefault()}
+                                >
+                                    #{ph.hashtag.name}
+                                </span>
+                            ))}
+                        </div>
+                    ) : null}
+
+                    {!compact ? (
+                        <p className="pt-0.5 text-sm text-[#9098B1]">Xem tất cả {post.totalComments.toLocaleString()} bình luận</p>
+                    ) : null}
+                </div>
+            </div>
+        </div>
+    );
+
+    return (
+        <>
+            {disableLink ? (
+                <div className={`mx-auto block ${compact ? "max-w-none" : "max-w-2xl"} ${className ?? ""}`}>{cardContent}</div>
+            ) : (
+                <Link to={`/community/${post.id}`} className={`mx-auto block ${compact ? "max-w-none" : "max-w-2xl"} ${className ?? ""}`}>
+                    {cardContent}
+                </Link>
+            )}
+
             <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
@@ -324,7 +322,7 @@ const PostCard = ({ post, onPostDeleted, compact = false }: PostCardProps) => {
                             Bạn có chắc chắn muốn xóa bài viết này? Hành động này không thể hoàn tác.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
-                    <div className="flex gap-3 justify-end">
+                    <div className="flex justify-end gap-3">
                         <AlertDialogCancel>Hủy</AlertDialogCancel>
                         <AlertDialogAction
                             onClick={handleDelete}

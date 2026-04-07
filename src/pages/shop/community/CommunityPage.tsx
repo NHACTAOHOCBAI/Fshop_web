@@ -6,11 +6,11 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import ClientPagination from "@/components/pagination/ClientPagination";
-import PostCard from "@/components/posts/PostCard";
 import { usePosts } from "@/hooks/usePosts";
 import type { Post } from "@/types/post";
 import PostDetailPage from "./PostDetailPage";
 import CreatePostPage from "./CreatePostPage";
+import PostCard from "@/components/posts/PostCard";
 
 const CommunityPage = () => {
     const navigate = useNavigate();
@@ -114,10 +114,6 @@ const CommunityPage = () => {
                 <div className="flex flex-col gap-4">
                     <form onSubmit={handleSearchSubmit} className="flex flex-1 flex-col gap-3 md:flex-row md:items-end">
                         <div className="flex-1">
-                            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-[#223263]">
-                                <Search className="h-4 w-4" />
-                                Tìm bài viết
-                            </div>
                             <div className="relative">
                                 <Search className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
                                 <Input

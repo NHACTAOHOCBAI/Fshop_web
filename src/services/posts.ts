@@ -22,6 +22,20 @@ export const getPosts = async (params: GetPostsParams = {}) => {
     return response.data;
 };
 
+export const getAdminPosts = async (params: GetPostsParams = {}) => {
+    const response = await axiosInstance.get<PostsResponse<Post>>(`${API_BASE}/admin`, {
+        params,
+    });
+    return response.data;
+};
+
+export const updatePostStatus = async (id: number, isActive: boolean) => {
+    const response = await axiosInstance.patch<{ message: string; data: Post }>(`${API_BASE}/admin/${id}/status`, {
+        isActive,
+    });
+    return response.data;
+};
+
 /**
  * Get single post by ID
  */

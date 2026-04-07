@@ -4,6 +4,7 @@ import * as postsService from "@/services/posts";
 import type { GetPostsParams } from "@/types/post";
 
 export const POSTS_QUERY_KEY = ["posts"];
+export const ADMIN_POSTS_QUERY_KEY = ["admin-posts"];
 
 /**
  * Get paginated list of posts
@@ -12,6 +13,50 @@ export const usePosts = (params?: GetPostsParams) => {
     return useQuery({
         queryKey: [...POSTS_QUERY_KEY, params],
         queryFn: () => postsService.getPosts(params),
+    });
+};
+
+export const useAdminPosts = (
+    params?: GetPostsParams,
+    statusFilter: "all" | "active" | "inactive" = "all"
+) => {
+    return useQuery({
+        queryKey: [...ADMIN_POSTS_QUERY_KEY, params, statusFilter],
+        queryFn: async () => {
+            const { page = 1, limit = 10, ...restParams } = params ?? {};
+            const response = await postsService.getAdminPosts(restParams);
+
+            const filtered = response.data.filter((post) => {
+                if (statusFilter === "all") return true;
+                if (statusFilter === "active") return post.isActive;
+                return !post.isActive;
+            });
+
+            const startIndex = (page - 1) * limit;
+            const endIndex = startIndex + limit;
+
+            return {
+                pagination: {
+                    total: filtered.length,
+                    page,
+                    limit,
+                },
+                data: filtered.slice(startIndex, endIndex),
+            };
+        },
+    });
+};
+
+export const useUpdatePostStatus = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, isActive }: { id: number; isActive: boolean }) =>
+            postsService.updatePostStatus(id, isActive),
+        onSuccess: () => {
+            queryClient.invalidateQueries({ queryKey: ADMIN_POSTS_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: POSTS_QUERY_KEY });
+        },
     });
 };
 
