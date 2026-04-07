@@ -1,0 +1,318 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { Camera, ShieldCheck, UserRound } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "sonner";
+import { z } from "zod";
+
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useChangePassword, useMe, useUpdateProfile } from "@/hooks/useAuth";
+import { extractApiErrorMessage } from "@/lib/api-error";
+import { authStorage } from "@/lib/auth";
+
+const profileSchema = z.object({
+    fullName: z.string().trim().min(1, "Họ và tên là bắt buộc").max(100, "Họ và tên quá dài"),
+});
+
+const passwordSchema = z.object({
+    currentPassword: z.string().min(1, "Mật khẩu hiện tại là bắt buộc"),
+    newPassword: z.string().min(6, "Mật khẩu mới tối thiểu 6 ký tự"),
+    confirmPassword: z.string().min(1, "Xác nhận mật khẩu là bắt buộc"),
+}).refine((values) => values.newPassword === values.confirmPassword, {
+    message: "Xác nhận mật khẩu không khớp",
+    path: ["confirmPassword"],
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
+type PasswordFormValues = z.infer<typeof passwordSchema>;
+
+const formatDate = (value?: string) => {
+    if (!value) {
+        return "--";
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) {
+        return "--";
+    }
+
+    return new Intl.DateTimeFormat("vi-VN").format(date);
+};
+
+const AdminProfilePage = () => {
+    const token = authStorage.getAccessToken();
+    const inputRef = useRef<HTMLInputElement | null>(null);
+    const [selectedAvatar, setSelectedAvatar] = useState<File | null>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const { data: meData, isLoading: isProfileLoading, isError: isProfileError } = useMe();
+    const { mutate: updateProfile, isPending: isUpdating } = useUpdateProfile();
+    const { mutate: changePassword, isPending: isChangingPassword } = useChangePassword();
+    const profile = meData?.data;
+
+    const form = useForm<ProfileFormValues>({
+        resolver: zodResolver(profileSchema),
+        defaultValues: {
+            fullName: "",
+        },
+    });
+
+    const passwordForm = useForm<PasswordFormValues>({
+        resolver: zodResolver(passwordSchema),
+        defaultValues: {
+            currentPassword: "",
+            newPassword: "",
+            confirmPassword: "",
+        },
+    });
+
+    useEffect(() => {
+        if (!profile) {
+            return;
+        }
+
+        form.reset({
+            fullName: profile.fullName ?? "",
+        });
+    }, [form, profile]);
+
+    useEffect(() => {
+        if (!selectedAvatar) {
+            setAvatarPreview(null);
+            return;
+        }
+
+        const nextPreview = URL.createObjectURL(selectedAvatar);
+        setAvatarPreview(nextPreview);
+
+        return () => {
+            URL.revokeObjectURL(nextPreview);
+        };
+    }, [selectedAvatar]);
+
+    const avatarSrc = avatarPreview || profile?.avatar || undefined;
+    const avatarFallback = profile?.fullName?.trim().charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase() || "A";
+
+    const onSubmit = (values: ProfileFormValues) => {
+        if (!profile) {
+            return;
+        }
+
+        updateProfile(
+            {
+                fullName: values.fullName.trim(),
+                avatar: selectedAvatar ?? undefined,
+            },
+            {
+                onSuccess: (response) => {
+                    toast.success("Cập nhật hồ sơ admin thành công");
+                    setSelectedAvatar(null);
+                    setAvatarPreview(null);
+                    form.reset({
+                        fullName: response.data.fullName ?? "",
+                    });
+                },
+                onError: (error) => {
+                    toast.error(extractApiErrorMessage(error, "Cập nhật hồ sơ thất bại"));
+                },
+            }
+        );
+    };
+
+    const onChangePassword = (values: PasswordFormValues) => {
+        changePassword(values, {
+            onSuccess: () => {
+                toast.success("Đổi mật khẩu thành công");
+                passwordForm.reset({
+                    currentPassword: "",
+                    newPassword: "",
+                    confirmPassword: "",
+                });
+            },
+            onError: (error) => {
+                toast.error(extractApiErrorMessage(error, "Đổi mật khẩu thất bại"));
+            },
+        });
+    };
+
+    if (!token) {
+        return (
+            <div className="rounded-2xl border border-dashed border-slate-200 bg-white px-6 py-12 text-center">
+                <h1 className="text-xl font-bold text-slate-900">Hồ sơ quản trị</h1>
+                <p className="mt-2 text-sm text-slate-500">Bạn cần đăng nhập để xem và cập nhật hồ sơ.</p>
+            </div>
+        );
+    }
+
+    if (isProfileLoading) {
+        return (
+            <div className="rounded-2xl border border-slate-200 bg-white px-6 py-12 text-center text-sm text-slate-500">
+                Đang tải thông tin hồ sơ...
+            </div>
+        );
+    }
+
+    if (isProfileError || !profile) {
+        return (
+            <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-12 text-center">
+                <h1 className="text-xl font-bold text-slate-900">Không thể tải hồ sơ</h1>
+                <p className="mt-2 text-sm text-slate-600">Vui lòng tải lại trang hoặc đăng nhập lại.</p>
+            </div>
+        );
+    }
+
+    return (
+        <div className="mx-auto w-full max-w-6xl space-y-6">
+            <div>
+                <h1 className="text-2xl font-bold text-slate-900">Hồ sơ quản trị</h1>
+                <p className="mt-1 text-sm text-slate-500">Cập nhật thông tin cá nhân và bảo mật tài khoản admin.</p>
+            </div>
+
+            <div className="grid gap-6 xl:grid-cols-[1fr_300px]">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
+                    <div className="grid gap-5 sm:grid-cols-2">
+                        <fieldset className="space-y-2">
+                            <Label>Họ và tên</Label>
+                            <div className="relative">
+                                <UserRound className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                                <Input className="pl-9" disabled={isUpdating} {...form.register("fullName")} />
+                            </div>
+                            <p className="text-sm text-destructive">{form.formState.errors.fullName?.message}</p>
+                        </fieldset>
+
+                        <fieldset className="space-y-2">
+                            <Label>Email</Label>
+                            <Input value={profile.email} disabled />
+                        </fieldset>
+
+                        <fieldset className="space-y-2">
+                            <Label>Vai trò</Label>
+                            <Input value={profile.role.toUpperCase()} disabled />
+                        </fieldset>
+
+                        <fieldset className="space-y-2">
+                            <Label>Trạng thái xác minh</Label>
+                            <Input value={profile.isVerified ? "Đã xác minh" : "Chưa xác minh"} disabled />
+                        </fieldset>
+
+                        <fieldset className="space-y-2">
+                            <Label>Ngày tham gia</Label>
+                            <Input value={formatDate(profile.createdAt)} disabled />
+                        </fieldset>
+
+                        <fieldset className="space-y-2">
+                            <Label>Trạng thái tài khoản</Label>
+                            <Input value={profile.isActive ? "Đang hoạt động" : "Đã khoá"} disabled />
+                        </fieldset>
+                    </div>
+
+                    <div className="pt-2 flex gap-3">
+                        <Button size="sm" type="submit" disabled={isUpdating}>
+                            {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
+                        </Button>
+                        <Button
+                            size="sm"
+                            type="button"
+                            variant="outline"
+                            disabled={isUpdating}
+                            onClick={() => {
+                                form.reset({
+                                    fullName: profile.fullName ?? "",
+                                });
+                                setSelectedAvatar(null);
+                                setAvatarPreview(null);
+                            }}
+                        >
+                            Huỷ
+                        </Button>
+                    </div>
+                </form>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col items-center gap-4">
+                    <div className="relative">
+                        <Avatar className="size-28">
+                            <AvatarImage src={avatarSrc} alt={profile.fullName ?? profile.email} />
+                            <AvatarFallback className="bg-primary/10 text-3xl font-semibold text-primary">
+                                {avatarFallback}
+                            </AvatarFallback>
+                        </Avatar>
+                        <button
+                            type="button"
+                            className="absolute bottom-0 right-0 flex size-8 items-center justify-center rounded-full bg-primary text-white transition-colors hover:bg-primary/90"
+                            onClick={() => inputRef.current?.click()}
+                        >
+                            <Camera className="size-4" />
+                        </button>
+                        <input
+                            ref={inputRef}
+                            type="file"
+                            accept="image/png,image/jpeg,image/jpg"
+                            className="hidden"
+                            onChange={(event) => {
+                                const file = event.target.files?.[0] ?? null;
+                                setSelectedAvatar(file);
+                            }}
+                        />
+                    </div>
+
+                    <div className="text-center">
+                        <p className="text-base font-semibold text-slate-800">{profile.fullName || "Admin"}</p>
+                        <p className="mt-0.5 text-xs text-slate-500">{profile.email}</p>
+                    </div>
+
+                    <div className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-600">
+                        <div className="flex items-center gap-2 font-medium text-slate-700">
+                            <ShieldCheck className="size-3.5" />
+                            Bảo mật tài khoản
+                        </div>
+                        <p className="mt-1">Đổi mật khẩu định kỳ và bảo vệ thiết bị đăng nhập để đảm bảo an toàn dữ liệu quản trị.</p>
+                    </div>
+
+                    <p className="text-center text-xs text-slate-400">Dung lượng tối đa 1 MB. Định dạng: JPG, PNG.</p>
+                    {selectedAvatar ? <p className="text-center text-xs text-slate-500">Ảnh mới: {selectedAvatar.name}</p> : null}
+                </div>
+            </div>
+
+            <form
+                onSubmit={passwordForm.handleSubmit(onChangePassword)}
+                className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4"
+            >
+                <div>
+                    <h2 className="text-base font-semibold text-slate-900">Đổi mật khẩu</h2>
+                    <p className="mt-1 text-sm text-slate-500">Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.</p>
+                </div>
+
+                <div className="grid gap-4 md:grid-cols-3">
+                    <fieldset className="space-y-2">
+                        <Label>Mật khẩu hiện tại</Label>
+                        <Input type="password" autoComplete="current-password" disabled={isChangingPassword} {...passwordForm.register("currentPassword")} />
+                        <p className="text-sm text-destructive">{passwordForm.formState.errors.currentPassword?.message}</p>
+                    </fieldset>
+
+                    <fieldset className="space-y-2">
+                        <Label>Mật khẩu mới</Label>
+                        <Input type="password" autoComplete="new-password" disabled={isChangingPassword} {...passwordForm.register("newPassword")} />
+                        <p className="text-sm text-destructive">{passwordForm.formState.errors.newPassword?.message}</p>
+                    </fieldset>
+
+                    <fieldset className="space-y-2">
+                        <Label>Xác nhận mật khẩu</Label>
+                        <Input type="password" autoComplete="new-password" disabled={isChangingPassword} {...passwordForm.register("confirmPassword")} />
+                        <p className="text-sm text-destructive">{passwordForm.formState.errors.confirmPassword?.message}</p>
+                    </fieldset>
+                </div>
+
+                <div className="pt-2">
+                    <Button size="sm" type="submit" disabled={isChangingPassword}>
+                        {isChangingPassword ? "Đang cập nhật..." : "Đổi mật khẩu"}
+                    </Button>
+                </div>
+            </form>
+        </div>
+    );
+};
+
+export default AdminProfilePage;

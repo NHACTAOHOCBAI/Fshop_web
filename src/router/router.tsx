@@ -34,6 +34,7 @@ import LoginPage from "@/pages/auth/login/LoginPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
 import ClientProductsPage from "@/pages/shop/products/ClientProductsPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
+import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage";
 import HomePage from "@/pages/shop/home/HomePage";
 import CommunityPage from "@/pages/shop/community/CommunityPage";
 import LivestreamListPage from "@/pages/shop/livestreams/LivestreamListPage";
@@ -183,6 +184,10 @@ const router = createBrowserRouter([
       {
         path: "users",
         element: <UsersPage />,
+      },
+      {
+        path: "profile",
+        element: <AdminProfilePage />,
       },
       {
         path: "coupons",

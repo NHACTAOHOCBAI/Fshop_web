@@ -23,6 +23,7 @@ import { ChevronsUpDownIcon, BadgeCheckIcon, BellIcon, LogOutIcon, MessageCircle
 export function NavUser({
   user,
   onLogout,
+  onAccountClick,
 }: {
   user: {
     name: string
@@ -30,6 +31,7 @@ export function NavUser({
     avatar: string
   }
   onLogout: () => void
+  onAccountClick?: () => void
 }) {
   const { isMobile } = useSidebar()
 
@@ -80,7 +82,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={onAccountClick}>
                 <BadgeCheckIcon
                 />
                 Tài khoản

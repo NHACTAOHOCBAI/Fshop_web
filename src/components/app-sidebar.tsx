@@ -34,6 +34,7 @@ import {
   Phone,
   RulerIcon,
   ShoppingBagIcon,
+  UserRound,
   TagsIcon,
   TerminalIcon,
   UsersIcon,
@@ -83,6 +84,7 @@ const adminMenuItems = [
   { title: "Đơn hàng", url: "/admin/orders", icon: <ShoppingBagIcon /> },
   { title: "Sản phẩm", url: "/admin/products", icon: <BoxesIcon /> },
   { title: "Người dùng", url: "/admin/users", icon: <UsersIcon /> },
+  { title: "Hồ sơ admin", url: "/admin/profile", icon: <UserRound /> },
   { title: "Mã giảm giá", url: "/admin/coupons", icon: <BadgePercentIcon /> },
   { title: "Kho hàng", url: "/admin/stocks", icon: <PackageCheckIcon /> },
   { title: "Cộng đồng", url: "/admin/community", icon: <MessageSquareIcon /> },
@@ -142,7 +144,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarUser} onLogout={handleLogout} />
+        <NavUser user={sidebarUser} onLogout={handleLogout} onAccountClick={() => navigate("/admin/profile")} />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>
