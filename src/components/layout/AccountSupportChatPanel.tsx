@@ -40,7 +40,8 @@ const AccountSupportChatPanel = () => {
     const videoInputRef = useRef<HTMLInputElement | null>(null);
     const typingTimeoutRef = useRef<number | null>(null);
     const seenConversationIdRef = useRef<number | null>(null);
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const messagesScrollRef = useRef<HTMLDivElement | null>(null);
+    const shouldStickToBottomRef = useRef(true);
     const imageItemsRef = useRef(imageItems);
 
     const cachedUser = authStorage.getUser<User>();
@@ -95,8 +96,17 @@ const AccountSupportChatPanel = () => {
     }, [conversationId, markSeenMutation]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, [messages, isSupportTyping]);
+        shouldStickToBottomRef.current = true;
+    }, [conversationId]);
+
+    useEffect(() => {
+        const container = messagesScrollRef.current;
+        if (!container || !shouldStickToBottomRef.current) {
+            return;
+        }
+
+        container.scrollTo({ top: container.scrollHeight, behavior: "auto" });
+    }, [conversationId, messages.length, isSupportTyping]);
 
     useEffect(() => {
         return () => {
@@ -295,6 +305,16 @@ const AccountSupportChatPanel = () => {
         );
     };
 
+    const handleMessagesScroll = () => {
+        const container = messagesScrollRef.current;
+        if (!container) {
+            return;
+        }
+
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        shouldStickToBottomRef.current = distanceFromBottom < 96;
+    };
+
     return (
         <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
@@ -314,7 +334,7 @@ const AccountSupportChatPanel = () => {
             </div>
 
             <div className="flex min-h-128 flex-col">
-                <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
+                <div ref={messagesScrollRef} onScroll={handleMessagesScroll} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
                     {conversationQuery.isError || messagesQuery.isError ? (
                         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                             <p className="font-medium">Không tải được cuộc trò chuyện.</p>
@@ -379,8 +399,6 @@ const AccountSupportChatPanel = () => {
                             </div>
                         </div>
                     ) : null}
-
-                    <div ref={messagesEndRef} />
                 </div>
 
                 <div className="border-t border-slate-100 px-5 py-4">

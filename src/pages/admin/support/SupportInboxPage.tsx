@@ -47,7 +47,8 @@ const SupportInboxPage = () => {
     const videoInputRef = useRef<HTMLInputElement | null>(null);
     const typingTimeoutRef = useRef<number | null>(null);
     const seenConversationIdRef = useRef<number | null>(null);
-    const messagesEndRef = useRef<HTMLDivElement | null>(null);
+    const messagesScrollRef = useRef<HTMLDivElement | null>(null);
+    const shouldStickToBottomRef = useRef(true);
     const imageItemsRef = useRef(imageItems);
 
     const cachedUser = authStorage.getUser<User>();
@@ -120,8 +121,17 @@ const SupportInboxPage = () => {
     }, [conversationId, markSeenMutation]);
 
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-    }, [messages, isSupportTyping]);
+        shouldStickToBottomRef.current = true;
+    }, [conversationId]);
+
+    useEffect(() => {
+        const container = messagesScrollRef.current;
+        if (!container || !shouldStickToBottomRef.current) {
+            return;
+        }
+
+        container.scrollTo({ top: container.scrollHeight, behavior: "auto" });
+    }, [conversationId, messages.length, isSupportTyping]);
 
     useEffect(() => {
         return () => {
@@ -298,6 +308,16 @@ const SupportInboxPage = () => {
         );
     };
 
+    const handleMessagesScroll = () => {
+        const container = messagesScrollRef.current;
+        if (!container) {
+            return;
+        }
+
+        const distanceFromBottom = container.scrollHeight - container.scrollTop - container.clientHeight;
+        shouldStickToBottomRef.current = distanceFromBottom < 96;
+    };
+
     return (
         <div className="flex h-[calc(100vh-8rem)] min-h-180 w-full gap-4">
             <aside className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
@@ -372,7 +392,7 @@ const SupportInboxPage = () => {
                         </div>
 
                         <div className="flex min-h-0 flex-1 flex-col">
-                            <div className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
+                            <div ref={messagesScrollRef} onScroll={handleMessagesScroll} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
                                 {messagesQuery.isError ? (
                                     <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                                         Không tải được tin nhắn. {(messagesQuery.error as Error | undefined)?.message || "Vui lòng thử lại sau."}
@@ -412,8 +432,6 @@ const SupportInboxPage = () => {
                                         <div className="rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-xs text-slate-500">Khách đang nhập...</div>
                                     </div>
                                 ) : null}
-
-                                <div ref={messagesEndRef} />
                             </div>
 
                             <div className="border-t border-slate-100 px-5 py-4">
