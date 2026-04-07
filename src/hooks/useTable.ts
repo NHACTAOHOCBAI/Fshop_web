@@ -98,7 +98,7 @@ const useTable = <T,>({ use, columns, defaultPageSize = 10 }: UseTableProps<T>) 
     const [filter, setFilter] = useState("");
     const [sorting, setSorting] = useState<SortingState>([]);
 
-    const { data, isFetching } = use({
+    const { data, isFetching, isError, error, refetch } = use({
         page: pagination.pageIndex + 1,
         limit: pagination.pageSize,
         search: filter,
@@ -142,6 +142,9 @@ const useTable = <T,>({ use, columns, defaultPageSize = 10 }: UseTableProps<T>) 
         setFilter,
         setPagination,
         isFetching,
+        isError,
+        error,
+        refetch,
     };
 };
 
