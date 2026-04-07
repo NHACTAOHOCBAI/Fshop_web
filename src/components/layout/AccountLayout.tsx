@@ -1,14 +1,20 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Bell, Heart, LogOutIcon, MapPinHouse, MessageCircle, Package, UserRound } from "lucide-react";
-import { NavLink, Outlet, useNavigate } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 import { useLogout, useMe } from "@/hooks/useAuth";
 import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import type { ChatProductAttachment } from "@/types/chat";
 import type { User } from "@/types/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AccountSupportChatPanel from "@/components/layout/AccountSupportChatPanel";
+
+type AccountRouteState = {
+    openChat?: boolean;
+    prefillProduct?: ChatProductAttachment;
+};
 
 const sidebarItems = [
     { to: "/my-account/profile", icon: UserRound, label: "Thông tin cá nhân" },
@@ -20,12 +26,26 @@ const sidebarItems = [
 
 const AccountLayout = () => {
     const [isChatOpen, setIsChatOpen] = useState(false);
+    const [prefillProduct, setPrefillProduct] = useState<ChatProductAttachment | null>(null);
+    const location = useLocation();
     const navigate = useNavigate();
     const { mutate: logout, isPending: isLoggingOut } = useLogout();
     const cachedUser = authStorage.getUser<User>();
     const { data } = useMe();
     const user = data?.data ?? cachedUser;
     const avatarFallback = user?.fullName?.trim().charAt(0).toUpperCase() || user?.email?.charAt(0).toUpperCase() || "U";
+
+    useEffect(() => {
+        const state = location.state as AccountRouteState | null;
+        if (!state?.openChat) {
+            return;
+        }
+
+        setIsChatOpen(true);
+        setPrefillProduct(state.prefillProduct ?? null);
+
+        navigate(location.pathname + location.search, { replace: true, state: null });
+    }, [location.pathname, location.search, location.state, navigate]);
 
     const handleLogout = () => {
         logout(undefined, {
@@ -98,7 +118,7 @@ const AccountLayout = () => {
 
             {/* Main content */}
             <div className="min-w-0 flex-1">
-                {isChatOpen ? <AccountSupportChatPanel /> : <Outlet />}
+                {isChatOpen ? <AccountSupportChatPanel prefillProduct={prefillProduct} onPrefillConsumed={() => setPrefillProduct(null)} /> : <Outlet />}
             </div>
         </div>
     );

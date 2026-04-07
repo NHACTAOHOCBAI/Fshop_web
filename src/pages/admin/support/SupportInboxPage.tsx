@@ -3,13 +3,22 @@ import { AudioLines, CheckCheck, FileVideo, Image as ImageIcon, Loader2, Message
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useMe } from "@/hooks/useAuth";
+import { useProducts } from "@/hooks/useProducts";
 import { useAdminChatRealtime, useAdminConversations, useChatRealtime, useConversationMessages, useMarkConversationSeen, useSendChatMessage } from "@/hooks/useChats";
 import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
 import type { ChatAttachment, ChatConversation, ChatMessage } from "@/types/chat";
+import type { Product } from "@/types/product";
 import type { User } from "@/types/user";
 
 const formatTime = (iso: string) => {
@@ -29,9 +38,15 @@ const getAttachmentLabel = (attachment: ChatAttachment) => {
             return "Audio";
         case "video":
             return "Video";
+        case "product":
+            return "Sản phẩm";
         default:
             return "Tệp";
     }
+};
+
+const formatProductPrice = (value: number) => {
+    return new Intl.NumberFormat("vi-VN", { style: "currency", currency: "VND" }).format(value);
 };
 
 const SupportInboxPage = () => {
@@ -41,6 +56,9 @@ const SupportInboxPage = () => {
     const [imageItems, setImageItems] = useState<Array<{ file: File; previewUrl: string }>>([]);
     const [voiceFile, setVoiceFile] = useState<File | null>(null);
     const [videoFile, setVideoFile] = useState<File | null>(null);
+    const [selectedProducts, setSelectedProducts] = useState<Product[]>([]);
+    const [isProductPickerOpen, setIsProductPickerOpen] = useState(false);
+    const [productSearch, setProductSearch] = useState("");
 
     const imageInputRef = useRef<HTMLInputElement | null>(null);
     const voiceInputRef = useRef<HTMLInputElement | null>(null);
@@ -50,6 +68,15 @@ const SupportInboxPage = () => {
     const messagesScrollRef = useRef<HTMLDivElement | null>(null);
     const shouldStickToBottomRef = useRef(true);
     const imageItemsRef = useRef(imageItems);
+
+    const productsQuery = useProducts({
+        page: 1,
+        limit: 12,
+        search: productSearch.trim() || undefined,
+        sortBy: "createdAt",
+        sortOrder: "DESC",
+    });
+    const availableProducts = useMemo(() => productsQuery.data?.data ?? [], [productsQuery.data]);
 
     const cachedUser = authStorage.getUser<User>();
     const { data: meResponse } = useMe();
@@ -108,7 +135,7 @@ const SupportInboxPage = () => {
     const imageFiles = useMemo(() => imageItems.map((item) => item.file), [imageItems]);
 
     const isSending = sendMessageMutation.isPending;
-    const hasAttachments = imageItems.length > 0 || Boolean(voiceFile) || Boolean(videoFile);
+    const hasAttachments = imageItems.length > 0 || Boolean(voiceFile) || Boolean(videoFile) || selectedProducts.length > 0;
     const canSend = Boolean(conversationId) && (draft.trim().length > 0 || hasAttachments) && !isSending;
 
     useEffect(() => {
@@ -195,6 +222,7 @@ const SupportInboxPage = () => {
         setImageItems([]);
         setVoiceFile(null);
         setVideoFile(null);
+        setSelectedProducts([]);
         emitTyping(false);
     };
 
@@ -210,6 +238,7 @@ const SupportInboxPage = () => {
                 images: imageFiles.length > 0 ? imageFiles : undefined,
                 voice: voiceFile,
                 video: videoFile,
+                productIds: selectedProducts.length > 0 ? selectedProducts.map((product) => product.id) : undefined,
             },
             {
                 onSuccess: () => {
@@ -222,10 +251,59 @@ const SupportInboxPage = () => {
         );
     };
 
+    const handleComposerKeyDown = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if (event.key !== "Enter" || event.shiftKey || event.nativeEvent.isComposing) {
+            return;
+        }
+
+        event.preventDefault();
+        handleSend();
+    };
+
+    const toggleProduct = (product: Product) => {
+        setSelectedProducts((prev) => {
+            if (prev.some((item) => item.id === product.id)) {
+                return prev.filter((item) => item.id !== product.id);
+            }
+
+            return [...prev, product];
+        });
+    };
+
     const renderAttachments = (attachments: ChatAttachment[]) => {
         return (
             <div className="mt-2 space-y-2">
                 {attachments.map((attachment) => {
+                    if (attachment.type === "product" && attachment.product) {
+                        const targetPath = `/${attachment.product.department ?? "men"}/products/${attachment.product.id}`;
+
+                        return (
+                            <a
+                                key={`product-${attachment.product.id}`}
+                                href={targetPath}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="block overflow-hidden rounded-xl border border-slate-200 bg-white transition-colors hover:border-primary/30"
+                            >
+                                <div className="flex gap-3 p-3">
+                                    <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-slate-100">
+                                        {attachment.product.imageUrl ? (
+                                            <img src={attachment.product.imageUrl} alt={attachment.product.name} className="h-full w-full object-cover" />
+                                        ) : null}
+                                    </div>
+                                    <div className="min-w-0 flex-1">
+                                        <p className="line-clamp-2 text-sm font-semibold text-slate-900">{attachment.product.name}</p>
+                                        <p className="mt-1 text-xs text-slate-500">
+                                            {attachment.product.brandName ?? "FShop"}
+                                            {attachment.product.categoryName ? ` · ${attachment.product.categoryName}` : ""}
+                                        </p>
+                                        <p className="mt-2 text-sm font-semibold text-primary">{formatProductPrice(attachment.product.price)}</p>
+                                    </div>
+                                </div>
+                            </a>
+                        );
+                    }
+
                     if (attachment.type === "image") {
                         return (
                             <a key={attachment.publicId} href={attachment.url} target="_blank" rel="noreferrer" className="block overflow-hidden rounded-xl border border-white/10">
@@ -304,6 +382,20 @@ const SupportInboxPage = () => {
                         </button>
                     </span>
                 ) : null}
+
+                {selectedProducts.map((product) => (
+                    <div key={product.id} className="w-40 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                        <div className="h-24 bg-slate-100">
+                            {product.images?.[0]?.imageUrl ? (
+                                <img src={product.images[0].imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                            ) : null}
+                        </div>
+                        <div className="space-y-1 p-2">
+                            <p className="line-clamp-2 text-[11px] font-medium text-slate-700">{product.name}</p>
+                            <p className="text-[11px] font-semibold text-primary">{formatProductPrice(Number(product.price))}</p>
+                        </div>
+                    </div>
+                ))}
             </div>
         );
     };
@@ -319,7 +411,8 @@ const SupportInboxPage = () => {
     };
 
     return (
-        <div className="flex h-[calc(100vh-8rem)] min-h-180 w-full gap-4">
+        <>
+            <div className="flex h-[calc(100vh-8rem)] min-h-180 w-full gap-4">
             <aside className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
                 <div className="border-b border-slate-100 p-4">
                     <div className="flex items-center gap-2 text-slate-900">
@@ -374,7 +467,7 @@ const SupportInboxPage = () => {
                 </div>
             </aside>
 
-            <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+            <main className="flex min-w-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
                 {selectedConversation ? (
                     <>
                         <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
@@ -407,16 +500,33 @@ const SupportInboxPage = () => {
                                 ) : messages.length > 0 ? (
                                     messages.map((message: ChatMessage) => {
                                         const isAdminMessage = currentUser?.id ? message.sender.id === currentUser.id : message.senderRole === "admin";
+                                        const hasTextContent = Boolean(message.content?.trim());
+                                        const hasAttachmentsContent = Boolean(message.attachments && message.attachments.length > 0);
 
                                         return (
                                             <div key={message.id} className={`flex ${isAdminMessage ? "justify-end" : "justify-start"}`}>
-                                                <div className={cn("max-w-[88%] rounded-2xl px-3 py-2 text-sm leading-relaxed shadow-sm", isAdminMessage ? "bg-primary text-primary-foreground" : "border border-slate-200 bg-slate-50 text-slate-700")}>
-                                                    {message.content ? <p className="whitespace-pre-wrap">{message.content}</p> : null}
-                                                    {message.attachments && message.attachments.length > 0 ? renderAttachments(message.attachments) : null}
-                                                    <div className={cn("mt-1 flex items-center gap-1.5 text-[11px]", isAdminMessage ? "text-primary-foreground/80" : "text-slate-400")}>
-                                                        <span>{formatTime(message.createdAt)}</span>
-                                                        {isAdminMessage && message.isSeen ? <CheckCheck className="size-3.5" /> : null}
-                                                    </div>
+                                                <div className="flex max-w-[88%] flex-col gap-2">
+                                                    {hasAttachmentsContent ? (
+                                                        <div className="max-w-full">
+                                                            {message.attachments ? renderAttachments(message.attachments) : null}
+                                                            {!hasTextContent ? (
+                                                                <div className="mt-1 flex items-center gap-1.5 px-1 text-[11px] text-slate-400">
+                                                                    <span>{formatTime(message.createdAt)}</span>
+                                                                    {isAdminMessage && message.isSeen ? <CheckCheck className="size-3.5" /> : null}
+                                                                </div>
+                                                            ) : null}
+                                                        </div>
+                                                    ) : null}
+
+                                                    {hasTextContent ? (
+                                                        <div className={cn("rounded-2xl px-3 py-2 text-sm leading-relaxed", isAdminMessage ? "bg-primary text-primary-foreground" : "border border-slate-200 bg-slate-50 text-slate-700")}>
+                                                            <p className="whitespace-pre-wrap">{message.content}</p>
+                                                            <div className={cn("mt-1 flex items-center gap-1.5 text-[11px]", isAdminMessage ? "text-primary-foreground/80" : "text-slate-400")}>
+                                                                <span>{formatTime(message.createdAt)}</span>
+                                                                {isAdminMessage && message.isSeen ? <CheckCheck className="size-3.5" /> : null}
+                                                            </div>
+                                                        </div>
+                                                    ) : null}
                                                 </div>
                                             </div>
                                         );
@@ -446,6 +556,7 @@ const SupportInboxPage = () => {
                                     <Textarea
                                         value={draft}
                                         onChange={(event) => syncTyping(event.target.value)}
+                                        onKeyDown={handleComposerKeyDown}
                                         placeholder="Nhập phản hồi cho khách..."
                                         className="min-h-24 resize-none"
                                     />
@@ -496,6 +607,11 @@ const SupportInboxPage = () => {
                                             Video
                                         </Button>
 
+                                        <Button type="button" variant="outline" size="sm" onClick={() => setIsProductPickerOpen(true)}>
+                                            <Store className="size-4" />
+                                            Sản phẩm{selectedProducts.length > 0 ? ` (${selectedProducts.length})` : ""}
+                                        </Button>
+
                                         <div className="ml-auto flex items-center gap-2">
                                             {(draft.trim() || hasAttachments) ? (
                                                 <Button type="button" variant="ghost" size="sm" onClick={clearComposer}>
@@ -524,6 +640,72 @@ const SupportInboxPage = () => {
                 )}
             </main>
         </div>
+
+        <Dialog open={isProductPickerOpen} onOpenChange={setIsProductPickerOpen}>
+            <DialogContent className="max-h-[86vh] max-w-3xl overflow-y-auto">
+                <DialogHeader>
+                    <DialogTitle>Chọn sản phẩm để gửi</DialogTitle>
+                    <DialogDescription>Tìm và chọn một hoặc nhiều sản phẩm để đính kèm vào tin nhắn.</DialogDescription>
+                </DialogHeader>
+
+                <Input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Tìm theo tên sản phẩm..." />
+
+                <div className="grid max-h-[54vh] gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
+                    {productsQuery.isLoading ? (
+                        <div className="col-span-full flex items-center justify-center py-10 text-sm text-slate-500">
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                            Đang tải sản phẩm...
+                        </div>
+                    ) : availableProducts.length > 0 ? (
+                        availableProducts.map((product) => {
+                            const selected = selectedProducts.some((item) => item.id === product.id);
+
+                            return (
+                                <button
+                                    key={product.id}
+                                    type="button"
+                                    onClick={() => toggleProduct(product)}
+                                    className={cn(
+                                        "overflow-hidden rounded-2xl border text-left transition-colors",
+                                        selected ? "border-primary bg-primary/5" : "border-slate-200 bg-white hover:border-primary/30 hover:bg-slate-50"
+                                    )}
+                                >
+                                    <div className="flex gap-3 p-3">
+                                        <div className="h-16 w-16 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                                            {product.images?.[0]?.imageUrl ? (
+                                                <img src={product.images[0].imageUrl} alt={product.name} className="h-full w-full object-cover" />
+                                            ) : null}
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="line-clamp-2 text-sm font-semibold text-slate-900">{product.name}</p>
+                                            <p className="mt-1 text-xs text-slate-500">{product.brand?.name ?? "FShop"}</p>
+                                            <p className="mt-2 text-sm font-semibold text-primary">{formatProductPrice(Number(product.price))}</p>
+                                        </div>
+                                    </div>
+                                </button>
+                            );
+                        })
+                    ) : (
+                        <div className="col-span-full rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-8 text-center text-sm text-slate-500">
+                            Không tìm thấy sản phẩm phù hợp.
+                        </div>
+                    )}
+                </div>
+
+                <div className="flex items-center justify-between gap-3 border-t border-slate-100 pt-4">
+                    <p className="text-xs text-slate-500">Đã chọn {selectedProducts.length} sản phẩm.</p>
+                    <div className="flex items-center gap-2">
+                        <Button type="button" variant="ghost" onClick={() => setIsProductPickerOpen(false)}>
+                            Đóng
+                        </Button>
+                        <Button type="button" onClick={() => setIsProductPickerOpen(false)}>
+                            Xong
+                        </Button>
+                    </div>
+                </div>
+            </DialogContent>
+        </Dialog>
+        </>
     );
 };
 

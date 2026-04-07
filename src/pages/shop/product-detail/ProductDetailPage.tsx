@@ -1,6 +1,6 @@
-import { ChevronLeft, Heart, Loader2, ShoppingCart, Star } from "lucide-react";
+import { ChevronLeft, Heart, Loader2, MessageCircle, ShoppingCart, Star } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -19,12 +19,14 @@ import ProductCard from "../products/components/ProductCard";
 const departmentList: DepartmentType[] = ["men", "women", "kids"];
 
 const ProductDetailPage = () => {
+    const navigate = useNavigate();
     const params = useParams<{ department?: string; productId?: string }>();
     const [selectedImage, setSelectedImage] = useState(0);
     const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
     const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
     const [quantity, setQuantity] = useState(1);
     const [activeTab, setActiveTab] = useState<"description" | "reviews">("description");
+    const [isSendingToAdmin, setIsSendingToAdmin] = useState(false);
 
     const department = useMemo<DepartmentType>(() => {
         const rawDepartment = params.department?.toLowerCase();
@@ -193,6 +195,34 @@ const ProductDetailPage = () => {
         );
     };
 
+    const handleSendProductToAdmin = () => {
+        if (!product) {
+            return;
+        }
+
+        if (!hasToken) {
+            return;
+        }
+
+        setIsSendingToAdmin(true);
+
+        navigate("/my-account/profile", {
+            state: {
+                openChat: true,
+                prefillProduct: {
+                    id: product.id,
+                    name: product.name,
+                    price: Number(product.price),
+                    imageUrl: product.images?.[0]?.imageUrl ?? null,
+                    brandName: product.brand?.name ?? null,
+                    categoryName: product.category?.name ?? null,
+                    department,
+                },
+            },
+        });
+        setIsSendingToAdmin(false);
+    };
+
     if (productQuery.isLoading) {
         return <div className="rounded-xl border border-slate-200 bg-white p-6 text-sm text-slate-500">Đang tải chi tiết sản phẩm...</div>;
     }
@@ -331,6 +361,17 @@ const ProductDetailPage = () => {
                             <Heart className={`size-4 ${isInWishlist ? "fill-red-500 text-red-500" : ""}`} />
                         </Button>
                     </div>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full gap-2"
+                        disabled={isSendingToAdmin}
+                        onClick={() => void handleSendProductToAdmin()}
+                    >
+                        {isSendingToAdmin ? <Loader2 className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
+                        {isSendingToAdmin ? "Đang gửi cho admin..." : "Gửi sản phẩm này cho admin"}
+                    </Button>
                 </section>
             </div>
 

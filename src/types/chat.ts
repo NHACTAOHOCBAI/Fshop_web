@@ -1,10 +1,20 @@
 export type ChatRole = "user" | "admin";
-export type ChatAttachmentType = "image" | "voice" | "video";
+export type ChatAttachmentType = "image" | "voice" | "video" | "product";
+
+export type ChatProductAttachment = {
+    id: number;
+    name: string;
+    price: number;
+    imageUrl?: string | null;
+    brandName?: string | null;
+    categoryName?: string | null;
+    department?: string | null;
+};
 
 export type ChatAttachment = {
     type: ChatAttachmentType;
-    url: string;
-    publicId: string;
+    url?: string;
+    publicId?: string;
     fileName?: string;
     fileSize?: number;
     duration?: number;
@@ -13,6 +23,7 @@ export type ChatAttachment = {
         height: number;
     };
     format?: string;
+    product?: ChatProductAttachment;
 };
 
 export type ChatParticipant = {
@@ -50,4 +61,5 @@ export type SendChatMessagePayload = {
     images?: File[];
     voice?: File | null;
     video?: File | null;
+    productIds?: number[];
 };

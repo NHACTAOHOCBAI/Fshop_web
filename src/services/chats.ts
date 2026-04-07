@@ -46,6 +46,10 @@ export const sendChatMessage = async (payload: SendChatMessagePayload) => {
         formData.append("video", payload.video);
     }
 
+    if (payload.productIds && payload.productIds.length > 0) {
+        formData.append("productIds", JSON.stringify(payload.productIds));
+    }
+
     const { data } = await axiosInstance.post<ApiResponse<ChatMessage>>("/chats/send", formData, {
         headers: {
             "Content-Type": "multipart/form-data",
