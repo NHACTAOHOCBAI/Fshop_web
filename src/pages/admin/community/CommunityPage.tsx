@@ -4,12 +4,12 @@ import { toast } from "sonner";
 
 import ClientPagination from "@/components/pagination/ClientPagination";
 import PostCard from "@/components/posts/PostCard.tsx";
+import PostDetailPage from "@/pages/shop/community/PostDetailPage";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useAdminPosts, useUpdatePostStatus } from "@/hooks/usePosts";
-import { formatDateTime, formatRelativeTime } from "@/lib/utils";
 import type { Post } from "@/types/post";
 
 const PAGE_SIZE = 8;
@@ -208,86 +208,17 @@ const AdminCommunityPage = () => {
                     }
                 }}
             >
-                <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-3xl">
-                    <DialogHeader>
-                        <DialogTitle>Chi tiết bài viết</DialogTitle>
+                <DialogContent className="max-h-[92vh] overflow-hidden p-4 sm:max-w-5xl [&>button]:hidden">
+                    <DialogHeader className="sr-only">
+                        <DialogTitle>Chi tiet bai viet cong dong</DialogTitle>
                     </DialogHeader>
                     {selectedPost ? (
-                        <div className="space-y-5">
-                            <div className="flex items-center gap-3">
-                                <img
-                                    src={selectedPost.user.avatar || "https://via.placeholder.com/80"}
-                                    alt={selectedPost.user.fullName}
-                                    className="h-12 w-12 rounded-full border object-cover"
-                                />
-                                <div>
-                                    <p className="font-semibold">{selectedPost.user.fullName}</p>
-                                    <p className="text-sm text-muted-foreground">{selectedPost.user.email}</p>
-                                    <p className="text-xs text-muted-foreground">
-                                        {formatRelativeTime(selectedPost.createdAt)} · {formatDateTime(selectedPost.createdAt)}
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="rounded-lg border bg-slate-50 p-4 text-sm leading-6">
-                                {selectedPost.content || "Bài viết không có nội dung văn bản."}
-                            </div>
-
-                            {selectedPost.postHashtags.length > 0 ? (
-                                <div className="space-y-2">
-                                    <p className="text-sm font-medium">Hashtag</p>
-                                    <div className="flex flex-wrap gap-2">
-                                        {selectedPost.postHashtags.map((item) => (
-                                            <span key={item.id} className="rounded-full bg-slate-100 px-3 py-1 text-xs">
-                                                #{item.hashtag.name}
-                                            </span>
-                                        ))}
-                                    </div>
-                                </div>
-                            ) : null}
-
-                            {selectedPost.images.length > 0 ? (
-                                <div className="space-y-2">
-                                    <p className="text-sm font-medium">Hình ảnh</p>
-                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-                                        {selectedPost.images.map((image) => (
-                                            <a
-                                                key={image.id}
-                                                href={image.imageUrl}
-                                                target="_blank"
-                                                rel="noreferrer"
-                                                className="overflow-hidden rounded-lg border"
-                                            >
-                                                <img
-                                                    src={image.imageUrl}
-                                                    alt="post"
-                                                    className="h-36 w-full object-cover"
-                                                />
-                                            </a>
-                                        ))}
-                                    </div>
-                                </div>
-                            ) : null}
-
-                            <div className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-                                <div className="rounded-lg border p-3">
-                                    <p className="text-muted-foreground">Lượt thích</p>
-                                    <p className="mt-1 font-semibold">{selectedPost.totalLikes}</p>
-                                </div>
-                                <div className="rounded-lg border p-3">
-                                    <p className="text-muted-foreground">Bình luận</p>
-                                    <p className="mt-1 font-semibold">{selectedPost.totalComments}</p>
-                                </div>
-                                <div className="rounded-lg border p-3">
-                                    <p className="text-muted-foreground">Trạng thái</p>
-                                    <p className="mt-1 font-semibold">{selectedPost.isActive ? "Đang hiển thị" : "Đã ẩn"}</p>
-                                </div>
-                                <div className="rounded-lg border p-3">
-                                    <p className="text-muted-foreground">Ảnh</p>
-                                    <p className="mt-1 font-semibold">{selectedPost.images.length}</p>
-                                </div>
-                            </div>
-                        </div>
+                        <PostDetailPage
+                            isModal
+                            postId={selectedPost.id}
+                            allowAdminDelete
+                            onClose={() => setSelectedPost(null)}
+                        />
                     ) : null}
                 </DialogContent>
             </Dialog>

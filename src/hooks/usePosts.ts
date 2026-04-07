@@ -218,6 +218,27 @@ export const useDeletePostComment = () => {
     });
 };
 
+export const useDeleteAdminPostComment = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({
+            postId,
+            commentId,
+        }: {
+            postId: number;
+            commentId: number;
+        }) => postsService.deleteAdminPostComment(postId, commentId),
+        onSuccess: (_, { postId }) => {
+            queryClient.invalidateQueries({
+                queryKey: [...POSTS_QUERY_KEY, postId, "comments"],
+            });
+            queryClient.invalidateQueries({ queryKey: [...POSTS_QUERY_KEY, postId] });
+            queryClient.invalidateQueries({ queryKey: ADMIN_POSTS_QUERY_KEY });
+        },
+    });
+};
+
 /**
  * Get replies for a comment
  */

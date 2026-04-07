@@ -163,6 +163,13 @@ export const deletePostComment = async (postId: number, commentId: number) => {
     return response.data;
 };
 
+export const deleteAdminPostComment = async (postId: number, commentId: number) => {
+    const response = await axiosInstance.delete<{ message: string }>(
+        `${API_BASE}/admin/${postId}/comments/${commentId}`
+    );
+    return response.data;
+};
+
 /**
  * Add a reply to a comment
  */

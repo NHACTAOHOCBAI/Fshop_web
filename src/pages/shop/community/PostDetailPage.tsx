@@ -1,4 +1,4 @@
-import { ArrowLeft, Loader2 } from "lucide-react";
+﻿import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
@@ -6,6 +6,16 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 import PostCard from "@/components/posts/PostCard";
 import CommentItem from "@/components/posts/CommentItem";
@@ -16,6 +26,7 @@ import {
     useAddPostComment,
     useAddCommentReply,
     useDeletePostComment,
+    useDeleteAdminPostComment,
     useUpdatePostComment,
     useCommentReplies,
     POSTS_QUERY_KEY,
@@ -36,12 +47,14 @@ type CommentRepliesProps = {
     onDelete: (commentId: number) => void;
     deletingCommentId: number | null;
     isExpanded: boolean;
+    canDelete: boolean;
 };
 
 type PostDetailPageProps = {
     isModal?: boolean;
     onClose?: () => void;
     postId?: number;
+    allowAdminDelete?: boolean;
 };
 
 const CommentReplies = ({
@@ -57,6 +70,7 @@ const CommentReplies = ({
     onDelete,
     deletingCommentId,
     isExpanded,
+    canDelete,
 }: CommentRepliesProps) => {
     const repliesQuery = useCommentReplies(postId, parentComment.id, {
         page: 1,
@@ -106,6 +120,7 @@ const CommentReplies = ({
                         onReply={onReply}
                         onEdit={onEdit}
                         onDelete={onDelete}
+                        canDelete={canDelete}
                         isDeleting={deletingCommentId === reply.id}
                     />
 
@@ -132,6 +147,7 @@ const CommentReplies = ({
                         onReply={onReply}
                         onEdit={onEdit}
                         onDelete={onDelete}
+                        canDelete={canDelete}
                         deletingCommentId={deletingCommentId}
                         isExpanded={!!expandedReplies[reply.id]}
                     />
@@ -141,7 +157,7 @@ const CommentReplies = ({
     );
 };
 
-const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride }: PostDetailPageProps) => {
+const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride, allowAdminDelete = false }: PostDetailPageProps) => {
     const queryClient = useQueryClient();
     const { postId } = useParams<{ postId: string }>();
     const navigate = useNavigate();
@@ -152,6 +168,7 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride }: Pos
     const [deletingCommentId, setDeletingCommentId] = useState<number | null>(
         null,
     );
+    const [commentToDeleteId, setCommentToDeleteId] = useState<number | null>(null);
     const [expandedReplies, setExpandedReplies] = useState<
         Record<number, boolean>
     >({});
@@ -177,6 +194,8 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride }: Pos
         useUpdatePostComment();
     const { mutate: deleteComment, isPending: isDeletingComment } =
         useDeletePostComment();
+    const { mutate: deleteAdminComment, isPending: isDeletingAdminComment } =
+        useDeleteAdminPostComment();
     const post = postQuery.data;
     const comments = commentsQuery.data?.data ?? [];
     const rootComments = comments.filter((comment) => !comment.parentCommentId);
@@ -307,31 +326,44 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride }: Pos
 
     const handleDeleteComment = useCallback(
         (commentId: number) => {
-            if (!id) return;
-            if (!window.confirm("Bạn có chắc chắn muốn xóa bình luận này?")) return;
-
-            setDeletingCommentId(commentId);
-            deleteComment(
-                { postId: id, commentId },
-                {
-                    onSuccess: () => {
-                        toast.success("Đã xóa bình luận");
-                        if (editingCommentId === commentId) {
-                            setEditingCommentId(null);
-                            setEditingContent("");
-                        }
-                    },
-                    onError: (error) => {
-                        toast.error(extractApiErrorMessage(error));
-                    },
-                    onSettled: () => {
-                        setDeletingCommentId(null);
-                    },
-                },
-            );
+            setCommentToDeleteId(commentId);
         },
-        [id, deleteComment, editingCommentId],
+        [],
     );
+
+    const handleConfirmDeleteComment = useCallback(() => {
+        if (!id || !commentToDeleteId) return;
+
+        setDeletingCommentId(commentToDeleteId);
+        const deletingId = commentToDeleteId;
+        const mutate = allowAdminDelete ? deleteAdminComment : deleteComment;
+
+        mutate(
+            { postId: id, commentId: deletingId },
+            {
+                onSuccess: () => {
+                    toast.success("Đã xóa bình luận");
+                    if (editingCommentId === deletingId) {
+                        setEditingCommentId(null);
+                        setEditingContent("");
+                    }
+                },
+                onError: (error) => {
+                    toast.error(extractApiErrorMessage(error));
+                },
+                onSettled: () => {
+                    setDeletingCommentId(null);
+                    setCommentToDeleteId(null);
+                },
+            },
+        );
+    }, [id, commentToDeleteId, allowAdminDelete, deleteAdminComment, deleteComment, editingCommentId]);
+
+    const handleDeleteDialogOpenChange = useCallback((open: boolean) => {
+        if (!open && !(isDeletingComment || isDeletingAdminComment)) {
+            setCommentToDeleteId(null);
+        }
+    }, [isDeletingComment, isDeletingAdminComment]);
 
     const toggleReplies = useCallback((commentId: number) => {
         setExpandedReplies((prev) => ({
@@ -361,12 +393,12 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride }: Pos
         if (isModal) {
             return (
                 <div className="py-8 text-center">
-                    <p className="mb-4 text-slate-600">Khong the tai bai viet nay</p>
+                    <p className="mb-4 text-slate-600">Không thể tải bài viết này</p>
                     <div className="flex items-center justify-center gap-2">
                         <Button variant="outline" onClick={handleClose}>
-                            Dong
+                            Đóng
                         </Button>
-                        <Button onClick={() => postQuery.refetch()}>Thu lai</Button>
+                        <Button onClick={() => postQuery.refetch()}>Thử lại</Button>
                     </div>
                 </div>
             );
@@ -461,8 +493,9 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride }: Pos
                                                 onReply={handleReply}
                                                 onEdit={handleStartEdit}
                                                 onDelete={handleDeleteComment}
+                                                canDelete={allowAdminDelete}
                                                 isDeleting={
-                                                    isDeletingComment && deletingCommentId === comment.id
+                                                    (isDeletingComment || isDeletingAdminComment) && deletingCommentId === comment.id
                                                 }
                                             />
                                         )}
@@ -489,6 +522,7 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride }: Pos
                                             onReply={handleReply}
                                             onEdit={handleStartEdit}
                                             onDelete={handleDeleteComment}
+                                            canDelete={allowAdminDelete}
                                             deletingCommentId={deletingCommentId}
                                             isExpanded={!!expandedReplies[comment.id]}
                                         />
@@ -537,6 +571,27 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride }: Pos
                     </div>
                 </div>
             </div>
+
+            <AlertDialog open={Boolean(commentToDeleteId)} onOpenChange={handleDeleteDialogOpenChange}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Xác nhận xóa bình luận</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Bình luận đã chọn sẽ bị xóa và không thể khôi phục.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isDeletingComment || isDeletingAdminComment}>Hủy</AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={handleConfirmDeleteComment}
+                            disabled={isDeletingComment || isDeletingAdminComment}
+                            className="bg-destructive hover:bg-destructive/90"
+                        >
+                            {isDeletingComment || isDeletingAdminComment ? "Đang xóa..." : "Xóa bình luận"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };

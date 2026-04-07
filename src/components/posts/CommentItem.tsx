@@ -20,6 +20,7 @@ interface CommentItemProps {
     onDelete?: (commentId: number) => void;
     isDeleting?: boolean;
     depth?: number;
+    canDelete?: boolean;
 }
 
 const CommentItem = ({
@@ -29,9 +30,11 @@ const CommentItem = ({
     onDelete,
     isDeleting,
     depth = 0,
+    canDelete,
 }: CommentItemProps) => {
     const currentUserId = authStorage.getUser<User>()?.id;
     const isOwner = currentUserId === comment.userId;
+    const canDeleteComment = canDelete ?? isOwner;
     const [showActions, setShowActions] = useState(false);
 
     return (
@@ -60,7 +63,7 @@ const CommentItem = ({
                         <p className="text-xs text-slate-500">{formatRelativeTime(comment.createdAt)}</p>
                     </div>
 
-                    {isOwner && (
+                    {(isOwner || canDeleteComment) && (
                         <DropdownMenu open={showActions} onOpenChange={setShowActions}>
                             <DropdownMenuTrigger asChild>
                                 <Button variant="ghost" size="sm" className="h-6 w-6 p-0 ml-auto">
@@ -68,22 +71,24 @@ const CommentItem = ({
                                 </Button>
                             </DropdownMenuTrigger>
                             <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                    onClick={() => {
-                                        onEdit?.(comment);
-                                        setShowActions(false);
-                                    }}
-                                >
-                                    <Edit2 className="mr-2 h-4 w-4" />
-                                    Sửa
-                                </DropdownMenuItem>
+                                {isOwner ? (
+                                    <DropdownMenuItem
+                                        onClick={() => {
+                                            onEdit?.(comment);
+                                            setShowActions(false);
+                                        }}
+                                    >
+                                        <Edit2 className="mr-2 h-4 w-4" />
+                                        Sửa
+                                    </DropdownMenuItem>
+                                ) : null}
                                 <DropdownMenuItem
                                     onClick={() => {
                                         onDelete?.(comment.id);
                                         setShowActions(false);
                                     }}
                                     className="text-destructive"
-                                    disabled={isDeleting}
+                                    disabled={isDeleting || !canDeleteComment}
                                 >
                                     <Trash2 className="mr-2 h-4 w-4" />
                                     Xóa
