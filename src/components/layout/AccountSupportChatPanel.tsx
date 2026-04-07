@@ -316,7 +316,7 @@ const AccountSupportChatPanel = () => {
     };
 
     return (
-        <section className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
+        <section className="flex max-h-[calc(100vh-8rem)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
             <div className="flex items-center justify-between border-b border-slate-100 px-5 py-4">
                 <div className="min-w-0">
                     <div className="flex items-center gap-2 text-slate-900">
@@ -333,8 +333,8 @@ const AccountSupportChatPanel = () => {
                 </div>
             </div>
 
-            <div className="flex min-h-128 flex-col">
-                <div ref={messagesScrollRef} onScroll={handleMessagesScroll} className="flex-1 space-y-3 overflow-y-auto px-5 py-4">
+            <div className="flex min-h-0 flex-1 flex-col">
+                <div ref={messagesScrollRef} onScroll={handleMessagesScroll} className="flex-1 min-h-0 space-y-3 overflow-y-auto px-5 py-4">
                     {conversationQuery.isError || messagesQuery.isError ? (
                         <div className="rounded-2xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-700">
                             <p className="font-medium">Không tải được cuộc trò chuyện.</p>
