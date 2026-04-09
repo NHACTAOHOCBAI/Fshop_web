@@ -11,6 +11,8 @@ import type { User } from "@/types/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import AccountSupportChatPanel from "@/components/layout/AccountSupportChatPanel";
 
+type AccountActiveView = "outlet" | "chat";
+
 type AccountRouteState = {
     openChat?: boolean;
     prefillProduct?: ChatProductAttachment;
@@ -25,7 +27,7 @@ const sidebarItems = [
 ];
 
 const AccountLayout = () => {
-    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [activeView, setActiveView] = useState<AccountActiveView>("outlet");
     const [prefillProduct, setPrefillProduct] = useState<ChatProductAttachment | null>(null);
     const location = useLocation();
     const navigate = useNavigate();
@@ -41,7 +43,7 @@ const AccountLayout = () => {
             return;
         }
 
-        setIsChatOpen(true);
+        setActiveView("chat");
         setPrefillProduct(state.prefillProduct ?? null);
 
         navigate(location.pathname + location.search, { replace: true, state: null });
@@ -77,11 +79,11 @@ const AccountLayout = () => {
                         <NavLink
                             key={item.to}
                             to={item.to}
-                            onClick={() => setIsChatOpen(false)}
+                            onClick={() => setActiveView("outlet")}
                             className={({ isActive }) =>
                                 cn(
                                     "flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-colors",
-                                    isActive
+                                    isActive && activeView === "outlet"
                                         ? "bg-primary/10 text-primary"
                                         : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                                 )
@@ -94,14 +96,16 @@ const AccountLayout = () => {
 
                     <button
                         type="button"
-                        onClick={() => setIsChatOpen(true)}
+                        onClick={() => setActiveView("chat")}
                         className={cn(
                             "flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
-                            isChatOpen ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
+                            activeView === "chat"
+                                ? "bg-primary/10 text-primary"
+                                : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
                         )}
                     >
                         <MessageCircle className="size-4 shrink-0" />
-                        Chat
+                        Chat với cửa hàng
                     </button>
 
                     <button
@@ -118,7 +122,14 @@ const AccountLayout = () => {
 
             {/* Main content */}
             <div className="min-w-0 flex-1">
-                {isChatOpen ? <AccountSupportChatPanel prefillProduct={prefillProduct} onPrefillConsumed={() => setPrefillProduct(null)} /> : <Outlet />}
+                {activeView === "chat" ? (
+                    <AccountSupportChatPanel
+                        prefillProduct={prefillProduct}
+                        onPrefillConsumed={() => setPrefillProduct(null)}
+                    />
+                ) : (
+                    <Outlet />
+                )}
             </div>
         </div>
     );

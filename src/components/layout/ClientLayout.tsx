@@ -1,6 +1,8 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { Bell, Heart, Loader2, ShoppingCart, UserRound } from "lucide-react";
 
+import FloatingAiChatbot from "@/components/FloatingAiChatbot";
+
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useMarkNotificationAsRead, useMyNotifications, useNotificationRealtime } from "@/hooks/useNotifications";
 import { authStorage } from "@/lib/auth";
@@ -205,6 +207,8 @@ const ClientLayout = () => {
             <main className=" mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
                 <Outlet />
             </main>
+
+            <FloatingAiChatbot />
 
             <footer className="mt-12 bg-primary/35">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 text-sm text-slate-700 md:grid-cols-3 md:px-8">
