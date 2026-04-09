@@ -31,6 +31,7 @@ import WishlistsPage from "@/pages/shop/my-account/WishlistsPage";
 import NotificationsPage from "@/pages/shop/my-account/NotificationsPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
+import ForgotPasswordPage from "@/pages/auth/forgot-password/ForgotPasswordPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
 import ClientProductsPage from "@/pages/shop/products/ClientProductsPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
@@ -134,6 +135,14 @@ const router = createBrowserRouter([
     element: (
       <PublicRoute>
         <RegisterPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <PublicRoute>
+        <ForgotPasswordPage />
       </PublicRoute>
     ),
   },

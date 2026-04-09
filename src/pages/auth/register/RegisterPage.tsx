@@ -1,6 +1,5 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import thumbnail from "@/assets/thumbnail.png";
 
 import { EyeOff, UserRound } from "lucide-react";
 import { Link, useNavigate } from "react-router";
@@ -54,9 +53,11 @@ export default function RegisterPage() {
     };
 
     return (
-        <main className="min-h-screen py-1 flex px-32">
-            <div className="flex-1 flex flex-col items-center justify-center">
-                <div>
+        <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#e2f0ff_0%,_#f8fbff_38%,_#ffffff_100%)] px-4 py-6 md:px-6">
+            <div className="pointer-events-none absolute -left-20 top-24 h-64 w-64 rounded-full bg-sky-200/50 blur-3xl animate-pulse" />
+            <div className="pointer-events-none absolute -right-24 bottom-14 h-72 w-72 rounded-full bg-cyan-100/60 blur-3xl animate-pulse [animation-delay:700ms]" />
+            <div className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
+                <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
                     <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Tạo tài khoản mới</h1>
                     <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600">
                         Hôm nay là ngày mới. Hoàn tất thông tin bên dưới để bắt đầu sử dụng hệ thống.
@@ -126,10 +127,6 @@ export default function RegisterPage() {
                         </Link>
                     </p>
                 </div>
-            </div>
-
-            <div className="flex-1 flex flex-col items-center justify-center">
-                <img className="h-[700px]" src={thumbnail} alt="image" />
             </div>
         </main>
     );

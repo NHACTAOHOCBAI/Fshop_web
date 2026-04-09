@@ -45,3 +45,19 @@ export type LinkGoogleResponse = {
     message: string;
     user: Omit<User, "password" | "publicId">;
 };
+
+export type ForgotPasswordRequestPayload = {
+    email: string;
+};
+
+export type ForgotPasswordVerifyPayload = {
+    email: string;
+    code: string;
+};
+
+export type ForgotPasswordResetPayload = {
+    email: string;
+    code: string;
+    newPassword: string;
+    confirmPassword: string;
+};

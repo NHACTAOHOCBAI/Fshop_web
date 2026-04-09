@@ -1,6 +1,9 @@
 import axiosInstance from "@/lib/axios";
 import type {
     ChangePasswordPayload,
+    ForgotPasswordRequestPayload,
+    ForgotPasswordResetPayload,
+    ForgotPasswordVerifyPayload,
     GoogleLoginPayload,
     LinkGooglePayload,
     LinkGoogleResponse,
@@ -95,4 +98,19 @@ export const changePassword = async (payload: ChangePasswordPayload) => {
 
 export const logout = async () => {
     await axiosInstance.post("/auth/logout");
+};
+
+export const requestForgotPassword = async (payload: ForgotPasswordRequestPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<{ message: string; warning?: string }>>("/auth/forgot-password/request", payload);
+    return data.data;
+};
+
+export const verifyForgotPasswordCode = async (payload: ForgotPasswordVerifyPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<{ message: string }>>("/auth/forgot-password/verify", payload);
+    return data.data;
+};
+
+export const resetForgotPassword = async (payload: ForgotPasswordResetPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<{ message: string }>>("/auth/forgot-password/reset", payload);
+    return data.data;
 };
