@@ -68,7 +68,7 @@ export default function LoginPage() {
             <div className="pointer-events-none absolute -right-24 bottom-14 h-72 w-72 rounded-full bg-cyan-100/60 blur-3xl animate-pulse [animation-delay:700ms]" />
             <div className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
                 <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
-                    <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Chào mừng trở lại</h1>
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Chào mừng trở lại</h1>
                     <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600">
                         Hôm nay là ngày mới. Đăng nhập để bắt đầu quản lý hệ thống của bạn.
                     </p>

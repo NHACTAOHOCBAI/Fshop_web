@@ -144,7 +144,7 @@ export default function ForgotPasswordPage() {
             Quay lại đăng nhập
           </Link>
 
-          <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Khôi phục mật khẩu</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Khôi phục mật khẩu</h1>
           <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600">
             Làm theo 3 bước để nhận mã xác thực và tạo lại mật khẩu cho tài khoản của bạn.
           </p>
@@ -290,10 +290,6 @@ export default function ForgotPasswordPage() {
                   </div>
                 </form>
               )}
-
-              <div className="mt-8 rounded-2xl bg-slate-50 p-4 text-sm leading-6 text-slate-600">
-                Nếu mã không đến, hãy kiểm tra hộp thư rác hoặc quay lại bước đầu để gửi lại mã.
-              </div>
             </div>
         </div>
       </div>

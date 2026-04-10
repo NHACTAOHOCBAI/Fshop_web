@@ -131,3 +131,20 @@
     @apply font-sans;
   }
 }
+
+@layer utilities {
+  @keyframes marquee-left {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee-left {
+    animation: marquee-left 28s linear infinite;
+    will-change: transform;
+  }
+}
