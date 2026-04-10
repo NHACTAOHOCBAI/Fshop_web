@@ -181,7 +181,7 @@ const LivestreamDetailPage = () => {
                                     <div className="mt-3 grid gap-2 sm:grid-cols-2">
                                         {sortedPinnedProducts.map((item) => (
                                             <div key={item.id} className="rounded-xl border border-slate-200 p-3">
-                                                <div className="flex gap-3">
+                                                <div className="flex flex-col gap-3 sm:flex-row">
                                                     <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                                                         {item.product?.images?.[0]?.imageUrl ? (
                                                             <img
@@ -217,7 +217,7 @@ const LivestreamDetailPage = () => {
                         <aside className="rounded-2xl border border-slate-200 bg-white p-4">
                             <p className="text-sm font-semibold text-slate-800">Realtime Chat</p>
 
-                            <div ref={chatScrollRef} className="mt-3 h-105 space-y-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3">
+                            <div ref={chatScrollRef} className="mt-3 h-[22rem] space-y-2 overflow-y-auto rounded-xl border border-slate-100 bg-slate-50 p-3 sm:h-[26rem] lg:h-[30rem]">
                                 {commentsQuery.isLoading ? (
                                     <div className="flex h-full items-center justify-center">
                                         <Loader2 className="size-5 animate-spin text-slate-500" />

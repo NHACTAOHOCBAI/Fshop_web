@@ -167,7 +167,7 @@ const CartPage = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <div className="flex items-center gap-3 h-8">
                     <Checkbox
                         id="check-all"
@@ -213,7 +213,7 @@ const CartPage = () => {
                         return (
                             <div
                                 key={item.id}
-                                className={`flex items-center gap-4 rounded-2xl border bg-white p-4 transition-colors ${isChecked ? "border-primary/40 bg-primary/2" : "border-slate-200"}`}
+                                className={`flex flex-col gap-4 rounded-2xl border bg-white p-4 transition-colors sm:flex-row sm:items-center ${isChecked ? "border-primary/40 bg-primary/2" : "border-slate-200"}`}
                             >
                                 <Checkbox
                                     id={`cart-item-${item.id}`}
@@ -228,7 +228,7 @@ const CartPage = () => {
                                 />
 
                                 {/* Image */}
-                                <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                                <div className="size-20 shrink-0 self-start overflow-hidden rounded-xl bg-slate-100 sm:self-center">
                                     {imageUrl ? (
                                         <img
                                             src={imageUrl}
@@ -263,7 +263,7 @@ const CartPage = () => {
                                 </div>
 
                                 {/* Quantity + price + remove */}
-                                <div className="flex shrink-0 flex-col items-end gap-2 sm:flex-row sm:items-center sm:gap-4">
+                                <div className="flex w-full shrink-0 flex-col items-stretch gap-2 sm:w-auto sm:flex-row sm:items-center sm:gap-4">
                                     <QuantityStepper
                                         value={item.quantity}
                                         min={1}
@@ -273,7 +273,7 @@ const CartPage = () => {
                                         }}
                                         className="shrink-0"
                                     />
-                                    <span className="w-24 text-right text-sm font-bold text-slate-900">
+                                    <span className="w-full text-left text-sm font-bold text-slate-900 sm:w-24 sm:text-right">
                                         {formatCurrency(item.variant.product.price * item.quantity)}
                                     </span>
                                     <button
@@ -292,7 +292,7 @@ const CartPage = () => {
                 </div>
 
                 {/* Order summary */}
-                <div className="h-fit p-5 ">
+                <div className="h-fit rounded-2xl border border-slate-200 bg-white p-5">
                     <h2 className="mb-4 text-base font-semibold text-slate-900">Tóm tắt đơn hàng</h2>
 
                     <div className="space-y-3 text-sm">

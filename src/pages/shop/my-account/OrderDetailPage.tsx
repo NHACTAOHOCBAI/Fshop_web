@@ -34,14 +34,14 @@ const OrderDetailPage = () => {
 
     return (
         <div className="space-y-5">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                 <Button variant="ghost" size="sm" asChild>
                     <Link to="/my-account/orders" className="gap-1.5">
                         <ArrowLeft className="size-4" />
                         Quay lại đơn hàng
                     </Link>
                 </Button>
-                <span className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-500">Đơn #{order.id}</span>
+                <span className="self-start rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-500 sm:self-auto">Đơn #{order.id}</span>
             </div>
 
             <article className="rounded-2xl border border-slate-200 bg-white p-5">
@@ -73,7 +73,7 @@ const OrderDetailPage = () => {
 
                 <div className="mt-4 space-y-3">
                     {order.items.map((item) => (
-                        <div key={item.id} className="flex items-center gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3">
+                        <div key={item.id} className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50 p-3 sm:flex-row sm:items-center">
                             <div className="size-16 overflow-hidden rounded-lg bg-slate-100">
                                 {item.variant?.imageUrl ? (
                                     <img src={item.variant.imageUrl} alt={item.variant.product?.name} className="h-full w-full object-cover" />
@@ -83,7 +83,7 @@ const OrderDetailPage = () => {
                                 <p className="line-clamp-1 text-sm font-medium text-slate-800">{item.variant?.product?.name || "Sản phẩm"}</p>
                                 <p className="mt-1 text-xs text-slate-500">Số lượng: x{item.quantity}</p>
                             </div>
-                            <p className="text-sm font-semibold text-slate-800">{formatCurrency(Number(item.price) * item.quantity)}</p>
+                            <p className="w-full text-left text-sm font-semibold text-slate-800 sm:w-auto sm:text-right">{formatCurrency(Number(item.price) * item.quantity)}</p>
                         </div>
                     ))}
                 </div>

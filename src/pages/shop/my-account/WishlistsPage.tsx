@@ -61,28 +61,31 @@ const WishlistsPage = () => {
     };
 
     return (
-        <div className="space-y-6">
+        <div className="space-y-6 ">
             <div>
                 <h1 className="text-xl font-bold text-slate-900">Danh sách yêu thích</h1>
                 <p className="mt-1 text-sm text-slate-500">{wishlistItems.length} sản phẩm đã lưu</p>
             </div>
 
             {isLoading ? (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {Array.from({ length: 6 }).map((_, index) => (
-                        <div key={index} className="h-84 animate-pulse rounded-2xl bg-slate-200" />
+                        <div key={index} className="h-72 sm:h-80 animate-pulse rounded-2xl bg-slate-200" />
                     ))}
                 </div>
             ) : wishlistItems.length === 0 ? (
-                <div className="flex flex-col items-center gap-3 rounded-2xl border border-dashed border-slate-200 py-20 text-center">
-                    <Heart className="size-10 text-slate-300" />
-                    <p className="text-sm text-slate-500">Chưa có sản phẩm yêu thích nào</p>
-                    <Button asChild variant="outline" size="sm">
+                <div className="flex w-full flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-slate-200 py-12 sm:py-16 md:py-20 text-center">
+                    <Heart className="size-12 text-slate-300 sm:size-14" />
+                    <div className="space-y-1">
+                        <p className="text-base font-medium text-slate-700 sm:text-lg">Chưa có sản phẩm yêu thích nào</p>
+                        <p className="text-xs text-slate-500 sm:text-sm">Hãy thêm sản phẩm yêu thích để dễ theo dõi</p>
+                    </div>
+                    <Button asChild variant="outline" size="sm" className="mt-2">
                         <Link to="/men">Khám phá sản phẩm</Link>
                     </Button>
                 </div>
             ) : (
-                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                <div className="grid  gap-3 sm:gap-4 sm:grid-cols-2 xl:grid-cols-3">
                     {wishlistItems.map((item) => {
                         const product = item.product;
                         const firstVariant = product.variants?.find((variant) => variant.isActive) ?? product.variants?.[0];

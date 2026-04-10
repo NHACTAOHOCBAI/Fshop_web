@@ -185,8 +185,8 @@ const ProfilePage = () => {
                 <p className="mt-1 text-sm text-slate-500">Cập nhật thông tin cơ bản và avatar từ tài khoản hiện tại</p>
             </div>
 
-            <div className="grid gap-6 lg:grid-cols-[1fr_200px]">
-                <form onSubmit={form.handleSubmit(onSubmit)} className="rounded-2xl border border-slate-200 bg-white p-6 space-y-5">
+            <div className="grid gap-6 md:grid-cols-[1fr_200px] lg:grid-cols-[1fr_240px]">
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-5 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6">
                     <div className="grid gap-5 sm:grid-cols-2">
                         <fieldset className="space-y-2">
                             <Label>Họ và tên</Label>
@@ -248,7 +248,7 @@ const ProfilePage = () => {
                         </p>
                     </fieldset>
 
-                    <div className="pt-2 flex gap-3">
+                    <div className="flex flex-col gap-3 pt-2 sm:flex-row">
                         <Button size="sm" type="submit" disabled={isUpdating}>
                             {isUpdating ? "Đang lưu..." : "Lưu thay đổi"}
                         </Button>
@@ -270,7 +270,7 @@ const ProfilePage = () => {
                     </div>
                 </form>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 flex flex-col items-center gap-4">
+                <div className="flex flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 md:h-fit">
                     <div className="relative">
                         <Avatar className="size-24">
                             <AvatarImage src={avatarSrc} alt={profile.fullName ?? profile.email} />
@@ -311,14 +311,14 @@ const ProfilePage = () => {
 
             <form
                 onSubmit={passwordForm.handleSubmit(onChangePassword)}
-                className="rounded-2xl border border-slate-200 bg-white p-6 space-y-4"
+                className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6"
             >
                 <div>
                     <h2 className="text-base font-semibold text-slate-900">Đổi mật khẩu</h2>
                     <p className="mt-1 text-sm text-slate-500">Nhập mật khẩu hiện tại và mật khẩu mới để cập nhật.</p>
                 </div>
 
-                <div className="grid gap-4 md:grid-cols-3">
+                <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3">
                     <fieldset className="space-y-2">
                         <Label>Mật khẩu hiện tại</Label>
                         <Input
@@ -353,7 +353,7 @@ const ProfilePage = () => {
                     </fieldset>
                 </div>
 
-                <div className="pt-1 flex gap-3">
+                <div className="flex flex-col gap-3 pt-1 sm:flex-row">
                     <Button type="submit" size="sm" disabled={isChangingPassword}>
                         {isChangingPassword ? "Đang đổi..." : "Đổi mật khẩu"}
                     </Button>

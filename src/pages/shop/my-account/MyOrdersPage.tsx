@@ -254,7 +254,7 @@ const MyOrdersPage = () => {
                                 type="button"
                                 onClick={() => setActiveTab(tabId)}
                                 className={cn(
-                                    "relative shrink-0 px-5 py-3 font-medium transition-colors",
+                                    "relative shrink-0 px-2 py-2 text-xs font-medium transition-colors sm:px-5 sm:py-3 sm:text-sm",
                                     isActive
                                         ? "text-primary"
                                         : "text-slate-500 hover:bg-slate-50 hover:text-slate-800"
@@ -267,14 +267,14 @@ const MyOrdersPage = () => {
                     })}
                 </div>
 
-                <div className="bg-slate-50/80 p-4">
+                <div className="bg-slate-50/80 p-3 sm:p-4">
                     <div className="relative">
                         <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
                         <Input
                             value={searchValue}
                             onChange={(event) => setSearchValue(event.target.value)}
-                            placeholder="Tìm theo mã đơn, tên người nhận hoặc tên sản phẩm"
-                            className="h-11 border-slate-200 bg-white pl-10"
+                            placeholder="Tìm mã đơn, tên, sản phẩm"
+                            className="h-10 border-slate-200 bg-white pl-10 text-sm sm:h-11 sm:placeholder:block"
                         />
                     </div>
                     <p className="mt-2 text-xs text-slate-400">
@@ -316,17 +316,27 @@ const MyOrdersPage = () => {
                             key={`order-${order.id}`}
                             className="overflow-hidden rounded-2xl border border-slate-200 bg-white"
                         >
-                            <div className="flex flex-col gap-4 border-b border-slate-100 px-5 py-4 sm:flex-row sm:items-start sm:justify-between">
-                                <div className="space-y-2">
-                                    <div className="flex flex-wrap items-center gap-2 text-sm">
-                                        <span className="inline-flex items-center gap-2 font-semibold text-slate-900">
-                                            <Store className="size-4 text-primary" />
-                                            FShop Official
+                            <div className="border-b border-slate-100 px-4 py-4 sm:px-5">
+                                <div className="space-y-3">
+                                    <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-start">
+                                        <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2 text-sm">
+                                            <span className="inline-flex shrink-0 items-center gap-2 font-semibold text-slate-900">
+                                                <Store className="size-4 text-primary" />
+                                                FShop Official
+                                            </span>
+                                            <span className="shrink-0 rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-500">
+                                                Đơn #{order.id}
+                                            </span>
+                                            <span className="shrink-0 text-xs text-slate-400">{formatDate(order.createdAt)}</span>
+                                        </div>
+                                        <span
+                                            className={cn(
+                                                "shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold",
+                                                statusCfg.className
+                                            )}
+                                        >
+                                            {statusCfg.label}
                                         </span>
-                                        <span className="rounded-md border border-slate-200 px-2 py-0.5 text-xs text-slate-500">
-                                            Đơn #{order.id}
-                                        </span>
-                                        <span className="text-xs text-slate-400">{formatDate(order.createdAt)}</span>
                                     </div>
 
                                     <p className="text-sm font-medium text-slate-800">{getStatusHeadline(order.status)}</p>
@@ -341,20 +351,12 @@ const MyOrdersPage = () => {
                                             {productCount} sản phẩm
                                         </span>
                                     </div>
-                                </div>
 
-                                <div className="flex items-center gap-3 self-start sm:flex-col sm:items-end">
-                                    <span
-                                        className={cn(
-                                            "rounded-full border px-2.5 py-1 text-xs font-semibold",
-                                            statusCfg.className
-                                        )}
-                                    >
-                                        {statusCfg.label}
-                                    </span>
-                                    <p className="text-sm text-slate-500">
-                                        Thành tiền: <span className="text-lg font-bold text-primary">{formatCurrency(Number(order.totalAmount))}</span>
-                                    </p>
+                                    <div className="flex flex-col items-start justify-between gap-2 sm:flex-row sm:items-center sm:justify-between">
+                                        <p className="text-sm text-slate-500">
+                                            Thành tiền: <span className="font-bold text-primary">{formatCurrency(Number(order.totalAmount))}</span>
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -368,9 +370,9 @@ const MyOrdersPage = () => {
                                     return (
                                         <div
                                             key={`order-item-${item.id}`}
-                                            className="flex items-center gap-4 rounded-2xl border border-slate-100 bg-slate-50/70 p-3"
+                                            className="flex flex-col gap-3 rounded-xl border border-slate-100 bg-slate-50/70 p-3 sm:flex-row sm:items-center sm:gap-4"
                                         >
-                                            <div className="flex size-16 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-slate-100 text-xs text-slate-400">
+                                            <div className="flex size-14 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-slate-100 text-xs text-slate-400 sm:size-16">
                                                 {imageUrl ? (
                                                     <img
                                                         src={imageUrl}
@@ -386,13 +388,13 @@ const MyOrdersPage = () => {
                                                 <p className="text-sm font-medium text-slate-800 line-clamp-1">
                                                     {productName}
                                                 </p>
-                                                <p className="mt-1 text-xs text-slate-500">Số lượng: x{item.quantity}</p>
+                                                <p className="mt-0.5 text-xs text-slate-500">Số lượng: <span className="font-medium">x{item.quantity}</span></p>
                                                 {order.note ? (
-                                                    <p className="mt-1 line-clamp-1 text-xs text-slate-400">Ghi chú: {order.note}</p>
+                                                    <p className="mt-0.5 line-clamp-1 text-xs text-slate-400">Ghi chú: {order.note}</p>
                                                 ) : null}
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-semibold text-slate-700">
+                                            <div className="flex flex-col items-end gap-1 sm:shrink-0">
+                                                <p className="whitespace-nowrap text-sm font-semibold text-slate-700">
                                                     {formatCurrency(Number(item.price) * item.quantity)}
                                                 </p>
                                                 {order.status === "delivered" ? (
@@ -400,7 +402,7 @@ const MyOrdersPage = () => {
                                                         type="button"
                                                         variant="outline"
                                                         size="sm"
-                                                        className="mt-2 h-8"
+                                                        className="h-7 text-xs"
                                                         disabled={isReviewed}
                                                         onClick={() =>
                                                             handleOpenReviewDialog({
@@ -419,64 +421,69 @@ const MyOrdersPage = () => {
                                 })}
                             </div>
 
-                            <div className="flex flex-col gap-4 border-t border-slate-100 bg-slate-50/60 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
-                                <div className="space-y-1 text-sm text-slate-500">
-                                    <p>
-                                        Giao đến: <span className="font-medium text-slate-700">{order.recipientName}</span>
-                                    </p>
-                                    <p className="line-clamp-1">
-                                        {order.detailAddress}, {order.commune}, {order.district}, {order.province}
-                                    </p>
-                                </div>
+                            <div className="border-t border-slate-100 bg-slate-50/60 px-4 py-4 sm:px-5">
+                                <div className="space-y-3 sm:space-y-4">
+                                    <div className="space-y-1 text-sm text-slate-500">
+                                        <p>
+                                            Giao đến: <span className="font-medium text-slate-700">{order.recipientName}</span>
+                                        </p>
+                                        <p className="line-clamp-2">
+                                            {order.detailAddress}, {order.commune}, {order.district}, {order.province}
+                                        </p>
+                                    </div>
 
-                                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-                                    <Button
-                                        type="button"
-                                        asChild
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-9"
-                                    >
-                                        <Link to={`/my-account/orders/${order.id}`}>Chi tiết</Link>
-                                    </Button>
+                                    <div className="flex flex-wrap gap-2 sm:justify-end">
+                                        <Button
+                                            type="button"
+                                            asChild
+                                            variant="outline"
+                                            size="sm"
+                                            className="h-8 flex-1 sm:flex-none sm:h-9"
+                                        >
+                                            <Link to={`/my-account/orders/${order.id}`}>Chi tiết</Link>
+                                        </Button>
 
-                                    <Button
-                                        type="button"
-                                        variant="outline"
-                                        size="sm"
-                                        className="h-9 gap-1.5 border-primary/20 text-primary hover:bg-primary/5"
-                                        onClick={() => handleChatWithShop(order)}
-                                    >
-                                        <MessageCircle className="size-4" />
-                                        Nhắn tin với shop
-                                    </Button>
-
-                                    {(order.status === "pending" || order.status === "confirmed") && (
                                         <Button
                                             type="button"
                                             variant="outline"
                                             size="sm"
-                                            className="h-9 gap-1"
-                                            disabled={isCanceling}
-                                            onClick={() => handleCancelOrder(order.id)}
+                                            className="h-8 flex-1 gap-1.5 border-primary/20 text-primary hover:bg-primary/5 sm:flex-none sm:h-9"
+                                            onClick={() => handleChatWithShop(order)}
                                         >
-                                            <XCircle className="size-4" />
-                                            Huỷ đơn
+                                            <MessageCircle className="size-3.5 sm:size-4" />
+                                            <span className="hidden sm:inline">Nhắn tin với shop</span>
+                                            <span className="sm:hidden">Chat</span>
                                         </Button>
-                                    )}
 
-                                    {order.status === "shipped" && (
-                                        <Button
-                                            type="button"
-                                            size="sm"
-                                            className="h-9 gap-1"
-                                            disabled={isConfirming}
-                                            onClick={() => handleConfirmDelivery(order.id)}
-                                        >
-                                            <CheckCircle2 className="size-4" />
-                                            Đã nhận hàng
-                                        </Button>
-                                    )}
+                                        {(order.status === "pending" || order.status === "confirmed") && (
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-8 flex-1 gap-1 sm:flex-none sm:h-9"
+                                                disabled={isCanceling}
+                                                onClick={() => handleCancelOrder(order.id)}
+                                            >
+                                                <XCircle className="size-3.5 sm:size-4" />
+                                                <span className="hidden sm:inline">Huỷ đơn</span>
+                                                <span className="sm:hidden">Huỷ</span>
+                                            </Button>
+                                        )}
+
+                                        {order.status === "shipped" && (
+                                            <Button
+                                                type="button"
+                                                size="sm"
+                                                className="h-8 flex-1 gap-1 sm:flex-none sm:h-9"
+                                                disabled={isConfirming}
+                                                onClick={() => handleConfirmDelivery(order.id)}
+                                            >
+                                                <CheckCircle2 className="size-3.5 sm:size-4" />
+                                                <span className="hidden sm:inline">Đã nhận hàng</span>
+                                                <span className="sm:hidden">Nhận</span>
+                                            </Button>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                         </article>

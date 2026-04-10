@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -419,7 +418,6 @@ const SupportInboxPage = () => {
                         <Store className="size-4 text-primary" />
                         <h1 className="text-lg font-semibold">Hộp thư hỗ trợ</h1>
                     </div>
-                    <p className="mt-1 text-sm text-slate-500">Quản lý các cuộc trò chuyện từ khách hàng.</p>
                     <div className="mt-3">
                         <Input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="Tìm khách hàng..." />
                     </div>
@@ -545,11 +543,6 @@ const SupportInboxPage = () => {
                             </div>
 
                             <div className="border-t border-slate-100 px-5 py-4">
-                                <div className="mb-2 flex items-center gap-2 text-xs text-slate-500">
-                                    <MessageCircle className="size-3.5" />
-                                    Tin nhắn sẽ được gửi đến khách hàng.
-                                </div>
-
                                 {renderComposerAttachments()}
 
                                 <div className="space-y-2">
@@ -634,7 +627,6 @@ const SupportInboxPage = () => {
                         <div>
                             <MessageCircle className="mx-auto mb-3 size-10 text-slate-300" />
                             <p className="text-lg font-semibold text-slate-800">Chọn một cuộc trò chuyện</p>
-                            <p className="mt-1 text-sm text-slate-500">Danh sách bên trái sẽ hiển thị khách hàng đang cần hỗ trợ.</p>
                         </div>
                     </div>
                 )}
@@ -645,7 +637,6 @@ const SupportInboxPage = () => {
             <DialogContent className="max-h-[86vh] max-w-3xl overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle>Chọn sản phẩm để gửi</DialogTitle>
-                    <DialogDescription>Tìm và chọn một hoặc nhiều sản phẩm để đính kèm vào tin nhắn.</DialogDescription>
                 </DialogHeader>
 
                 <Input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Tìm theo tên sản phẩm..." />

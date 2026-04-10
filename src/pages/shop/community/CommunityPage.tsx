@@ -166,8 +166,8 @@ const CommunityPage = () => {
                 )}
             </div>
 
-            <main className="w-full flex justify-between">
-                <section className="flex-5">
+            <main className="grid w-full gap-6 lg:grid-cols-[1fr_300px]">
+                <section className="min-w-0">
                     {postsQuery.isLoading && page === 1 ? (
                         <div className="rounded-2xl border border-[#EAF0FF] bg-white px-6 py-20 text-center ">
                             <Loader2 className="mx-auto mb-3 h-8 w-8 animate-spin text-slate-400" />
@@ -219,7 +219,7 @@ const CommunityPage = () => {
                     )}
                 </section>
 
-                <aside className="flex-2">
+                <aside className="min-w-0">
                     <div className="sticky top-24 space-y-4">
 
 

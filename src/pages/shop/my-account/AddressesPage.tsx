@@ -183,12 +183,12 @@ const AddressesPage = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 className="text-xl font-bold text-slate-900">Địa chỉ của tôi</h1>
                     <p className="mt-1 text-sm text-slate-500">Quản lý địa chỉ giao hàng cho đơn hàng của bạn</p>
                 </div>
-                <Button size="sm" onClick={startCreate} disabled={isMutating || isCreating}>
+                <Button size="sm" onClick={startCreate} disabled={isMutating || isCreating} className="w-full sm:w-auto">
                     <Plus className="mr-1.5 size-4" />
                     Thêm địa chỉ
                 </Button>
@@ -197,13 +197,13 @@ const AddressesPage = () => {
             {(isCreating || editingAddressId !== null) ? (
                 <form
                     onSubmit={form.handleSubmit(onSubmit)}
-                    className="rounded-2xl border border-slate-200 bg-white p-5 space-y-4"
+                    className="space-y-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-5"
                 >
-                    <div className="flex items-center justify-between gap-3">
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                         <h2 className="text-sm font-semibold text-slate-900">
                             {editingAddressId ? "Cập nhật địa chỉ" : "Thêm địa chỉ mới"}
                         </h2>
-                        <Button type="button" variant="outline" size="sm" onClick={cancelForm} disabled={isMutating}>
+                        <Button type="button" variant="outline" size="sm" onClick={cancelForm} disabled={isMutating} className="w-full sm:w-auto">
                             Huỷ
                         </Button>
                     </div>
@@ -378,7 +378,7 @@ const AddressesPage = () => {
                                     </p>
                                 </div>
 
-                                <div className="flex items-center gap-2">
+                                <div className="flex flex-wrap items-center gap-2 sm:justify-end">
                                     {!address.isDefault ? (
                                         <Button
                                             size="sm"

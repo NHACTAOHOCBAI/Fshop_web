@@ -224,7 +224,7 @@ const CreatePostPage = ({ onClose }: CreatePostPageProps) => {
                         {/* Hashtags */}
                         <div className="mb-4">
                             <Label htmlFor="hashtag">Hashtags</Label>
-                            <div className="flex gap-2 mt-2">
+                            <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                                 <Input
                                     id="hashtag"
                                     placeholder="Thêm hashtag (VD: #trending)"
@@ -289,7 +289,7 @@ const CreatePostPage = ({ onClose }: CreatePostPageProps) => {
 
                             {/* Image Previews */}
                             {imagePreviews.length > 0 && (
-                                <div className="grid grid-cols-4 gap-3 mt-4">
+                                <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
                                     {imagePreviews.map((preview, index) => (
                                         <div key={index} className="relative group">
                                             <img
@@ -319,7 +319,7 @@ const CreatePostPage = ({ onClose }: CreatePostPageProps) => {
                         )}
 
                         {/* Buttons */}
-                        <div className="flex gap-3">
+                        <div className="flex flex-col gap-3 sm:flex-row">
                             <Button
                                 type="button"
                                 variant="outline"
