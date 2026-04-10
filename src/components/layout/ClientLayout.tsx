@@ -1,9 +1,8 @@
 import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
-import { Bell, Heart, Loader2, Menu, ShoppingCart, UserRound, X, Search } from "lucide-react";
+import { Bell, Heart, Loader2, Menu, ShoppingCart, UserRound, X } from "lucide-react";
 import { useState } from "react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
-import { Input } from "@/components/ui/input";
 import {
     Sheet,
     SheetContent,
@@ -45,7 +44,6 @@ const getNotificationTitle = (notification: Notification) => {
 const ClientLayout = () => {
     const router = useNavigate();
     const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
     const params = useParams<{ department?: string }>();
     const location = useLocation();
     const pathname = location.pathname.toLowerCase();
@@ -183,28 +181,6 @@ const ClientLayout = () => {
                         </span>
                         <span className="text-base font-semibold tracking-wide">FShop</span>
                     </Link>
-
-                    <form
-                        onSubmit={(e) => {
-                            e.preventDefault();
-                            if (searchQuery.trim()) {
-                                router(`/search?q=${encodeURIComponent(searchQuery.trim())}`);
-                                setSearchQuery("");
-                            }
-                        }}
-                        className="hidden flex-1 max-w-xs md:flex"
-                    >
-                        <div className="relative w-full">
-                            <Input
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                                placeholder="Tìm kiếm sản phẩm..."
-                                className="w-full rounded-full pl-10 pr-4"
-                            />
-                            <Search className="absolute left-3 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                        </div>
-                    </form>
-
                     <div className="flex items-center gap-1 md:hidden">
                         <button
                             type="button"
