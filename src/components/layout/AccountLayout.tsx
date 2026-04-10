@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Bell, Heart, LogOutIcon, MapPinHouse, MessageCircle, Menu, Package, UserRound, X } from "lucide-react";
+import { Bell, Heart, LogOutIcon, MapPinHouse, Menu, Package, UserRound, X, MessageCircle } from "lucide-react";
 import { NavLink, Outlet, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 
@@ -15,7 +15,6 @@ import { cn } from "@/lib/utils";
 import type { ChatProductAttachment } from "@/types/chat";
 import type { User } from "@/types/user";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import AccountSupportChatPanel from "@/components/layout/AccountSupportChatPanel";
 
 type AccountRouteState = {
     openChat?: boolean;
@@ -28,12 +27,11 @@ const sidebarItems = [
     { to: "/my-account/orders", icon: Package, label: "Đơn hàng của tôi" },
     { to: "/my-account/wishlists", icon: Heart, label: "Danh sách yêu thích" },
     { to: "/my-account/notifications", icon: Bell, label: "Thông báo" },
+    { to: "/my-account/support", icon: MessageCircle, label: "Chat" },
 ];
 
 const AccountLayout = () => {
-    const [isChatOpen, setIsChatOpen] = useState(false);
     const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
-    const [prefillProduct, setPrefillProduct] = useState<ChatProductAttachment | null>(null);
     const location = useLocation();
     const navigate = useNavigate();
     const { mutate: logout, isPending: isLoggingOut } = useLogout();
@@ -48,11 +46,13 @@ const AccountLayout = () => {
             return;
         }
 
-        setIsChatOpen(true);
-        setPrefillProduct(state.prefillProduct ?? null);
-
-        navigate(location.pathname + location.search, { replace: true, state: null });
-    }, [location.pathname, location.search, location.state, navigate]);
+        navigate("/my-account/support", {
+            replace: true,
+            state: {
+                prefillProduct: state.prefillProduct ?? null,
+            },
+        });
+    }, [location.state, navigate]);
 
     const handleLogout = () => {
         logout(undefined, {
@@ -65,7 +65,6 @@ const AccountLayout = () => {
     };
 
     const handleNavClick = () => {
-        setIsChatOpen(false);
         setIsMobileSidebarOpen(false);
     };
 
@@ -101,21 +100,6 @@ const AccountLayout = () => {
                         {item.label}
                     </NavLink>
                 ))}
-
-                <button
-                    type="button"
-                    onClick={() => {
-                        setIsChatOpen(true);
-                        setIsMobileSidebarOpen(false);
-                    }}
-                    className={cn(
-                        "flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
-                        isChatOpen ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                    )}
-                >
-                    <MessageCircle className="size-4 shrink-0" />
-                    Chat
-                </button>
 
                 <button
                     type="button"
@@ -173,21 +157,6 @@ const AccountLayout = () => {
 
                         <button
                             type="button"
-                            onClick={() => {
-                                setIsChatOpen(true);
-                                setIsMobileSidebarOpen(false);
-                            }}
-                            className={cn(
-                                "flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium transition-colors",
-                                isChatOpen ? "bg-primary/10 text-primary" : "text-slate-600 hover:bg-slate-100 hover:text-slate-900"
-                            )}
-                        >
-                            <MessageCircle className="size-4 shrink-0" />
-                            Chat
-                        </button>
-
-                        <button
-                            type="button"
                             onClick={handleLogout}
                             disabled={isLoggingOut}
                             className="flex w-full items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
@@ -208,7 +177,7 @@ const AccountLayout = () => {
 
                 {/* Main content */}
                 <div className="min-w-0 flex-1">
-                    {isChatOpen ? <AccountSupportChatPanel prefillProduct={prefillProduct} onPrefillConsumed={() => setPrefillProduct(null)} /> : <Outlet />}
+                    <Outlet />
                 </div>
             </div>
         </div>

@@ -206,7 +206,7 @@ const ProductDetailPage = () => {
 
         setIsSendingToAdmin(true);
 
-        navigate("/my-account/profile", {
+        navigate("/my-account/support", {
             state: {
                 openChat: true,
                 prefillProduct: {

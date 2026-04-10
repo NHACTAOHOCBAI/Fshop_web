@@ -29,6 +29,7 @@ import MyOrdersPage from "@/pages/shop/my-account/MyOrdersPage";
 import OrderDetailPage from "@/pages/shop/my-account/OrderDetailPage";
 import WishlistsPage from "@/pages/shop/my-account/WishlistsPage";
 import NotificationsPage from "@/pages/shop/my-account/NotificationsPage";
+import SupportPage from "@/pages/shop/my-account/SupportPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
 import ForgotPasswordPage from "@/pages/auth/forgot-password/ForgotPasswordPage";
@@ -117,6 +118,10 @@ const router = createBrowserRouter([
           {
             path: "notifications",
             element: <NotificationsPage />,
+          },
+          {
+            path: "support",
+            element: <SupportPage />,
           },
         ],
       },
