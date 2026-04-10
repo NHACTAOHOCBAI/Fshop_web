@@ -1,8 +1,9 @@
-import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
+import { NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
 import { Bell, Heart, Loader2, Menu, ShoppingCart, UserRound, X } from "lucide-react";
 import { useState } from "react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import FShopLogo from "@/components/layout/FShopLogo";
 import {
     Sheet,
     SheetContent,
@@ -175,12 +176,7 @@ const ClientLayout = () => {
                 </div>
                 <div className="h-px w-full bg-slate-100" />
                 <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-2.5 md:px-8 md:py-3">
-                    <Link to="/" className="inline-flex items-center gap-2">
-                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground shadow-sm">
-                            F
-                        </span>
-                        <span className="text-base font-semibold tracking-wide">FShop</span>
-                    </Link>
+                    <FShopLogo />
                     <div className="flex items-center gap-1 md:hidden">
                         <button
                             type="button"
