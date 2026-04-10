@@ -32,10 +32,22 @@ const sortOptions: { value: ShopSortOption; label: string }[] = [
     { value: "name-desc", label: "Tên Z-A" },
 ];
 
-const departmentLabelMap = {
-    men: "Nam",
-    women: "Nữ",
-    kids: "Trẻ em",
+const departmentBannerCopyMap = {
+    men: {
+        title: "Khu vực Nam",
+        description:
+            "Tập trung các thiết kế nam tính, dễ phối cho đi làm và đi chơi.\nƯu tiên chất liệu bền, phom đứng và bảng màu tối giản hiện đại.",
+    },
+    women: {
+        title: "Khu vực Nữ",
+        description:
+            "Tổng hợp các mẫu nữ thanh lịch, linh hoạt cho nhiều hoàn cảnh.\nTừ outfit hằng ngày đến phong cách nổi bật cho những dịp đặc biệt.",
+    },
+    kids: {
+        title: "Khu vực Trẻ em",
+        description:
+            "Ưu tiên sự thoải mái, an toàn và năng động cho bé khi vận động.\nThiết kế vui tươi, chất liệu mềm và dễ chăm sóc cho phụ huynh.",
+    },
 } as const;
 
 const departmentList: DepartmentType[] = ["men", "women", "kids"];
@@ -141,7 +153,7 @@ const ClientProductsPage = () => {
         return "men";
     }, [params.department]);
 
-    const departmentLabel = departmentLabelMap[department];
+    const departmentBannerCopy = departmentBannerCopyMap[department];
 
     const {
         page,
@@ -336,10 +348,12 @@ const ClientProductsPage = () => {
 
                 <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-linear-to-r from-primary/95 via-primary/85 to-cyan-400 p-5 text-white md:p-6">
                     <div className="absolute -right-8 -top-12 h-36 w-36 rounded-full bg-white/20 blur-3xl" />
-                    <p className="relative text-xs font-semibold tracking-[0.18em] text-sky-100 uppercase">Danh mục theo đối tượng</p>
-                    <h2 className="relative mt-1 text-xl font-semibold md:text-2xl">Giày {departmentLabel}</h2>
+                    <p className="relative text-xs font-semibold tracking-[0.18em] text-sky-100 uppercase">Bộ sưu tập nổi bật</p>
+                    <h2 className="relative mt-1 text-xl font-semibold md:text-2xl">{departmentBannerCopy.title}</h2>
                     <p className="relative mt-2 max-w-xl text-sm text-sky-50">
-                        Đang hiển thị sản phẩm thuộc nhóm <span className="font-semibold text-white">{departmentLabel}</span>.
+                        {departmentBannerCopy.description.split("\n")[0]}
+                        <br />
+                        {departmentBannerCopy.description.split("\n")[1]}
                     </p>
                 </div>
 

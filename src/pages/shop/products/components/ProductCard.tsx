@@ -20,6 +20,20 @@ const formatCompactNumber = (value: number) => {
     return String(value);
 };
 
+const isCreatedWithinOneDay = (createdAt?: string | null) => {
+    if (!createdAt) {
+        return false;
+    }
+
+    const createdAtDate = new Date(createdAt);
+    if (Number.isNaN(createdAtDate.getTime())) {
+        return false;
+    }
+
+    const diffInMilliseconds = Date.now() - createdAtDate.getTime();
+    return diffInMilliseconds >= 0 && diffInMilliseconds < 24 * 60 * 60 * 1000;
+};
+
 const ProductCard = ({ product, department, actionSlot, brandName }: ProductCardProps) => {
     const imageUrl = product.images?.[0]?.imageUrl;
     const basePrice = Number(product.price ?? 0);
@@ -33,6 +47,7 @@ const ProductCard = ({ product, department, actionSlot, brandName }: ProductCard
     const hasCouponDiscount = Number.isFinite(maxCouponDiscount) && maxCouponDiscount > 0;
     const discountedPrice = Math.max(0, basePrice - maxCouponDiscount);
     const bestCouponCode = product.bestCouponCode;
+    const showNewBadge = isCreatedWithinOneDay(product.createdAt);
 
     const cardContent = (
         <>
@@ -50,9 +65,11 @@ const ProductCard = ({ product, department, actionSlot, brandName }: ProductCard
                     </div>
                 )}
 
-                <span className="absolute right-2 top-2 rounded-md bg-app-secondary px-2 py-1 text-[10px] font-semibold tracking-wide text-white uppercase">
-                    Mới
-                </span>
+                {showNewBadge ? (
+                    <span className="absolute right-2 top-2 rounded-md bg-app-secondary px-2 py-1 text-[10px] font-semibold tracking-wide text-white uppercase">
+                        Mới
+                    </span>
+                ) : null}
             </div>
             <div className="p-3.5 space-y-2">
                 <p className="text-xs text-slate-400 font-medium">{brandName ?? product.brand?.name}</p>
