@@ -18,12 +18,14 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar"
-import { ChevronsUpDownIcon, BadgeCheckIcon, BellIcon, LogOutIcon, MessageCircle } from "lucide-react"
+import { BadgeCheckIcon, BellIcon, ChevronsUpDownIcon, LogOutIcon } from "lucide-react"
 
 export function NavUser({
   user,
   onLogout,
   onAccountClick,
+  onNotificationsClick,
+  notificationCount = 0,
 }: {
   user: {
     name: string
@@ -32,8 +34,11 @@ export function NavUser({
   }
   onLogout: () => void
   onAccountClick?: () => void
+  onNotificationsClick?: () => void
+  notificationCount?: number
 }) {
   const { isMobile } = useSidebar()
+  const displayNotificationCount = notificationCount > 99 ? "99+" : String(notificationCount)
 
   return (
     <SidebarMenu>
@@ -75,22 +80,20 @@ export function NavUser({
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
-              <DropdownMenuItem>
-                <MessageCircle />
-                Chat
-              </DropdownMenuItem>
-            </DropdownMenuGroup>
-            <DropdownMenuSeparator />
-            <DropdownMenuGroup>
               <DropdownMenuItem onClick={onAccountClick}>
                 <BadgeCheckIcon
                 />
                 Tài khoản
               </DropdownMenuItem>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={onNotificationsClick}>
                 <BellIcon
                 />
                 Thông báo
+                {notificationCount > 0 ? (
+                  <span className="ml-auto inline-flex min-w-5 items-center justify-center rounded-full bg-primary px-1.5 py-0.5 text-[11px] font-semibold leading-none text-primary-foreground">
+                    {displayNotificationCount}
+                  </span>
+                ) : null}
               </DropdownMenuItem>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />

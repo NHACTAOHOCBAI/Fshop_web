@@ -33,9 +33,3 @@ export type GetAdminNotificationsParams = QueryParams & {
     type?: NotificationTypeExtended;
     isRead?: boolean;
 };
-
-export type CreateAdminBroadcastPayload = {
-    title: string;
-    message: string;
-    type: NotificationTypeExtended;
-};

@@ -4,14 +4,12 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { authStorage } from "@/lib/auth";
 import {
     connectNotificationsSocket,
-    createAdminBroadcast,
     getAdminNotifications,
     getMyNotifications,
     markAllNotificationsAsRead,
     markNotificationAsRead,
 } from "@/services/notifications";
 import type {
-    CreateAdminBroadcastPayload,
     GetAdminNotificationsParams,
     GetMyNotificationsParams,
     Notification,
@@ -101,17 +99,6 @@ export const useAdminNotifications = (params?: GetAdminNotificationsParams) => {
         queryKey: [...ADMIN_NOTIFICATIONS_QUERY_KEY, params],
         queryFn: () => getAdminNotifications(params),
         enabled: Boolean(authStorage.getAccessToken()),
-    });
-};
-
-export const useCreateAdminBroadcast = () => {
-    const queryClient = useQueryClient();
-
-    return useMutation({
-        mutationFn: (payload: CreateAdminBroadcastPayload) => createAdminBroadcast(payload),
-        onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ADMIN_NOTIFICATIONS_QUERY_KEY });
-        },
     });
 };
 

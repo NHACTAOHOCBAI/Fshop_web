@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AudioLines, CheckCheck, FileVideo, Image as ImageIcon, Loader2, MessageCircle, Send, Store, Trash2, X } from "lucide-react";
+import { AudioLines, CheckCheck, FileVideo, Image as ImageIcon, Loader2, Send, Store, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";

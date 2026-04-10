@@ -25,8 +25,10 @@ const AdminLayout = () => {
                             <SidebarTrigger className="-ml-1" />
                         </div>
                     </header>
-                    <div className="flex flex-1 p-4 pt-0">
-                        <Outlet />
+                    <div className="flex w-full flex-1 p-4 pt-0">
+                        <div className="min-w-0 w-full flex-1">
+                            <Outlet />
+                        </div>
                     </div>
                 </SidebarInset>
             </SidebarProvider>

@@ -4,8 +4,9 @@ import * as React from "react"
 import { toast } from "sonner"
 
 import { NavUser } from "@/components/nav-user"
-import { TeamSwitcher } from "@/components/team-switcher"
+import FShopLogo from "@/components/layout/FShopLogo"
 import { useLogout } from "@/hooks/useAuth"
+import { useAdminNotificationRealtime, useAdminNotifications } from "@/hooks/useNotifications"
 import { authStorage } from "@/lib/auth"
 import type { User } from "@/types/user"
 import {
@@ -22,59 +23,25 @@ import {
 } from "@/components/ui/sidebar"
 import {
   ArchiveRestoreIcon,
-  AudioLinesIcon,
   BadgePercentIcon,
-  BellIcon,
   BoxesIcon,
   FolderTreeIcon,
-  GalleryVerticalEndIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
   PackageCheckIcon,
   Phone,
   RulerIcon,
   ShoppingBagIcon,
-  UserRound,
   TagsIcon,
-  TerminalIcon,
   UsersIcon,
   VideoIcon,
 } from "lucide-react"
 import { Link, useLocation, useNavigate } from "react-router"
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  teams: [
-    {
-      name: "Acme Inc",
-      logo: (
-        <GalleryVerticalEndIcon
-        />
-      ),
-      plan: "Enterprise",
-    },
-    {
-      name: "Acme Corp.",
-      logo: (
-        <AudioLinesIcon
-        />
-      ),
-      plan: "Startup",
-    },
-    {
-      name: "Evil Corp.",
-      logo: (
-        <TerminalIcon
-        />
-      ),
-      plan: "Free",
-    },
-  ],
-}
+const logoBrandTheme = {
+  "--primary": "#40BFFF",
+  "--primary-foreground": "#ffffff",
+} as React.CSSProperties
 
 const adminMenuItems = [
   { title: "Bảng điều khiển", url: "/admin/dashboard", icon: <LayoutDashboardIcon /> },
@@ -84,13 +51,11 @@ const adminMenuItems = [
   { title: "Đơn hàng", url: "/admin/orders", icon: <ShoppingBagIcon /> },
   { title: "Sản phẩm", url: "/admin/products", icon: <BoxesIcon /> },
   { title: "Người dùng", url: "/admin/users", icon: <UsersIcon /> },
-  { title: "Hồ sơ admin", url: "/admin/profile", icon: <UserRound /> },
   { title: "Mã giảm giá", url: "/admin/coupons", icon: <BadgePercentIcon /> },
   { title: "Kho hàng", url: "/admin/stocks", icon: <PackageCheckIcon /> },
   { title: "Cộng đồng", url: "/admin/community", icon: <MessageSquareIcon /> },
   { title: "Hỗ trợ khách hàng", url: "/admin/support", icon: <Phone /> },
   { title: "Livestream", url: "/admin/livestreams", icon: <VideoIcon /> },
-  { title: "Thông báo", url: "/admin/notifications", icon: <BellIcon /> },
   { title: "Sao lưu & Khôi phục", url: "/admin/backup-restore", icon: <ArchiveRestoreIcon /> },
 ]
 
@@ -98,6 +63,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const location = useLocation()
   const navigate = useNavigate()
   const { mutate: logoutMutation } = useLogout()
+  const { data: unreadNotificationsData } = useAdminNotifications({
+    page: 1,
+    limit: 1,
+    isRead: false,
+  })
+
+  useAdminNotificationRealtime(true)
+
+  const unreadNotificationCount = unreadNotificationsData?.meta?.pagination?.total ?? 0
 
   const authUser = authStorage.getUser<User>()
   const sidebarUser = {
@@ -124,7 +98,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <TeamSwitcher teams={data.teams} />
+        <div className="px-2 py-1" style={logoBrandTheme}>
+          <FShopLogo to="/" />
+        </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
@@ -144,7 +120,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={sidebarUser} onLogout={handleLogout} onAccountClick={() => navigate("/admin/profile")} />
+        <NavUser
+          user={sidebarUser}
+          onLogout={handleLogout}
+          onAccountClick={() => navigate("/admin/profile")}
+          onNotificationsClick={() => navigate("/admin/notifications")}
+          notificationCount={unreadNotificationCount}
+        />
       </SidebarFooter>
       <SidebarRail />
     </Sidebar>

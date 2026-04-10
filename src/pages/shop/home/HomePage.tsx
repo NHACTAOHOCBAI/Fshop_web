@@ -1,4 +1,5 @@
 import { ArrowRight, Camera, Compass, MessageCircle, Mic, Sparkles, Tag } from "lucide-react";
+import { useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";
@@ -68,6 +69,8 @@ const HomePage = () => {
     const brandsQuery = useBrands({ page: 1, limit: 18, sortBy: "name", sortOrder: "ASC" });
     const categoriesQuery = useCategories({ page: 1, limit: 60, sortBy: "name", sortOrder: "ASC" });
     const productsQuery = useProducts({ page: 1, limit: 12, sortBy: "createdAt", sortOrder: "DESC" });
+    const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
+    const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
     const brands = brandsQuery.data?.data ?? [];
     const categories = categoriesQuery.data?.data ?? [];
@@ -103,6 +106,30 @@ const HomePage = () => {
         title: collection.title,
         items: categories.filter((category) => category.department === collection.id),
     }));
+
+    const filterableBrands = useMemo(() => {
+        const productBrandIds = new Set(products.map((item) => item.brandId));
+        return brands.filter((brand) => productBrandIds.has(brand.id));
+    }, [brands, products]);
+
+    const filterableCategories = useMemo(() => {
+        const productCategoryIds = new Set(products.map((item) => item.categoryId));
+        return categories.filter((category) => productCategoryIds.has(category.id));
+    }, [categories, products]);
+
+    const filteredProducts = useMemo(() => {
+        return products.filter((product) => {
+            if (selectedBrandId && product.brandId !== selectedBrandId) {
+                return false;
+            }
+
+            if (selectedCategoryId && product.categoryId !== selectedCategoryId) {
+                return false;
+            }
+
+            return true;
+        });
+    }, [products, selectedBrandId, selectedCategoryId]);
 
     return (
         <div className="space-y-16 pb-4">
@@ -291,17 +318,61 @@ const HomePage = () => {
                         <Link to="/men">Xem thêm</Link>
                     </Button>
                 </div>
+
+                <div className="mb-4 grid gap-3 rounded-2xl border border-slate-200 bg-white p-3 sm:grid-cols-[1fr_1fr_auto]">
+                    <label className="flex flex-col gap-1 text-xs font-semibold text-slate-500">
+                        Thương hiệu
+                        <select
+                            value={selectedBrandId ?? ""}
+                            onChange={(event) => setSelectedBrandId(event.target.value ? Number(event.target.value) : null)}
+                            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-primary"
+                        >
+                            <option value="">Tất cả thương hiệu</option>
+                            {filterableBrands.map((brand) => (
+                                <option key={brand.id} value={brand.id}>{brand.name}</option>
+                            ))}
+                        </select>
+                    </label>
+
+                    <label className="flex flex-col gap-1 text-xs font-semibold text-slate-500">
+                        Danh mục
+                        <select
+                            value={selectedCategoryId ?? ""}
+                            onChange={(event) => setSelectedCategoryId(event.target.value ? Number(event.target.value) : null)}
+                            className="h-10 rounded-xl border border-slate-200 bg-white px-3 text-sm font-medium text-slate-700 outline-none transition-colors focus:border-primary"
+                        >
+                            <option value="">Tất cả danh mục</option>
+                            {filterableCategories.map((category) => (
+                                <option key={category.id} value={category.id}>{category.name}</option>
+                            ))}
+                        </select>
+                    </label>
+
+                    <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        className="h-10 self-end rounded-xl"
+                        onClick={() => {
+                            setSelectedBrandId(null);
+                            setSelectedCategoryId(null);
+                        }}
+                    >
+                        Xóa lọc
+                    </Button>
+                </div>
+
                 {productsQuery.isLoading ? (
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
                         {Array.from({ length: 8 }).map((_, i) => (
                             <div key={i} className="h-72 animate-pulse rounded-xl bg-slate-100" />
                         ))}
                     </div>
-                ) : products.length === 0 ? (
+                ) : filteredProducts.length === 0 ? (
                     <p className="text-sm text-slate-500">Chưa có sản phẩm để hiển thị.</p>
                 ) : (
                     <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4">
-                        {products.map((product) => {
+                        {filteredProducts.map((product) => {
                             const department = product.category?.department ?? "men";
                             return (
                                 <div key={product.id} className="transition-transform duration-300 hover:-translate-y-1">

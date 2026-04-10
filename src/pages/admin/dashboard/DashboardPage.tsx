@@ -1,7 +1,6 @@
 import {
   ArrowUpRight,
   CircleDollarSign,
-  Filter,
   Package,
   ShoppingBag,
   TriangleAlert,
