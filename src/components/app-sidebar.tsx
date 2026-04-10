@@ -98,7 +98,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
-        <div className="px-2 py-1" style={logoBrandTheme}>
+        <div className="px-2 py-1 group-data-[collapsible=icon]:hidden" style={logoBrandTheme}>
           <FShopLogo to="/" />
         </div>
       </SidebarHeader>
