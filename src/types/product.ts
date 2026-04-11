@@ -1,5 +1,6 @@
 import type { Brand } from "@/types/brand";
 import type { Category } from "@/types/category";
+import type { Color, Size } from "@/types/attribute";
 
 export type ProductImage = {
     id: number;
@@ -26,6 +27,8 @@ export type ProductVariant = {
     createdAt: string;
     updatedAt: string;
     product: Product;
+    color?: Color;
+    size?: Size;
 };
 
 export type Product = {
@@ -64,6 +67,35 @@ export type CreateProductPayload = {
     categoryId: number;
     productImages: File[];
     variants: CreateProductVariantPayload[];
+};
+
+export type UpdateProductPayload = {
+    name?: string;
+    description?: string;
+    brandId?: number;
+    categoryId?: number;
+    price?: number;
+    isActive?: boolean;
+};
+
+export type UpsertProductVariantPayload = {
+    id?: number;
+    sku?: string;
+    colorId: number;
+    sizeId: number;
+    imageFileIndex?: number;
+    removeImage?: boolean;
+};
+
+export type UpdateProductFullPayload = {
+    id: number;
+    payload: UpdateProductPayload & {
+        keepImageIds?: number[];
+        removeVariantIds?: number[];
+        variants?: UpsertProductVariantPayload[];
+    };
+    productImages?: File[];
+    variantImages?: File[];
 };
 
 export type ImageSearchResult = {
