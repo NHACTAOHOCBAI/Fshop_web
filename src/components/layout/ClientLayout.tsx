@@ -4,6 +4,7 @@ import { useState } from "react";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import FShopLogo from "@/components/layout/FShopLogo";
+import FloatingAiChatbot from "@/components/layout/FloatingAiChatbot";
 import {
     Sheet,
     SheetContent,
@@ -299,6 +300,8 @@ const ClientLayout = () => {
                     </div>
                 </div>
             </footer>
+
+            <FloatingAiChatbot />
         </div>
     );
 };
