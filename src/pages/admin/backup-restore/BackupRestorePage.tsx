@@ -234,10 +234,10 @@ const BackupRestorePage = () => {
             </div>
 
             <div>
-                <div className="flex items-center py-4">
+                <div className="flex flex-col gap-3 py-4 md:flex-row md:items-center">
                     <Input
                         placeholder="Tìm theo tên file..."
-                        className="max-w-sm"
+                        className="w-full md:max-w-sm"
                         value={filter}
                         onChange={(event) => {
                             setFilter(event.target.value);
@@ -252,7 +252,7 @@ const BackupRestorePage = () => {
                             setPagination((prev) => ({ ...prev, pageIndex: 0 }));
                         }}
                     >
-                        <SelectTrigger className="ml-2 h-8 w-44">
+                        <SelectTrigger className="h-8 w-full md:ml-2 md:w-44">
                             <SelectValue placeholder="Trạng thái" />
                         </SelectTrigger>
                         <SelectContent>
@@ -262,12 +262,12 @@ const BackupRestorePage = () => {
                         </SelectContent>
                     </Select>
 
-                    <div className="ml-auto flex items-center">
+                    <div className="flex flex-wrap items-center gap-2 md:ml-auto md:justify-end">
                         <DataTableViewOptions table={table} />
                         <Button
                             variant="outline"
                             size="sm"
-                            className="ml-2 h-8"
+                            className="h-8"
                             onClick={() => {
                                 void refetch();
                             }}
@@ -278,7 +278,7 @@ const BackupRestorePage = () => {
                         </Button>
                         <Button
                             size="sm"
-                            className="ml-2 h-8"
+                            className="h-8"
                             onClick={handleCreateBackup}
                             disabled={isCreatingBackup || isRestoringBackup || isDeletingBackup}
                         >

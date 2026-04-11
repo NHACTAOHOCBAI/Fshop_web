@@ -79,7 +79,7 @@ export const userColumns = (
                                 <MoreHorizontal className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-52 max-w-[calc(100vw-1rem)]">
                             <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
                             <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>
                                 Cập nhật người dùng

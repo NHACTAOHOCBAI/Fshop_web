@@ -97,20 +97,20 @@ const AdminCommunityPage = () => {
                 </div>
             </div>
 
-            <div className="flex items-center py-4">
-                <form onSubmit={handleSearchSubmit} className="flex w-full items-center gap-2">
+            <div className="py-4">
+                <form onSubmit={handleSearchSubmit} className="flex w-full flex-col gap-2 lg:flex-row lg:items-center">
                     <Input
                         value={searchInput}
                         onChange={(event) => setSearchInput(event.target.value)}
                         placeholder="Tìm theo nội dung, người đăng hoặc hashtag..."
-                        className="max-w-sm"
+                        className="w-full lg:max-w-sm"
                     />
 
                     <Select
                         value={statusFilter}
                         onValueChange={(value) => setStatusFilter(value as StatusFilter)}
                     >
-                        <SelectTrigger className="w-44">
+                        <SelectTrigger className="w-full lg:w-44">
                             <SelectValue placeholder="Trạng thái" />
                         </SelectTrigger>
                         <SelectContent>
@@ -120,7 +120,7 @@ const AdminCommunityPage = () => {
                         </SelectContent>
                     </Select>
 
-                    <div className="ml-auto flex items-center gap-2">
+                    <div className="flex flex-wrap items-center gap-2 lg:ml-auto lg:justify-end">
                         <Button type="submit" variant="outline" size="sm" className="h-8">
                             <Search className="size-4" />
                             Tìm

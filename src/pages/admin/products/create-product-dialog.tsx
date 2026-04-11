@@ -137,7 +137,7 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="max-h-[96vh] max-w-3xl overflow-y-auto">
+            <DialogContent className="w-[calc(100vw-1rem)] max-h-[96vh] overflow-y-auto sm:max-w-3xl sm:w-full">
                 <DialogHeader>
                     <DialogTitle>Add Product</DialogTitle>
                     <DialogDescription>
@@ -156,11 +156,11 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
                         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={isPending} />
                     </div>
 
-                    <div className="grid gap-4 md:grid-cols-2">
+                    <div className="grid gap-4 sm:grid-cols-2">
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Brand</label>
                             <Select value={brandId} onValueChange={setBrandId}>
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select brand" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -176,7 +176,7 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Category</label>
                             <Select value={categoryId} onValueChange={setCategoryId}>
-                                <SelectTrigger>
+                                <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Select category" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -232,7 +232,7 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
                                     )}
                                 </div>
 
-                                <div className="grid gap-3 md:grid-cols-2">
+                                <div className="grid gap-3 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">SKU</label>
                                         <Input

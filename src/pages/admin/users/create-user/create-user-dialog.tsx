@@ -99,7 +99,7 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent className="sm:max-w-md max-h-[96vh] overflow-y-auto">
+            <DialogContent className="w-[calc(100vw-1rem)] max-h-[96vh] overflow-y-auto sm:max-w-md sm:w-full">
                 <DialogHeader>
                     <DialogTitle>Thêm người dùng</DialogTitle>
                     <DialogDescription>
@@ -152,7 +152,7 @@ export function CreateUserDialog({ open, setOpen }: CreateUserDialogProps) {
                                     onValueChange={field.onChange}
                                     disabled={isPending}
                                 >
-                                    <SelectTrigger>
+                                    <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Chọn vai trò" />
                                     </SelectTrigger>
                                     <SelectContent>

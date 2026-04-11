@@ -351,7 +351,7 @@ const SupportInboxPage = () => {
         return (
             <div className="mb-3 flex flex-wrap gap-2">
                 {imageItems.map(({ file, previewUrl }, index) => (
-                    <div key={`${file.name}-${index}`} className="relative w-24 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                    <div key={`${file.name}-${index}`} className="relative w-20 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 sm:w-24">
                         <img src={previewUrl} alt={file.name} className="h-24 w-full object-cover" />
                         <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-2 bg-black/55 px-2 py-1 text-[11px] text-white backdrop-blur-sm">
                             <span className="min-w-0 truncate">{file.name}</span>
@@ -365,7 +365,7 @@ const SupportInboxPage = () => {
                 {voiceFile ? (
                     <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
                         <AudioLines className="size-3.5 text-primary" />
-                        <span className="max-w-40 truncate">{voiceFile.name}</span>
+                        <span className="max-w-24 truncate sm:max-w-40">{voiceFile.name}</span>
                         <button type="button" onClick={() => setVoiceFile(null)} className="text-slate-400 transition-colors hover:text-slate-700">
                             <X className="size-3.5" />
                         </button>
@@ -375,7 +375,7 @@ const SupportInboxPage = () => {
                 {videoFile ? (
                     <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs text-slate-600">
                         <FileVideo className="size-3.5 text-primary" />
-                        <span className="max-w-40 truncate">{videoFile.name}</span>
+                        <span className="max-w-24 truncate sm:max-w-40">{videoFile.name}</span>
                         <button type="button" onClick={() => setVideoFile(null)} className="text-slate-400 transition-colors hover:text-slate-700">
                             <X className="size-3.5" />
                         </button>
@@ -383,7 +383,7 @@ const SupportInboxPage = () => {
                 ) : null}
 
                 {selectedProducts.map((product) => (
-                    <div key={product.id} className="w-40 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50">
+                    <div key={product.id} className="w-32 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50 sm:w-40">
                         <div className="h-24 bg-slate-100">
                             {product.images?.[0]?.imageUrl ? (
                                 <img src={product.images[0].imageUrl} alt={product.name} className="h-full w-full object-cover" />
@@ -411,8 +411,8 @@ const SupportInboxPage = () => {
 
     return (
         <>
-            <div className="flex h-[calc(100vh-8rem)] min-h-180 w-full gap-4">
-            <aside className="flex w-80 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white">
+            <div className="flex h-auto min-h-0 w-full flex-col gap-4 lg:h-[calc(100vh-8rem)] lg:min-h-180 lg:flex-row">
+            <aside className="flex w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white lg:w-80">
                 <div className="border-b border-slate-100 p-4">
                     <div className="flex items-center gap-2 text-slate-900">
                         <Store className="size-4 text-primary" />
@@ -503,7 +503,7 @@ const SupportInboxPage = () => {
 
                                         return (
                                             <div key={message.id} className={`flex ${isAdminMessage ? "justify-end" : "justify-start"}`}>
-                                                <div className="flex max-w-[88%] flex-col gap-2">
+                                                <div className="flex max-w-[92%] flex-col gap-2 sm:max-w-[88%]">
                                                     {hasAttachmentsContent ? (
                                                         <div className="max-w-full">
                                                             {message.attachments ? renderAttachments(message.attachments) : null}
@@ -634,12 +634,12 @@ const SupportInboxPage = () => {
         </div>
 
         <Dialog open={isProductPickerOpen} onOpenChange={setIsProductPickerOpen}>
-            <DialogContent className="max-h-[86vh] max-w-3xl overflow-y-auto">
+            <DialogContent className="max-h-[86vh] w-[calc(100vw-1.5rem)] max-w-3xl overflow-y-auto sm:w-full">
                 <DialogHeader>
                     <DialogTitle>Chọn sản phẩm để gửi</DialogTitle>
                 </DialogHeader>
 
-                <Input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Tìm theo tên sản phẩm..." />
+                <Input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Tìm theo tên sản phẩm..." className="w-full" />
 
                 <div className="grid max-h-[54vh] gap-3 overflow-y-auto pr-1 sm:grid-cols-2">
                     {productsQuery.isLoading ? (
