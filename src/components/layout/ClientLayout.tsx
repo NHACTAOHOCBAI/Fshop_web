@@ -2,8 +2,6 @@ import { NavLink, Outlet, useLocation, useNavigate, useParams } from "react-rout
 import { Bell, Heart, Loader2, Menu, ShoppingCart, UserRound, X } from "lucide-react";
 import { useState } from "react";
 
-import FloatingAiChatbot from "@/components/FloatingAiChatbot";
-
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import FShopLogo from "@/components/layout/FShopLogo";
 import FloatingAiChatbot from "@/components/layout/FloatingAiChatbot";
