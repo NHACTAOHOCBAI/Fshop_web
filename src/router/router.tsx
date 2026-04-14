@@ -39,6 +39,7 @@ import HomePage from "@/pages/shop/home/HomePage";
 import CommunityPage from "@/pages/shop/community/CommunityPage";
 import LivestreamListPage from "@/pages/shop/livestreams/LivestreamListPage";
 import LivestreamDetailPage from "@/pages/shop/livestreams/LivestreamDetailPage";
+import PaymentReturnPage from "@/pages/shop/payment/PaymentReturnPage";
 
 const router = createBrowserRouter([
   {
@@ -84,6 +85,10 @@ const router = createBrowserRouter([
       {
         path: "livestreams/:id",
         element: <LivestreamDetailPage />,
+      },
+      {
+        path: "payment/return",
+        element: <PaymentReturnPage />,
       },
       {
         path: "my-account",

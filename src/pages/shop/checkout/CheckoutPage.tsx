@@ -18,6 +18,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useMyAddresses } from "@/hooks/useAddresses";
 import { useBestPublicCoupons, useCoupons } from "@/hooks/useCoupons";
 import { useCreateOrder } from "@/hooks/useOrders";
+import { initiatePayment } from "@/services/payments";
 import { clearCheckoutSession, getCheckoutSession } from "@/lib/checkout";
 import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
 import type { Coupon } from "@/types/coupon";
@@ -78,7 +79,8 @@ const CheckoutPage = () => {
     const [selectedAddressId, setSelectedAddressId] = useState<number | null>(null);
     const [addressDialogOpen, setAddressDialogOpen] = useState(false);
     const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
-    const [paymentMethod, setPaymentMethod] = useState<"paypal" | "cod">("cod");
+    const [paymentMethod, setPaymentMethod] = useState<"momo" | "cod">("cod");
+    const [isInitiatingPayment, setIsInitiatingPayment] = useState(false);
     const [orderNote, setOrderNote] = useState("");
     const [manualVoucherCode, setManualVoucherCode] = useState("");
     const [showAllCoupons, setShowAllCoupons] = useState(false);
@@ -86,7 +88,7 @@ const CheckoutPage = () => {
     const [voucherFeedback, setVoucherFeedback] = useState<{ type: "success" | "error"; message: string } | null>(
         null
     );
-    const { mutate: createOrder, isPending: isCreatingOrder } = useCreateOrder();
+    const { mutateAsync: createOrderAsync, isPending: isCreatingOrder } = useCreateOrder();
     const { data: addressesData, isLoading: isLoadingAddresses } = useMyAddresses();
     const { data: couponsData } = useCoupons({
         page: 1,
@@ -223,37 +225,48 @@ const CheckoutPage = () => {
         setVoucherFeedback({ type: "success", message: `Đã áp dụng mã ${foundCoupon.code}.` });
     };
 
-    const handlePlaceOrder = () => {
+    const handlePlaceOrder = async () => {
         if (!selectedAddressId) {
             toast.error("Vui lòng chọn địa chỉ giao hàng.");
             return;
         }
 
-        const noteParts = [orderNote.trim()];
-        noteParts.push(`Payment: ${paymentMethod}`);
-
-        createOrder(
-            {
+        try {
+            const orderResponse = await createOrderAsync({
                 addressId: selectedAddressId,
                 couponId: selectedCoupon?.id,
                 shippingMethod: shippingMethodId as ShippingMethod,
-                note: noteParts.filter(Boolean).join(" | ") || undefined,
+                note: orderNote.trim() || undefined,
                 items: session.items.map((item) => ({
                     variantId: item.variantId,
                     quantity: item.quantity,
                 })),
-            },
-            {
-                onSuccess: () => {
-                    toast.success("Đặt hàng thành công.");
-                    clearCheckoutSession();
-                    window.location.href = "/my-account/orders";
-                },
-                onError: (error) => {
-                    toast.error(`Đặt hàng thất bại: ${error.message}`);
-                },
+            });
+
+            clearCheckoutSession();
+
+            if (paymentMethod === "cod") {
+                toast.success("Đặt hàng thành công.");
+                window.location.href = "/my-account/orders";
+                return;
             }
-        );
+
+            setIsInitiatingPayment(true);
+            const orderId = orderResponse.data.id;
+            const paymentResponse = await initiatePayment(orderId, paymentMethod);
+            const redirectUrl = paymentResponse.data.redirectUrl;
+
+            if (redirectUrl) {
+                window.location.href = redirectUrl;
+            } else {
+                toast.error("Không nhận được URL thanh toán.");
+                setIsInitiatingPayment(false);
+            }
+        } catch (error: unknown) {
+            const msg = error instanceof Error ? error.message : "Có lỗi xảy ra, vui lòng thử lại.";
+            toast.error(msg);
+            setIsInitiatingPayment(false);
+        }
     };
 
     const subtotal = session.subtotal;
@@ -581,32 +594,30 @@ const CheckoutPage = () => {
                         <RadioGroup
                             className="mt-3 space-y-3"
                             value={paymentMethod}
-                            onValueChange={(value) => setPaymentMethod(value as "paypal" | "cod")}
+                            onValueChange={(value) => setPaymentMethod(value as "momo" | "cod")}
                         >
                             <label
                                 className={cn(
                                     "flex cursor-pointer items-start justify-between rounded-xl border p-3 transition-colors",
-                                    paymentMethod === "paypal"
+                                    paymentMethod === "momo"
                                         ? "border-primary bg-primary/5"
                                         : "border-slate-200 hover:border-primary/40"
                                 )}
                             >
                                 <div className="flex items-start gap-3">
-                                    <RadioGroupItem value="paypal" id="payment-paypal" className="mt-0.5" />
-
+                                    <RadioGroupItem value="momo" id="payment-momo" className="mt-0.5" />
                                     <div>
-                                        <p className="text-sm font-semibold text-slate-900">Thanh toán qua PayPal</p>
+                                        <p className="text-sm font-semibold text-slate-900">Ví MoMo</p>
                                         <p className="text-xs text-slate-500">
-                                            Bạn sẽ được chuyển hướng đến website PayPal sau khi đặt hàng.
+                                            Thanh toán qua ứng dụng MoMo. Bạn sẽ được chuyển hướng sau khi đặt hàng.
                                         </p>
                                     </div>
                                 </div>
-
-                                <div className="rounded border border-slate-200 px-2 py-1 text-xs text-slate-500">
-                                    PP
+                                <div className="rounded-lg bg-[#ae2070] px-2 py-1 text-xs font-bold text-white">
+                                    MoMo
                                 </div>
                             </label>
-
+                            
                             <label
                                 className={cn(
                                     "flex cursor-pointer items-start justify-between rounded-xl border p-3 transition-colors",
@@ -617,13 +628,11 @@ const CheckoutPage = () => {
                             >
                                 <div className="flex items-start gap-3">
                                     <RadioGroupItem value="cod" id="payment-cod" className="mt-0.5" />
-
                                     <div>
                                         <p className="text-sm font-semibold text-slate-900">Thanh toán khi nhận hàng (COD)</p>
                                         <p className="text-xs text-slate-500">Thanh toán trực tiếp sau khi nhận được hàng.</p>
                                     </div>
                                 </div>
-
                                 <Banknote className="size-4 text-primary" />
                             </label>
                         </RadioGroup>
@@ -667,10 +676,14 @@ const CheckoutPage = () => {
                         />
                         <Button
                             className="h-11 w-full text-sm font-semibold"
-                            onClick={handlePlaceOrder}
-                            disabled={isCreatingOrder || !selectedAddressId || addresses.length === 0}
+                            onClick={() => { void handlePlaceOrder(); }}
+                            disabled={isCreatingOrder || isInitiatingPayment || !selectedAddressId || addresses.length === 0}
                         >
-                            {isCreatingOrder ? "Đang đặt hàng..." : "Đặt hàng"}
+                            {isCreatingOrder
+                                ? "Đang đặt hàng..."
+                                : isInitiatingPayment
+                                    ? "Đang chuyển đến cổng thanh toán..."
+                                    : "Đặt hàng"}
                         </Button>
                     </div>
 
