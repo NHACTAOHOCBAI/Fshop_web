@@ -9,7 +9,7 @@ import {
     listAiChatSessions,
     sendAiChatMessage,
 } from "@/services/chatbot";
-import type { AiChatMessage, AiChatSession, CreateAiChatSessionPayload, SendAiChatMessagePayload } from "@/types/chatbot";
+import type { AiChatMessage, AiChatSession } from "@/types/chatbot";
 import type { ApiResponse } from "@/types/response";
 
 export const useAiChatSessions = (enabled = true) => {
@@ -23,10 +23,10 @@ export const useAiChatSessions = (enabled = true) => {
 
 export const useAiChatMessages = (sessionId?: number, enabled = true) => {
     return useQuery({
-        queryKey: aiChatbotMessagesQueryKey(sessionId ?? 0),
-        queryFn: () => getAiChatMessages(sessionId!),
+        queryKey: sessionId ? aiChatbotMessagesQueryKey(sessionId) : ["ai-chatbot", "messages", "none"],
+        queryFn: () => getAiChatMessages(sessionId as number),
+        enabled: enabled && Boolean(sessionId),
         staleTime: 10_000,
-        enabled: Boolean(sessionId) && enabled,
     });
 };
 
@@ -34,68 +34,97 @@ export const useCreateAiChatSession = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (payload?: CreateAiChatSessionPayload) => createAiChatSession(payload),
-        onSuccess: (data) => {
-            queryClient.setQueryData<ApiResponse<AiChatSession[]>>(
-                AI_CHATBOT_SESSIONS_QUERY_KEY,
-                (prev) => {
-                    const session = data.data;
-                    if (!prev) {
-                        return { ...data, data: [session] };
-                    }
-                    return { ...prev, data: [session, ...prev.data] };
+        mutationFn: createAiChatSession,
+        onSuccess: (response) => {
+            queryClient.setQueryData<ApiResponse<AiChatSession[]>>(AI_CHATBOT_SESSIONS_QUERY_KEY, (old) => {
+                if (!old) {
+                    return {
+                        statusCode: 200,
+                        message: "success",
+                        path: "/ai-chatbot/sessions",
+                        data: [response.data],
+                    };
                 }
-            );
+
+                const exists = old.data.some((item) => item.id === response.data.id);
+                const nextData = exists
+                    ? old.data.map((item) => (item.id === response.data.id ? response.data : item))
+                    : [response.data, ...old.data];
+
+                return {
+                    ...old,
+                    data: nextData,
+                };
+            });
         },
     });
+};
+
+type SendMessageArgs = {
+    sessionId: number;
+    message: string;
+    historyLimit?: number;
 };
 
 export const useSendAiChatMessage = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({
-            sessionId,
-            payload,
-        }: {
-            sessionId: number;
-            payload: SendAiChatMessagePayload;
-        }) => sendAiChatMessage(sessionId, payload),
-        onSuccess: (data) => {
-            const { sessionId, userMessage, assistantMessage } = data.data;
-            const messagesKey = aiChatbotMessagesQueryKey(sessionId);
+        mutationFn: ({ sessionId, message, historyLimit }: SendMessageArgs) =>
+            sendAiChatMessage(sessionId, { message, historyLimit }),
+        onSuccess: (response, variables) => {
+            const { userMessage, assistantMessage } = response.data;
 
-            queryClient.setQueryData<ApiResponse<AiChatMessage[]>>(messagesKey, (prev) => {
-                const newMessages = [userMessage, assistantMessage];
-                if (!prev) {
-                    return { ...data, data: newMessages };
-                }
-                const filtered = prev.data.filter(
-                    (m) => m.id !== userMessage.id && m.id !== assistantMessage.id
-                );
-                return { ...prev, data: [...filtered, ...newMessages] };
-            });
-
-            queryClient.setQueryData<ApiResponse<AiChatSession[]>>(
-                AI_CHATBOT_SESSIONS_QUERY_KEY,
-                (prev) => {
-                    if (!prev) return prev;
+            queryClient.setQueryData<ApiResponse<AiChatMessage[]>>(aiChatbotMessagesQueryKey(variables.sessionId), (old) => {
+                if (!old) {
                     return {
-                        ...prev,
-                        data: prev.data
-                            .map((session) =>
-                                session.id === sessionId
-                                    ? { ...session, lastMessageAt: assistantMessage.createdAt }
-                                    : session
-                            )
-                            .sort(
-                                (a, b) =>
-                                    new Date(b.lastMessageAt).getTime() -
-                                    new Date(a.lastMessageAt).getTime()
-                            ),
+                        statusCode: 200,
+                        message: "success",
+                        path: `/ai-chatbot/sessions/${variables.sessionId}/messages`,
+                        data: [userMessage, assistantMessage],
                     };
                 }
-            );
+
+                const merged = [...old.data];
+
+                if (!merged.some((item) => item.id === userMessage.id)) {
+                    merged.push(userMessage);
+                }
+                if (!merged.some((item) => item.id === assistantMessage.id)) {
+                    merged.push(assistantMessage);
+                }
+
+                merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+
+                return {
+                    ...old,
+                    data: merged,
+                };
+            });
+
+            queryClient.setQueryData<ApiResponse<AiChatSession[]>>(AI_CHATBOT_SESSIONS_QUERY_KEY, (old) => {
+                if (!old) {
+                    return old;
+                }
+
+                const nextData = old.data
+                    .map((session) =>
+                        session.id === response.data.sessionId
+                            ? {
+                                ...session,
+                                title: session.title || userMessage.content.slice(0, 80),
+                                lastMessageAt: assistantMessage.createdAt,
+                                updatedAt: assistantMessage.createdAt,
+                            }
+                            : session
+                    )
+                    .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime());
+
+                return {
+                    ...old,
+                    data: nextData,
+                };
+            });
         },
     });
 };
@@ -104,18 +133,19 @@ export const useCloseAiChatSession = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: (sessionId: number) => closeAiChatSession(sessionId),
-        onSuccess: (_, sessionId) => {
-            queryClient.setQueryData<ApiResponse<AiChatSession[]>>(
-                AI_CHATBOT_SESSIONS_QUERY_KEY,
-                (prev) => {
-                    if (!prev) return prev;
-                    return {
-                        ...prev,
-                        data: prev.data.filter((session) => session.id !== sessionId),
-                    };
+        mutationFn: closeAiChatSession,
+        onSuccess: (_response, sessionId) => {
+            queryClient.setQueryData<ApiResponse<AiChatSession[]>>(AI_CHATBOT_SESSIONS_QUERY_KEY, (old) => {
+                if (!old) {
+                    return old;
                 }
-            );
+
+                return {
+                    ...old,
+                    data: old.data.filter((item) => item.id !== sessionId),
+                };
+            });
+
             queryClient.removeQueries({ queryKey: aiChatbotMessagesQueryKey(sessionId) });
         },
     });

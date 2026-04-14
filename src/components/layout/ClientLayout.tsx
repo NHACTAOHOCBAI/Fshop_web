@@ -1,9 +1,18 @@
-import { Link, NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
-import { Bell, Heart, Loader2, ShoppingCart, UserRound } from "lucide-react";
+import { NavLink, Outlet, useLocation, useNavigate, useParams } from "react-router";
+import { Bell, Heart, Loader2, Menu, ShoppingCart, UserRound, X } from "lucide-react";
+import { useState } from "react";
 
 import FloatingAiChatbot from "@/components/FloatingAiChatbot";
 
 import { DropdownMenu, DropdownMenuContent, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import FShopLogo from "@/components/layout/FShopLogo";
+import FloatingAiChatbot from "@/components/layout/FloatingAiChatbot";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
 import { useMarkNotificationAsRead, useMyNotifications, useNotificationRealtime } from "@/hooks/useNotifications";
 import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -38,6 +47,7 @@ const getNotificationTitle = (notification: Notification) => {
 
 const ClientLayout = () => {
     const router = useNavigate();
+    const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
     const params = useParams<{ department?: string }>();
     const location = useLocation();
     const pathname = location.pathname.toLowerCase();
@@ -80,6 +90,7 @@ const ClientLayout = () => {
 
     const notifications = notificationsData?.data ?? [];
     const unreadCount = notifications.filter((item) => !item.isRead).length;
+    const quickActionClass = "rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary";
 
     const handleOpenNotification = (notification: Notification) => {
         if (!notification.isRead) {
@@ -90,9 +101,9 @@ const ClientLayout = () => {
     };
 
     return (
-        <div className="min-h-screen bg-white text-slate-900">
+        <div className="flex min-h-screen flex-col bg-white text-slate-900">
             <header className="sticky top-0 z-30 border-b border-slate-200/80 bg-white/95 backdrop-blur">
-                <div className="mx-auto flex w-full max-w-6xl items-center justify-end gap-3  border-slate-100 px-4 py-1 md:px-8">
+                <div className="mx-auto hidden w-full max-w-6xl items-center justify-end gap-3 border-slate-100 px-4 py-1 md:flex md:px-8">
                     <div className="flex items-center gap-2 text-slate-500">
                         <DropdownMenu>
                             <DropdownMenuTrigger asChild>
@@ -105,7 +116,7 @@ const ClientLayout = () => {
                                     )}
                                 </button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end" className="w-96 rounded-xl p-0">
+                            <DropdownMenuContent align="end" className="w-[min(22rem,calc(100vw-2rem))] rounded-xl p-0">
                                 <div className="border-b border-slate-100 px-4 py-3">
                                     <p className="text-sm font-semibold text-slate-900">Thông báo</p>
                                     <p className="text-xs text-slate-500">
@@ -155,33 +166,60 @@ const ClientLayout = () => {
                                 </div>
                             </DropdownMenuContent>
                         </DropdownMenu>
-                        <button onClick={() => router("/my-account/wishlists")} type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
+                        <button onClick={() => router("/my-account/wishlists")} type="button" className={quickActionClass}>
                             <Heart className="size-4" />
                         </button>
-                        <button onClick={() => router("/cart")} type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
+                        <button onClick={() => router("/cart")} type="button" className={quickActionClass}>
                             <ShoppingCart className="size-4" />
                         </button>
-                        <button onClick={() => router("/my-account/profile")} type="button" className="rounded-md p-2 transition-colors hover:bg-slate-100 hover:text-primary">
+                        <button onClick={() => router("/my-account/profile")} type="button" className={quickActionClass}>
                             <UserRound className="size-4" />
                         </button>
                     </div>
                 </div>
-                <div className="w-full bg-slate-100 h-px">
+                <div className="h-px w-full bg-slate-100" />
+                <div className="mx-auto flex w-full max-w-6xl items-center justify-between gap-4 px-4 py-2.5 md:px-8 md:py-3">
+                    <FShopLogo />
+                    <div className="flex items-center gap-1 md:hidden">
+                        <button
+                            type="button"
+                            onClick={() => router("/my-account/notifications")}
+                            className={cn(quickActionClass, "relative")}
+                            aria-label="Mở trang thông báo"
+                        >
+                            <Bell className="size-4" />
+                            {unreadCount > 0 && (
+                                <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-white">
+                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                </span>
+                            )}
+                        </button>
 
-                </div>
-                <div className="mx-auto flex w-full max-w-6xl items-center  px-4 py-3 md:px-8">
-                    <Link to="/" className="inline-flex items-center gap-2">
-                        <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-primary font-semibold text-primary-foreground shadow-sm">
-                            F
-                        </span>
-                        <span className="text-base font-semibold tracking-wide">FShop</span>
-                    </Link>
-                    <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold md:gap-10 ml-85">
+                        <button onClick={() => router("/cart")} type="button" className={quickActionClass}>
+                            <ShoppingCart className="size-4" />
+                        </button>
+
+                        <button onClick={() => router("/my-account/profile")} type="button" className={quickActionClass}>
+                            <UserRound className="size-4" />
+                        </button>
+
+                        <button
+                            type="button"
+                            className="inline-flex items-center justify-center rounded-md p-2 text-slate-700 transition-colors hover:bg-slate-100"
+                            onClick={() => setIsMobileNavOpen((prev) => !prev)}
+                            aria-label={isMobileNavOpen ? "Đóng menu" : "Mở menu"}
+                        >
+                            {isMobileNavOpen ? <X className="size-5" /> : <Menu className="size-5" />}
+                        </button>
+                    </div>
+
+                    <nav className="hidden flex-wrap items-center justify-center gap-x-6 gap-y-2 text-sm font-semibold md:flex md:gap-10">
                         {navItems.map((item) => (
                             <NavLink
                                 key={item.label}
                                 to={item.to}
                                 end={item.end}
+                                onClick={() => setIsMobileNavOpen(false)}
                                 className={({ isActive }) =>
                                     cn(
                                         "uppercase tracking-wider text-slate-700 transition-colors hover:text-primary",
@@ -194,17 +232,57 @@ const ClientLayout = () => {
                         ))}
                     </nav>
                 </div>
+
+                <Sheet open={isMobileNavOpen} onOpenChange={setIsMobileNavOpen}>
+                    <SheetContent side="left" className="w-[84vw] max-w-xs p-0 md:hidden">
+                        <SheetHeader className="border-b border-slate-100">
+                            <SheetTitle>Điều hướng</SheetTitle>
+                        </SheetHeader>
+
+                        <div className="space-y-2 p-4">
+                            {navItems.map((item) => (
+                                <NavLink
+                                    key={item.label}
+                                    to={item.to}
+                                    end={item.end}
+                                    onClick={() => setIsMobileNavOpen(false)}
+                                    className={({ isActive }) =>
+                                        cn(
+                                            "block rounded-lg border px-3 py-2.5 text-sm font-semibold uppercase tracking-wide transition-colors",
+                                            isActive
+                                                ? "border-primary bg-primary/5 text-primary"
+                                                : "border-slate-200 text-slate-700 hover:border-primary/40"
+                                        )
+                                    }
+                                >
+                                    {item.label}
+                                </NavLink>
+                            ))}
+                        </div>
+
+                        <div className="mt-auto border-t border-slate-100 p-4">
+                            <div className="grid grid-cols-2 gap-2">
+                                <button onClick={() => { setIsMobileNavOpen(false); router("/my-account/wishlists"); }} type="button" className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700">
+                                    Yêu thích
+                                </button>
+                                <button onClick={() => { setIsMobileNavOpen(false); router("/my-account/profile"); }} type="button" className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700">
+                                    Tài khoản
+                                </button>
+                            </div>
+                        </div>
+                    </SheetContent>
+                </Sheet>
             </header>
             {pathname !== "/" && (
-                <div className="bg-gray-100 py-3.5">
-                    <div className="px-4  md:px-8 mx-auto max-w-6xl text-sm text-slate-500">
+                <div className="bg-gray-100 py-2.5 sm:py-3.5">
+                    <div className="mx-auto max-w-6xl px-4 text-sm text-slate-500 md:px-8">
                         <span>Fshop</span>
                         <span className="mx-2">/</span>
-                        <span className="text-primary">{breadcrumbDepartmentLabel}</span>
+                        <span className="break-words text-primary">{breadcrumbDepartmentLabel}</span>
                     </div>
                 </div>
             )}
-            <main className=" mx-auto w-full max-w-6xl px-4 py-6 md:px-8 md:py-8">
+            <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-4 md:px-8 md:py-8">
                 <Outlet />
             </main>
 
@@ -226,6 +304,8 @@ const ClientLayout = () => {
                     </div>
                 </div>
             </footer>
+
+            <FloatingAiChatbot />
         </div>
     );
 };

@@ -17,6 +17,7 @@ import AdminNotificationsPage from "@/pages/admin/notifications/AdminNotificatio
 import OrdersPage from "@/pages/admin/orders/OrdersPage";
 import OrderDetailAdminPage from "@/pages/admin/orders/OrderDetailAdminPage";
 import CreateProductPage from "@/pages/admin/products/CreateProductPage";
+import EditProductPage from "@/pages/admin/products/EditProductPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
 import ProductDetailPage from "@/pages/shop/product-detail/ProductDetailPage";
@@ -29,8 +30,10 @@ import MyOrdersPage from "@/pages/shop/my-account/MyOrdersPage";
 import OrderDetailPage from "@/pages/shop/my-account/OrderDetailPage";
 import WishlistsPage from "@/pages/shop/my-account/WishlistsPage";
 import NotificationsPage from "@/pages/shop/my-account/NotificationsPage";
+import SupportPage from "@/pages/shop/my-account/SupportPage";
 import { createBrowserRouter, Navigate } from "react-router";
 import LoginPage from "@/pages/auth/login/LoginPage";
+import ForgotPasswordPage from "@/pages/auth/forgot-password/ForgotPasswordPage";
 import RegisterPage from "@/pages/auth/register/RegisterPage";
 import ClientProductsPage from "@/pages/shop/products/ClientProductsPage";
 import ProductsPage from "@/pages/admin/products/ProductsPage";
@@ -122,6 +125,10 @@ const router = createBrowserRouter([
             path: "notifications",
             element: <NotificationsPage />,
           },
+          {
+            path: "support",
+            element: <SupportPage />,
+          },
         ],
       },
     ],
@@ -139,6 +146,14 @@ const router = createBrowserRouter([
     element: (
       <PublicRoute>
         <RegisterPage />
+      </PublicRoute>
+    ),
+  },
+  {
+    path: "/forgot-password",
+    element: (
+      <PublicRoute>
+        <ForgotPasswordPage />
       </PublicRoute>
     ),
   },
@@ -185,6 +200,10 @@ const router = createBrowserRouter([
       {
         path: "products/create",
         element: <CreateProductPage />,
+      },
+      {
+        path: "products/:productId/edit",
+        element: <EditProductPage />,
       },
       {
         path: "users",

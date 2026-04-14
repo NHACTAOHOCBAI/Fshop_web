@@ -3,7 +3,6 @@ import { io, type Socket } from "socket.io-client";
 import axiosInstance from "@/lib/axios";
 import { resolveSocketBaseUrl } from "@/lib/socket";
 import type {
-    CreateAdminBroadcastPayload,
     GetAdminNotificationsParams,
     GetMyNotificationsParams,
     Notification,
@@ -33,14 +32,6 @@ export const getAdminNotifications = async (params?: GetAdminNotificationsParams
         params,
     });
 
-    return data;
-};
-
-export const createAdminBroadcast = async (payload: CreateAdminBroadcastPayload) => {
-    const { data } = await axiosInstance.post<ApiResponse<{ success: boolean; totalRecipients: number }>>(
-        "/notifications/admin/broadcast",
-        payload,
-    );
     return data;
 };
 

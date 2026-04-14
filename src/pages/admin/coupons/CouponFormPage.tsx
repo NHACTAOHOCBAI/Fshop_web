@@ -293,7 +293,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                     <div className="space-y-4 rounded-md border p-4">
                         <p className="text-sm font-semibold">Thông tin mã giảm giá</p>
 
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Mã</label>
                                 <Input disabled={isPending} {...form.register("code")} />
@@ -313,7 +313,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                             <p className="text-sm text-destructive">{form.formState.errors.description?.message}</p>
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Loại coupon</label>
                                 <Select
@@ -354,7 +354,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                         </div>
 
                         {selectedType !== "shipping" && (
-                            <div className="grid gap-4 md:grid-cols-3">
+                            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium">
                                         {selectedType === "percent" ? "Phần trăm giảm" : "Giá trị giảm"}
@@ -397,7 +397,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                             </div>
                         )}
 
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Ngày bắt đầu</label>
                                 <DatePickerV2
@@ -415,7 +415,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                     disabled={isPending}
                                     placeholder="Chọn ngày bắt đầu"
                                 />
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                     <Select
                                         value={getHourValue(startDate)}
                                         onValueChange={(hour) => {
@@ -478,7 +478,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                     disabled={isPending}
                                     placeholder="Chọn ngày kết thúc"
                                 />
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                     <Select
                                         value={getHourValue(endDate)}
                                         onValueChange={(hour) => {

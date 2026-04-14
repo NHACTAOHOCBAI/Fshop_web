@@ -1,12 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AudioLines, CheckCheck, FileVideo, Image as ImageIcon, Loader2, MessageCircle, Send, Store, Trash2, X } from "lucide-react";
+import { AudioLines, CheckCheck, FileVideo, Image as ImageIcon, Loader2, Send, Store, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import {
     Dialog,
     DialogContent,
-    DialogDescription,
     DialogHeader,
     DialogTitle,
 } from "@/components/ui/dialog";
@@ -459,9 +458,6 @@ const AccountSupportChatPanel = ({ prefillProduct, onPrefillConsumed }: AccountS
                         <Store className="size-4 text-primary" />
                         <h2 className="text-lg font-semibold">Chat với cửa hàng</h2>
                     </div>
-                    <p className="mt-1 text-sm text-slate-500">
-                        Hỗ trợ đơn hàng, vận chuyển, đổi trả và các vấn đề liên quan đến tài khoản mua sắm.
-                    </p>
                 </div>
                 <div className="text-right text-xs text-slate-500">
                     <p>{conversation?.status === "HANDLING" ? "Shop đang phản hồi" : "Đang chờ shop hỗ trợ"}</p>
@@ -541,7 +537,6 @@ const AccountSupportChatPanel = ({ prefillProduct, onPrefillConsumed }: AccountS
                     ) : (
                         <div className="rounded-2xl border border-dashed border-slate-200 bg-slate-50 px-4 py-6 text-sm text-slate-500">
                             <p className="font-medium text-slate-700">Chưa có tin nhắn nào</p>
-                            <p className="mt-1">Gửi lời nhắn đầu tiên hoặc đính kèm ảnh, video, audio để shop phản hồi nhanh hơn.</p>
                         </div>
                     )}
 
@@ -555,11 +550,6 @@ const AccountSupportChatPanel = ({ prefillProduct, onPrefillConsumed }: AccountS
                 </div>
 
                 <div className="border-t border-slate-100 px-5 py-4">
-                    <div className="mb-2 flex items-center gap-2 text-xs text-slate-500">
-                        <MessageCircle className="size-3.5" />
-                        Tin nhắn sẽ được gửi đến cửa hàng.
-                    </div>
-
                     {renderComposerAttachments()}
 
                     <div className="space-y-2">
@@ -636,7 +626,6 @@ const AccountSupportChatPanel = ({ prefillProduct, onPrefillConsumed }: AccountS
                             </div>
                         </div>
 
-                        <p className="text-xs text-slate-500">Chat này hỗ trợ gửi ảnh, video và audio trực tiếp lên server.</p>
                     </div>
                 </div>
             </div>
@@ -645,7 +634,6 @@ const AccountSupportChatPanel = ({ prefillProduct, onPrefillConsumed }: AccountS
                 <DialogContent className="max-h-[86vh] max-w-3xl overflow-y-auto">
                     <DialogHeader>
                         <DialogTitle>Chọn sản phẩm để gửi</DialogTitle>
-                        <DialogDescription>Tìm và chọn một hoặc nhiều sản phẩm để đính kèm vào tin nhắn.</DialogDescription>
                     </DialogHeader>
 
                     <Input value={productSearch} onChange={(event) => setProductSearch(event.target.value)} placeholder="Tìm theo tên sản phẩm..." />

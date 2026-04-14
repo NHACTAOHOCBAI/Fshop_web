@@ -1,7 +1,20 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { authStorage } from "@/lib/auth";
-import { changePassword, getMe, linkGoogleAccount, login, loginWithGoogle, logout, register, unlinkGoogleAccount, updateProfile } from "@/services/auth";
+import {
+    changePassword,
+    getMe,
+    linkGoogleAccount,
+    login,
+    loginWithGoogle,
+    logout,
+    register,
+    requestForgotPassword,
+    resetForgotPassword,
+    unlinkGoogleAccount,
+    updateProfile,
+    verifyForgotPasswordCode,
+} from "@/services/auth";
 
 export const AUTH_ME_QUERY_KEY = ["auth", "me"] as const;
 
@@ -86,5 +99,23 @@ export const useUnlinkGoogleAccount = () => {
             queryClient.setQueryData(AUTH_ME_QUERY_KEY, response);
             queryClient.invalidateQueries({ queryKey: AUTH_ME_QUERY_KEY });
         },
+    });
+};
+
+export const useForgotPasswordRequest = () => {
+    return useMutation({
+        mutationFn: requestForgotPassword,
+    });
+};
+
+export const useForgotPasswordVerify = () => {
+    return useMutation({
+        mutationFn: verifyForgotPasswordCode,
+    });
+};
+
+export const useForgotPasswordReset = () => {
+    return useMutation({
+        mutationFn: resetForgotPassword,
     });
 };

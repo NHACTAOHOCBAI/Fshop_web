@@ -1,5 +1,5 @@
-import { Search, SlidersHorizontal, Camera, Mic } from "lucide-react";
-import { useMemo, useState } from "react";
+import { Search, SlidersHorizontal, Camera, Mic, ChevronDown, ChevronUp } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +10,12 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
+import {
+    Sheet,
+    SheetContent,
+    SheetHeader,
+    SheetTitle,
+} from "@/components/ui/sheet";
 import { ImageSearchDialog } from "@/components/image-search-dialog";
 import { VoiceSearchDialog } from "@/components/voice-search-dialog";
 import ClientPagination from "@/components/pagination/ClientPagination";
@@ -26,10 +32,22 @@ const sortOptions: { value: ShopSortOption; label: string }[] = [
     { value: "name-desc", label: "Tên Z-A" },
 ];
 
-const departmentLabelMap = {
-    men: "Nam",
-    women: "Nữ",
-    kids: "Trẻ em",
+const departmentBannerCopyMap = {
+    men: {
+        title: "Khu vực Nam",
+        description:
+            "Tập trung các thiết kế nam tính, dễ phối cho đi làm và đi chơi.\nƯu tiên chất liệu bền, phom đứng và bảng màu tối giản hiện đại.",
+    },
+    women: {
+        title: "Khu vực Nữ",
+        description:
+            "Tổng hợp các mẫu nữ thanh lịch, linh hoạt cho nhiều hoàn cảnh.\nTừ outfit hằng ngày đến phong cách nổi bật cho những dịp đặc biệt.",
+    },
+    kids: {
+        title: "Khu vực Trẻ em",
+        description:
+            "Ưu tiên sự thoải mái, an toàn và năng động cho bé khi vận động.\nThiết kế vui tươi, chất liệu mềm và dễ chăm sóc cho phụ huynh.",
+    },
 } as const;
 
 const departmentList: DepartmentType[] = ["men", "women", "kids"];
@@ -49,6 +67,23 @@ type FilterPanelProps = {
 };
 
 const FilterPanel = ({ title, name, items, selectedId, onSelect, onClear }: FilterPanelProps) => {
+    const MAX_VISIBLE_ITEMS = 6;
+    const [isExpanded, setIsExpanded] = useState(false);
+
+    useEffect(() => {
+        if (selectedId === null) {
+            return;
+        }
+
+        const selectedIndex = items.findIndex((item) => item.id === selectedId);
+        if (selectedIndex >= MAX_VISIBLE_ITEMS) {
+            setIsExpanded(true);
+        }
+    }, [items, selectedId]);
+
+    const shouldShowCollapse = items.length > MAX_VISIBLE_ITEMS;
+    const visibleItems = shouldShowCollapse && !isExpanded ? items.slice(0, MAX_VISIBLE_ITEMS) : items;
+
     return (
         <section className="rounded-2xl border border-slate-200 bg-white p-4 shadow-[0_1px_1px_rgba(15,23,42,0.06)]">
             <div className="mb-3 flex items-center justify-between">
@@ -61,7 +96,7 @@ const FilterPanel = ({ title, name, items, selectedId, onSelect, onClear }: Filt
             {items.length === 0 ? <p className="text-sm text-slate-400">Không có dữ liệu</p> : null}
 
             <div className="space-y-2 text-sm">
-                {items.map((item) => (
+                {visibleItems.map((item) => (
                     <label key={item.id} className="flex cursor-pointer items-center gap-2 text-slate-700">
                         <input
                             type="radio"
@@ -73,6 +108,26 @@ const FilterPanel = ({ title, name, items, selectedId, onSelect, onClear }: Filt
                     </label>
                 ))}
             </div>
+
+            {shouldShowCollapse ? (
+                <button
+                    type="button"
+                    onClick={() => setIsExpanded((prev) => !prev)}
+                    className="mt-3 inline-flex w-full items-center justify-center gap-1 rounded-md py-1.5 text-xs font-semibold text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900"
+                >
+                    {isExpanded ? (
+                        <>
+                            <ChevronUp className="size-4" />
+                            Thu gọn
+                        </>
+                    ) : (
+                        <>
+                            <ChevronDown className="size-4" />
+                            Xem thêm
+                        </>
+                    )}
+                </button>
+            ) : null}
         </section>
     );
 };
@@ -87,6 +142,7 @@ const ClientProductsPage = () => {
     const [voiceTranscription, setVoiceTranscription] = useState("");
     const [isLoadingImageResults, setIsLoadingImageResults] = useState(false);
     const [isLoadingVoiceResults, setIsLoadingVoiceResults] = useState(false);
+    const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
     const department = useMemo<DepartmentType>(() => {
         const rawDepartment = params.department?.toLowerCase();
@@ -97,7 +153,7 @@ const ClientProductsPage = () => {
         return "men";
     }, [params.department]);
 
-    const departmentLabel = departmentLabelMap[department];
+    const departmentBannerCopy = departmentBannerCopyMap[department];
 
     const {
         page,
@@ -184,7 +240,7 @@ const ClientProductsPage = () => {
     return (
 
         <div className="grid gap-5 lg:grid-cols-[250px_1fr]">
-            <aside className="space-y-4">
+            <aside className="hidden space-y-4 lg:sticky lg:top-24 lg:block lg:h-fit">
                 <FilterPanel
                     title="Danh mục"
                     name="category"
@@ -217,7 +273,7 @@ const ClientProductsPage = () => {
                                 value={searchInput}
                                 onChange={(event) => onSearchChange(event.target.value)}
                                 placeholder="Tìm kiếm sản phẩm..."
-                                className="p-5 rounded-[24px] pl-23 pr-10"
+                                className="rounded-[24px] p-5 pl-24 pr-10"
                             />
                             <button
                                 type="button"
@@ -240,21 +296,33 @@ const ClientProductsPage = () => {
                             </div>
                         </div>
 
-                        <Select value={sortOption} onValueChange={(value) => onSortChange(value as ShopSortOption)}>
-                            <SelectTrigger className="w-full md:w-45">
-                                <SelectValue placeholder="Sắp xếp theo" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                {sortOptions.map((option) => (
-                                    <SelectItem key={option.value} value={option.value}>
-                                        {option.label}
-                                    </SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
+                        <div className="flex w-full gap-2 md:w-auto">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className=" px-3 lg:hidden"
+                                onClick={() => setIsFilterSheetOpen(true)}
+                            >
+                                <SlidersHorizontal className="size-4" />
+                                Bộ lọc
+                            </Button>
+
+                            <Select value={sortOption} onValueChange={(value) => onSortChange(value as ShopSortOption)}>
+                                <SelectTrigger className="w-full md:w-[180px]">
+                                    <SelectValue placeholder="Sắp xếp theo" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {sortOptions.map((option) => (
+                                        <SelectItem key={option.value} value={option.value}>
+                                            {option.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
 
-                    <div className="mt-3 flex items-center justify-between">
+                    <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                         <p className="text-sm text-slate-600">
                             Tìm thấy <span className="font-semibold text-primary">{displayTotalItems}</span> sản phẩm
                             {isFetching && !isShowingAiResults ? " (đang cập nhật...)" : ""}
@@ -280,10 +348,12 @@ const ClientProductsPage = () => {
 
                 <div className="relative overflow-hidden rounded-2xl border border-slate-200 bg-linear-to-r from-primary/95 via-primary/85 to-cyan-400 p-5 text-white md:p-6">
                     <div className="absolute -right-8 -top-12 h-36 w-36 rounded-full bg-white/20 blur-3xl" />
-                    <p className="relative text-xs font-semibold tracking-[0.18em] text-sky-100 uppercase">Danh mục theo đối tượng</p>
-                    <h2 className="relative mt-1 text-xl font-semibold md:text-2xl">Giày {departmentLabel}</h2>
+                    <p className="relative text-xs font-semibold tracking-[0.18em] text-sky-100 uppercase">Bộ sưu tập nổi bật</p>
+                    <h2 className="relative mt-1 text-xl font-semibold md:text-2xl">{departmentBannerCopy.title}</h2>
                     <p className="relative mt-2 max-w-xl text-sm text-sky-50">
-                        Đang hiển thị sản phẩm thuộc nhóm <span className="font-semibold text-white">{departmentLabel}</span>.
+                        {departmentBannerCopy.description.split("\n")[0]}
+                        <br />
+                        {departmentBannerCopy.description.split("\n")[1]}
                     </p>
                 </div>
 
@@ -294,14 +364,14 @@ const ClientProductsPage = () => {
                 ) : null}
 
                 {isLoading || isLoadingImageResults || isLoadingVoiceResults ? (
-                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                    <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         {Array.from({ length: 6 }).map((_, index) => (
                             <div key={index} className="h-67.5 animate-pulse rounded-2xl bg-slate-200" />
                         ))}
                     </div>
                 ) : (
                     <>
-                        <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                             {displayProducts.map((product) => (
                                 <ProductCard key={product.id} product={product} department={department} />
                             ))}
@@ -337,6 +407,54 @@ const ClientProductsPage = () => {
                 onOpenChange={setIsVoiceSearchDialogOpen}
                 onSuccess={handleVoiceSearchSuccess}
             />
+
+            <Sheet open={isFilterSheetOpen} onOpenChange={setIsFilterSheetOpen}>
+                <SheetContent side="left" className="w-[84vw] max-w-xs overflow-y-auto p-0 md:hidden">
+                    <SheetHeader className="border-b border-slate-100">
+                        <SheetTitle>Bộ lọc</SheetTitle>
+                    </SheetHeader>
+
+                    <div className="space-y-4 p-4">
+                        <FilterPanel
+                            title="Danh mục"
+                            name="category-mobile"
+                            items={categories}
+                            selectedId={selectedCategoryId}
+                            onSelect={onCategoryChange}
+                            onClear={() => onCategoryChange(null)}
+                        />
+
+                        <FilterPanel
+                            title="Thương hiệu"
+                            name="brand-mobile"
+                            items={brands}
+                            selectedId={selectedBrandId}
+                            onSelect={onBrandChange}
+                            onClear={() => onBrandChange(null)}
+                        />
+
+                    </div>
+
+                    <div className="mt-auto border-t border-slate-100 p-4">
+                        <div className="grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={clearFilters}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                            >
+                                Đặt lại
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsFilterSheetOpen(false)}
+                                className="rounded-lg border border-slate-200 px-3 py-2 text-xs font-semibold text-slate-700"
+                            >
+                                Áp dụng
+                            </button>
+                        </div>
+                    </div>
+                </SheetContent>
+            </Sheet>
         </div>
     );
 };

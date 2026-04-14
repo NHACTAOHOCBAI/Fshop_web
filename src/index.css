@@ -125,9 +125,27 @@
 
   body {
     @apply bg-background text-foreground;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 16px);
   }
 
   html {
     @apply font-sans;
+  }
+}
+
+@layer utilities {
+  @keyframes marquee-left {
+    0% {
+      transform: translateX(0);
+    }
+
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+
+  .animate-marquee-left {
+    animation: marquee-left 28s linear infinite;
+    will-change: transform;
   }
 }

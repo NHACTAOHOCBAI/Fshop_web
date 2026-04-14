@@ -20,13 +20,15 @@ const AdminLayout = () => {
             <SidebarProvider style={adminTheme}>
                 <AppSidebar />
                 <SidebarInset>
-                    <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12">
-                        <div className="flex items-center gap-2 px-4">
+                    <header className="flex h-14 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12 sm:h-16">
+                        <div className="flex items-center gap-2 px-3 sm:px-4">
                             <SidebarTrigger className="-ml-1" />
                         </div>
                     </header>
-                    <div className="flex flex-1 p-4 pt-0">
-                        <Outlet />
+                    <div className="flex w-full flex-1 overflow-x-hidden px-3 pb-3 pt-0 sm:px-4 sm:pb-4">
+                        <div className="min-w-0 w-full flex-1">
+                            <Outlet />
+                        </div>
                     </div>
                 </SidebarInset>
             </SidebarProvider>

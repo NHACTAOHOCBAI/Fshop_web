@@ -49,8 +49,8 @@ const OrderDetailAdminPage = () => {
     };
 
     return (
-        <div className="space-y-4 w-full">
-            <div className="flex items-center justify-between">
+        <div className="w-full space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <Button variant="ghost" size="sm" asChild>
                     <Link to="/admin/orders" className="gap-1.5">
                         <ArrowLeft className="size-4" />
@@ -69,7 +69,7 @@ const OrderDetailAdminPage = () => {
                         onValueChange={(value) => handleUpdateStatus(value as OrderStatus)}
                         disabled={isUpdatingStatus || allowedNextStatuses.length === 0}
                     >
-                        <SelectTrigger className="w-55">
+                        <SelectTrigger className="w-full sm:w-56">
                             <SelectValue placeholder="Cập nhật trạng thái" />
                         </SelectTrigger>
                         <SelectContent>

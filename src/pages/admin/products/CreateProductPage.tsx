@@ -126,10 +126,12 @@ export default function CreateProductPage() {
     };
 
     return (
-        <div className="space-y-4 w-full">
-            <div className="flex items-center justify-between">
+        <div className="w-full space-y-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                 <h1 className="text-2xl font-semibold">Tạo sản phẩm</h1>
-                <Button type="button" variant="outline" onClick={() => navigate("/admin/products")}>Quay lại danh sách sản phẩm</Button>
+                <Button type="button" variant="outline" className="w-full sm:w-auto" onClick={() => navigate("/admin/products")}>
+                    Quay lại danh sách sản phẩm
+                </Button>
             </div>
 
             <div className="space-y-4 rounded-lg border p-4">
@@ -146,7 +148,7 @@ export default function CreateProductPage() {
                             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={isPending} />
                         </div>
 
-                        <div className="grid gap-4 md:grid-cols-2">
+                        <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Thương hiệu</label>
                                 <Select value={brandId} onValueChange={setBrandId}>
@@ -190,12 +192,13 @@ export default function CreateProductPage() {
                     </div>
 
                     <div className="space-y-3 rounded-md border p-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <p className="text-sm font-semibold">Biến thể</p>
                             <Button
                                 type="button"
                                 variant="outline"
                                 size="sm"
+                                className="w-full sm:w-auto"
                                 onClick={() => setVariants((prev) => [...prev, emptyVariant()])}
                                 disabled={isPending}
                             >
@@ -223,7 +226,7 @@ export default function CreateProductPage() {
                                     )}
                                 </div>
 
-                                <div className="grid gap-3 md:grid-cols-2">
+                                <div className="grid gap-3 sm:grid-cols-2">
                                     <div className="space-y-2">
                                         <label className="text-sm font-medium">SKU</label>
                                         <Input
@@ -324,7 +327,7 @@ export default function CreateProductPage() {
                     </div>
                 </div>
 
-                <div className="flex flex-col gap-3">
+                <div className="flex flex-col gap-3 sm:flex-row">
                     <Button type="button" disabled={isPending} onClick={submit} className="w-full">
                         {isPending ? "Đang tạo..." : "Tạo"}
                     </Button>

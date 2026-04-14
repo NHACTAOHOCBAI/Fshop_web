@@ -1,7 +1,6 @@
 import {
   ArrowUpRight,
   CircleDollarSign,
-  Filter,
   Package,
   ShoppingBag,
   TriangleAlert,
@@ -232,7 +231,7 @@ const DashboardPage = () => {
           </div>
 
           <div className="overflow-x-auto">
-            <div className="min-w-[560px]">
+            <div className="min-w-full sm:min-w-[560px]">
               <svg viewBox={`0 0 ${chartWidth} ${chartHeight + 28}`} className="h-64 w-full">
                 <defs>
                   <linearGradient id="revenueLine" x1="0" y1="0" x2="0" y2="1">

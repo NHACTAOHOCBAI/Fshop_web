@@ -53,7 +53,7 @@ const OrdersPage = () => {
                 <p className="mt-1 text-sm text-slate-500">Theo dõi và cập nhật trạng thái đơn hàng từ API Orders.</p>
             </div>
 
-            <div >
+            <div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <Input
                         placeholder="Tìm theo ghi chú hoặc địa chỉ..."
@@ -62,7 +62,7 @@ const OrdersPage = () => {
                             setSearch(event.target.value);
                             setPage(1);
                         }}
-                        className="md:max-w-sm"
+                        className="w-full md:max-w-sm"
                     />
 
                     <Select
@@ -72,7 +72,7 @@ const OrdersPage = () => {
                             setPage(1);
                         }}
                     >
-                        <SelectTrigger className="w-full md:w-55">
+                        <SelectTrigger className="w-full md:w-56">
                             <SelectValue placeholder="Lọc theo trạng thái" />
                         </SelectTrigger>
                         <SelectContent>
@@ -131,7 +131,7 @@ const OrdersPage = () => {
                                         onValueChange={(value) => handleUpdateStatus(order.id, value as OrderStatus)}
                                         disabled={isUpdatingStatus || getAdminAllowedNextStatuses(order.status).length === 0}
                                     >
-                                        <SelectTrigger className="w-47.5">
+                                        <SelectTrigger className="w-full sm:w-48">
                                             <SelectValue placeholder="Cập nhật trạng thái" />
                                         </SelectTrigger>
                                         <SelectContent>

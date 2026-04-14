@@ -76,7 +76,7 @@ const NotificationsPage = () => {
 
     return (
         <div className="space-y-6">
-            <div className="flex items-start justify-between gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div>
                     <h1 className="text-xl font-bold text-slate-900">Thông báo</h1>
                     <p className="mt-1 text-sm text-slate-500">
@@ -88,7 +88,7 @@ const NotificationsPage = () => {
                         type="button"
                         onClick={handleMarkAllAsRead}
                         disabled={isMarkingAll}
-                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto"
                     >
                         {isMarkingAll ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCheck className="size-3.5" />}
                         Đánh dấu tất cả đã đọc
@@ -134,7 +134,7 @@ const NotificationsPage = () => {
                                 </div>
 
                                 <div className="min-w-0 flex-1">
-                                    <div className="flex items-start justify-between gap-2">
+                                    <div className="flex flex-col gap-1 sm:flex-row sm:items-start sm:justify-between sm:gap-2">
                                         <p
                                             className={cn(
                                                 "text-sm",
@@ -145,7 +145,7 @@ const NotificationsPage = () => {
                                         >
                                             {getNotificationTitle(notification)}
                                         </p>
-                                        <div className="flex shrink-0 items-center gap-2">
+                                        <div className="flex shrink-0 items-center gap-2 sm:self-start">
                                             <span className="text-xs text-slate-400">{formatDateTime(notification.createdAt)}</span>
                                             {!notification.isRead && <span className="size-2 rounded-full bg-primary" />}
                                         </div>

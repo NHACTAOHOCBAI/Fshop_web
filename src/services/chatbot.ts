@@ -9,15 +9,10 @@ import type {
 import type { ApiResponse } from "@/types/response";
 
 export const AI_CHATBOT_SESSIONS_QUERY_KEY = ["ai-chatbot", "sessions"] as const;
-
-export const aiChatbotMessagesQueryKey = (sessionId: number) =>
-    ["ai-chatbot", "messages", sessionId] as const;
+export const aiChatbotMessagesQueryKey = (sessionId: number) => ["ai-chatbot", "messages", sessionId] as const;
 
 export const createAiChatSession = async (payload?: CreateAiChatSessionPayload) => {
-    const { data } = await axiosInstance.post<ApiResponse<AiChatSession>>(
-        "/ai-chatbot/sessions",
-        payload ?? {}
-    );
+    const { data } = await axiosInstance.post<ApiResponse<AiChatSession>>("/ai-chatbot/sessions", payload ?? {});
     return data;
 };
 
@@ -27,27 +22,20 @@ export const listAiChatSessions = async () => {
 };
 
 export const getAiChatMessages = async (sessionId: number) => {
-    const { data } = await axiosInstance.get<ApiResponse<AiChatMessage[]>>(
-        `/ai-chatbot/sessions/${sessionId}/messages`
-    );
+    const { data } = await axiosInstance.get<ApiResponse<AiChatMessage[]>>(`/ai-chatbot/sessions/${sessionId}/messages`);
     return data;
 };
 
-export const sendAiChatMessage = async (
-    sessionId: number,
-    payload: SendAiChatMessagePayload
-) => {
+export const sendAiChatMessage = async (sessionId: number, payload: SendAiChatMessagePayload) => {
     const { data } = await axiosInstance.post<ApiResponse<SendAiChatMessageResponse>>(
         `/ai-chatbot/sessions/${sessionId}/messages`,
         payload,
-        { timeout: 50000 }
+        { timeout: 50_000 }
     );
     return data;
 };
 
 export const closeAiChatSession = async (sessionId: number) => {
-    const { data } = await axiosInstance.patch<ApiResponse<AiChatSession>>(
-        `/ai-chatbot/sessions/${sessionId}/close`
-    );
+    const { data } = await axiosInstance.patch<ApiResponse<AiChatSession>>(`/ai-chatbot/sessions/${sessionId}/close`);
     return data;
 };

@@ -400,7 +400,7 @@ const LivestreamsPage = () => {
 
                                 <div className="space-y-2">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Pin sản phẩm mới</p>
-                                    <div className="grid grid-cols-2 gap-2">
+                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
                                         <Input
                                             value={pinProductId}
                                             onChange={(e) => setPinProductId(e.target.value)}

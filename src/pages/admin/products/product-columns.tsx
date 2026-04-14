@@ -14,6 +14,8 @@ import type { Product } from "@/types/product";
 import { formatDateTime } from "@/lib/utils";
 
 export const productColumns = (
+    handleViewItem: (id: number) => void,
+    handleEditItem: (id: number) => void,
     handleDeleteItem: (id: number) => void
 ): ColumnDef<Product>[] => [
         {
@@ -65,8 +67,14 @@ export const productColumns = (
                                 <MoreHorizontal className="size-4" />
                             </Button>
                         </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
+                        <DropdownMenuContent align="end" className="w-52 max-w-[calc(100vw-1rem)]">
                             <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                            <DropdownMenuItem onClick={() => handleViewItem(item.id)}>
+                                Xem chi tiết
+                            </DropdownMenuItem>
+                            <DropdownMenuItem onClick={() => handleEditItem(item.id)}>
+                                Chỉnh sửa
+                            </DropdownMenuItem>
                             <DropdownMenuItem
                                 className="focus:text-red-500"
                                 onClick={() => handleDeleteItem(item.id)}

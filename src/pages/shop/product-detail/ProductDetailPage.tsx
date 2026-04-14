@@ -206,7 +206,7 @@ const ProductDetailPage = () => {
 
         setIsSendingToAdmin(true);
 
-        navigate("/my-account/profile", {
+        navigate("/my-account/support", {
             state: {
                 openChat: true,
                 prefillProduct: {
@@ -242,14 +242,14 @@ const ProductDetailPage = () => {
                 <section className="space-y-3">
                     <div className="overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
                         {allImages[selectedImage] ? (
-                            <img src={allImages[selectedImage]} alt={product.name} className="h-120 w-full object-cover" />
+                            <img src={allImages[selectedImage]} alt={product.name} className="h-[320px] w-full object-cover sm:h-[440px] lg:h-[560px]" />
                         ) : (
-                            <div className="flex h-120 w-full items-center justify-center text-slate-500">Không có ảnh</div>
+                            <div className="flex h-[320px] w-full items-center justify-center text-slate-500 sm:h-[440px] lg:h-[560px]">Không có ảnh</div>
                         )}
                     </div>
 
                     {allImages.length > 1 ? (
-                        <div className="grid grid-cols-5 gap-2">
+                        <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
                             {allImages.map((image, index) => (
                                 <button
                                     key={`${image}-${index}`}
@@ -333,11 +333,11 @@ const ProductDetailPage = () => {
                         </div>
                     </div>
 
-                    <div className="flex items-center gap-3">
-                        <QuantityStepper value={quantity} onChange={setQuantity} />
+                    <div className="flex flex-wrap items-center gap-3">
+                        <QuantityStepper value={quantity} onChange={setQuantity} className="w-full sm:w-auto" />
 
                         <Button
-                            className="h-10 flex-1 gap-2"
+                            className="h-10 w-full flex-1 gap-2 sm:w-auto"
                             disabled={!canAddToCart || !selectedCartVariant || !hasStock || isAddingToCart}
                             onClick={handleAddToCart}
                         >
@@ -354,6 +354,7 @@ const ProductDetailPage = () => {
                             type="button"
                             variant="outline"
                             size="icon"
+                            className="shrink-0"
                             disabled={isTogglingWishlist}
                             onClick={handleToggleWishlist}
                             aria-label={isInWishlist ? "Xóa khỏi yêu thích" : "Thêm vào yêu thích"}
@@ -375,9 +376,9 @@ const ProductDetailPage = () => {
                 </section>
             </div>
 
-            <section className="  border-slate-200 bg-white ">
+            <section className="border-slate-200 bg-white">
                 <div className="border-b border-slate-200">
-                    <div className="flex items-center gap-6 text-sm font-medium">
+                    <div className="flex flex-wrap items-center gap-6 text-sm font-medium">
                         <button
                             type="button"
                             onClick={() => setActiveTab("description")}

@@ -1,5 +1,5 @@
 import axiosInstance from "@/lib/axios";
-import type { CreateProductPayload, Product, ImageSearchResult, VoiceSearchResponse } from "@/types/product";
+import type { CreateProductPayload, ImageSearchResult, Product, UpdateProductFullPayload, UpdateProductPayload, VoiceSearchResponse } from "@/types/product";
 import type { QueryParams } from "@/types/query";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
 
@@ -51,6 +51,60 @@ export const createProduct = async (payload: CreateProductPayload) => {
             "Content-Type": "multipart/form-data",
         },
     });
+};
+
+export const updateProduct = async ({ id, payload }: { id: number; payload: UpdateProductPayload }) => {
+    const { data } = await axiosInstance.patch<ApiResponse<Product>>(`/products/${id}`, payload);
+    return data;
+};
+
+export const updateProductFull = async ({ id, payload, productImages = [], variantImages = [] }: UpdateProductFullPayload) => {
+    const formData = new FormData();
+
+    if (payload.name !== undefined) {
+        formData.append("name", payload.name);
+    }
+    if (payload.description !== undefined) {
+        formData.append("description", payload.description);
+    }
+    if (payload.brandId !== undefined) {
+        formData.append("brandId", String(payload.brandId));
+    }
+    if (payload.categoryId !== undefined) {
+        formData.append("categoryId", String(payload.categoryId));
+    }
+    if (payload.price !== undefined) {
+        formData.append("price", String(payload.price));
+    }
+    if (payload.isActive !== undefined) {
+        formData.append("isActive", String(payload.isActive));
+    }
+
+    if (payload.keepImageIds) {
+        formData.append("keepImageIds", JSON.stringify(payload.keepImageIds));
+    }
+    if (payload.removeVariantIds) {
+        formData.append("removeVariantIds", JSON.stringify(payload.removeVariantIds));
+    }
+    if (payload.variants) {
+        formData.append("variants", JSON.stringify(payload.variants));
+    }
+
+    productImages.forEach((file) => {
+        formData.append("productImages", file);
+    });
+
+    variantImages.forEach((file) => {
+        formData.append("variantImages", file);
+    });
+
+    const { data } = await axiosInstance.patch<ApiResponse<Product>>(`/products/${id}/full`, formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+
+    return data;
 };
 
 export const searchByImage = async (file: File, topK: number = 12) => {

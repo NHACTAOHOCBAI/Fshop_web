@@ -423,9 +423,9 @@ const CheckoutPage = () => {
                                 return (
                                     <article
                                         key={`${item.cartItemId}-${item.variantId}`}
-                                        className="flex items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4"
+                                        className="flex flex-col gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:flex-row sm:items-center"
                                     >
-                                        <div className="size-20 shrink-0 overflow-hidden rounded-xl bg-slate-100">
+                                        <div className="size-20 shrink-0 self-start overflow-hidden rounded-xl bg-slate-100 sm:self-center">
                                             {item.imageUrl ? (
                                                 <img
                                                     src={item.imageUrl}
@@ -462,7 +462,7 @@ const CheckoutPage = () => {
                                             </div>
                                         </div>
 
-                                        <div className="w-24 text-right text-sm font-bold text-slate-900">
+                                        <div className="w-full text-left text-sm font-bold text-slate-900 sm:w-24 sm:text-right">
                                             {formatCurrency(item.unitPrice * item.quantity)}
                                         </div>
                                     </article>
@@ -639,7 +639,7 @@ const CheckoutPage = () => {
                     </article>
                 </section>
 
-                <aside className="h-fit p-5">
+                <aside className="h-fit rounded-2xl border border-slate-200 bg-white p-5">
                     <h2 className="mb-4 flex items-center gap-2 text-base font-semibold text-slate-900">
                         <Wallet className="size-4" />
                         Tóm tắt đơn hàng

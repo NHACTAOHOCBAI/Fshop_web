@@ -1,7 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect } from "react";
 import { useForm } from "react-hook-form";
-import thumbnail from "@/assets/thumbnail.png";
 import { EyeOff } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -64,10 +63,12 @@ export default function LoginPage() {
     };
 
     return (
-        <main className="min-h-screen py-1 flex px-32">
-            <div className=" flex-1 flex flex-col items-center justify-center">
-                <div>
-                    <h1 className="text-4xl font-semibold tracking-tight text-slate-900">Chào mừng trở lại</h1>
+        <main className="relative min-h-screen overflow-hidden bg-[radial-gradient(circle_at_top,_#e2f0ff_0%,_#f8fbff_38%,_#ffffff_100%)] px-4 py-6 md:px-6">
+            <div className="pointer-events-none absolute -left-20 top-24 h-64 w-64 rounded-full bg-sky-200/50 blur-3xl animate-pulse" />
+            <div className="pointer-events-none absolute -right-24 bottom-14 h-72 w-72 rounded-full bg-cyan-100/60 blur-3xl animate-pulse [animation-delay:700ms]" />
+            <div className="relative z-10 mx-auto flex min-h-[calc(100vh-3rem)] w-full max-w-md items-center">
+                <div className="w-full max-w-md rounded-2xl border border-slate-200 bg-white p-6 shadow-sm md:p-8">
+                    <h1 className="text-2xl font-semibold tracking-tight text-slate-900">Chào mừng trở lại</h1>
                     <p className="mt-3 max-w-sm text-sm leading-6 text-slate-600">
                         Hôm nay là ngày mới. Đăng nhập để bắt đầu quản lý hệ thống của bạn.
                     </p>
@@ -86,9 +87,12 @@ export default function LoginPage() {
                         <div className="space-y-2">
                             <div className="flex items-center justify-between">
                                 <label className="text-sm font-medium ">Mật khẩu</label>
-                                <button type="button" className="text-sm text-blue-600 hover:underline">
+                                <Link
+                                    to="/forgot-password"
+                                    className="text-sm text-blue-600 hover:underline"
+                                >
                                     Quên mật khẩu?
-                                </button>
+                                </Link>
                             </div>
                             <div className="relative">
                                 <Input
@@ -130,10 +134,6 @@ export default function LoginPage() {
                         </Link>
                     </p>
                 </div>
-
-            </div>
-            <div className=" flex-1 flex flex-col items-center justify-center">
-                <img className="h-96" src={thumbnail} alt="image" />
             </div>
         </main>
     );
