@@ -25,7 +25,6 @@ type VariantDraft = {
     sku: string;
     colorId: string;
     sizeId: string;
-    price: string;
     image: File[];
 };
 
@@ -33,7 +32,6 @@ const emptyVariant = (): VariantDraft => ({
     sku: "",
     colorId: "",
     sizeId: "",
-    price: "",
     image: [],
 });
 
@@ -43,6 +41,7 @@ export default function CreateProductPage() {
 
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [price, setPrice] = useState("");
     const [brandId, setBrandId] = useState("");
     const [categoryId, setCategoryId] = useState("");
     const [productImages, setProductImages] = useState<File[]>([]);
@@ -62,7 +61,7 @@ export default function CreateProductPage() {
         const payload: CreateProductVariantPayload[] = [];
 
         for (const variant of variants) {
-            if (!variant.colorId || !variant.sizeId || !variant.price || variant.image.length === 0) {
+            if (!variant.colorId || !variant.sizeId || variant.image.length === 0) {
                 return null;
             }
 
@@ -70,7 +69,6 @@ export default function CreateProductPage() {
                 sku: variant.sku || undefined,
                 colorId: Number(variant.colorId),
                 sizeId: Number(variant.sizeId),
-                price: Number(variant.price),
                 image: variant.image[0],
             });
         }
@@ -81,6 +79,7 @@ export default function CreateProductPage() {
     const resetForm = () => {
         setName("");
         setDescription("");
+        setPrice("");
         setBrandId("");
         setCategoryId("");
         setProductImages([]);
@@ -90,6 +89,11 @@ export default function CreateProductPage() {
     const submit = () => {
         if (!name.trim()) {
             toast.error("Tên sản phẩm là bắt buộc");
+            return;
+        }
+
+        if (!price || Number(price) <= 0) {
+            toast.error("Giá sản phẩm là bắt buộc");
             return;
         }
 
@@ -109,6 +113,7 @@ export default function CreateProductPage() {
                 description: description || undefined,
                 brandId: Number(brandId),
                 categoryId: Number(categoryId),
+                price: Number(price),
                 productImages,
                 variants: variantPayload,
             },
@@ -146,6 +151,11 @@ export default function CreateProductPage() {
                         <div className="space-y-2">
                             <label className="text-sm font-medium">Mô tả</label>
                             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={isPending} />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Giá (VNĐ)</label>
+                            <Input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} disabled={isPending} />
                         </div>
 
                         <div className="grid gap-4 sm:grid-cols-2">
@@ -235,22 +245,6 @@ export default function CreateProductPage() {
                                                 setVariants((prev) => {
                                                     const next = [...prev];
                                                     next[index].sku = e.target.value;
-                                                    return next;
-                                                })
-                                            }
-                                            disabled={isPending}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Giá</label>
-                                        <Input
-                                            type="number"
-                                            value={variant.price}
-                                            onChange={(e) =>
-                                                setVariants((prev) => {
-                                                    const next = [...prev];
-                                                    next[index].price = e.target.value;
                                                     return next;
                                                 })
                                             }

@@ -1,4 +1,4 @@
-import { ChevronLeft, Heart, Loader2, MessageCircle, ShoppingCart, Star } from "lucide-react";
+import { ChevronLeft, Glasses, Heart, Loader2, MessageCircle, ShoppingCart, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import QuantityStepper from "@/components/ui/quantity-stepper";
 import { useColors, useSizes } from "@/hooks/useAttributes";
 import { useAddToCart } from "@/hooks/useCart";
-import { useProductById, useRelatedProducts } from "@/hooks/useProducts";
+import { useProductById, useProductTryonAssets, useRelatedProducts } from "@/hooks/useProducts";
 import { useReviewSummary, useReviewsByProduct } from "@/hooks/useReviews";
 import { useToggleWishlist, useWishlists } from "@/hooks/useWishlists";
 import { extractApiErrorMessage } from "@/lib/api-error";
@@ -39,6 +39,7 @@ const ProductDetailPage = () => {
 
     const productId = Number(params.productId);
     const productQuery = useProductById(productId, Number.isFinite(productId));
+    const tryonAssetsQuery = useProductTryonAssets(productId, Number.isFinite(productId) && productId > 0);
     const reviewsQuery = useReviewsByProduct(productId, Number.isFinite(productId) && productId > 0);
     const reviewSummaryQuery = useReviewSummary(productId, Number.isFinite(productId) && productId > 0);
     const colorsQuery = useColors({ page: 1, limit: 200, sortBy: "name", sortOrder: "ASC" });
@@ -47,6 +48,7 @@ const ProductDetailPage = () => {
     const { data: wishlistData } = useWishlists();
     const { mutate: toggleWishlist, isPending: isTogglingWishlist } = useToggleWishlist();
     const product = productQuery.data?.data;
+    const tryonAssets = tryonAssetsQuery.data?.data ?? [];
     const hasToken = Boolean(authStorage.getAccessToken());
 
     const colorMap = useMemo(() => {
@@ -109,7 +111,7 @@ const ProductDetailPage = () => {
                 (variant) => variant.colorId === selectedColorId && variant.sizeId === selectedSizeId
             ) ?? null
         );
-    }, [product?.variants, selectedColorId, selectedSizeId]);
+    }, [product, selectedColorId, selectedSizeId]);
 
     const totalStockQuantity = useMemo(() => {
         const variants = product?.variants ?? [];
@@ -373,6 +375,17 @@ const ProductDetailPage = () => {
                         {isSendingToAdmin ? <Loader2 className="size-4 animate-spin" /> : <MessageCircle className="size-4" />}
                         {isSendingToAdmin ? "Đang gửi cho admin..." : "Gửi sản phẩm này cho admin"}
                     </Button>
+                    {tryonAssets.length > 0 ? (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full gap-2"
+                            onClick={() => navigate(`/${department}/products/${product.id}/try-on`)}
+                        >
+                            <Glasses className="size-4" />
+                            Thử đồ ảo
+                        </Button>
+                    ) : null}
                 </section>
             </div>
 

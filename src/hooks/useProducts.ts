@@ -1,6 +1,17 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-import { createProduct, deleteProduct, getProductById, getProducts, updateProduct, updateProductFull } from "@/services/products";
+import {
+    createProduct,
+    createProductTryonAsset,
+    deleteProduct,
+    deleteProductTryonAsset,
+    getProductById,
+    getProducts,
+    getProductTryonAssets,
+    updateProduct,
+    updateProductFull,
+    updateProductTryonAsset,
+} from "@/services/products";
 import type { QueryParams } from "@/types/query";
 
 export const useProducts = (params?: QueryParams) => {
@@ -15,6 +26,14 @@ export const useProductById = (id: number, enabled = true) => {
         queryKey: ["product", id],
         queryFn: () => getProductById(id),
         enabled: enabled && Number.isFinite(id) && id > 0,
+    });
+};
+
+export const useProductTryonAssets = (productId: number, enabled = true) => {
+    return useQuery({
+        queryKey: ["product-tryon-assets", productId],
+        queryFn: () => getProductTryonAssets(productId),
+        enabled: enabled && Number.isFinite(productId) && productId > 0,
     });
 };
 
@@ -88,6 +107,39 @@ export const useUpdateProductFull = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["products"] });
             queryClient.invalidateQueries({ queryKey: ["product", variables.id] });
+        },
+    });
+};
+
+export const useCreateProductTryonAsset = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: createProductTryonAsset,
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["product-tryon-assets", variables.productId] });
+        },
+    });
+};
+
+export const useUpdateProductTryonAsset = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: updateProductTryonAsset,
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["product-tryon-assets", variables.productId] });
+        },
+    });
+};
+
+export const useDeleteProductTryonAsset = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: deleteProductTryonAsset,
+        onSuccess: (_, variables) => {
+            queryClient.invalidateQueries({ queryKey: ["product-tryon-assets", variables.productId] });
         },
     });
 };
