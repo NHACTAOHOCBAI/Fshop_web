@@ -73,12 +73,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   const unreadNotificationCount = unreadNotificationsData?.meta?.pagination?.total ?? 0
 
+
   const authUser = authStorage.getUser<User>()
   const sidebarUser = {
     name: authUser?.fullName || authUser?.email || "Người dùng",
     email: authUser?.email || "",
     avatar: authUser?.avatar || "",
   }
+
+  // Chỉ cho admin thấy menu admin
+  const isAdmin = authUser?.role === "admin"
 
   const isItemActive = (url: string) => {
     return location.pathname === url || location.pathname.startsWith(`${url}/`)
@@ -104,19 +108,23 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Quản trị</SidebarGroupLabel>
-          <SidebarMenu className="gap-1">
-            {adminMenuItems.map((item) => (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild isActive={isItemActive(item.url)} tooltip={item.title}>
-                  <Link to={item.url}>
-                    {item.icon}
-                    <span>{item.title}</span>
-                  </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            ))}
-          </SidebarMenu>
+          {isAdmin && (
+            <>
+              <SidebarGroupLabel>Quản trị</SidebarGroupLabel>
+              <SidebarMenu className="gap-1">
+                {adminMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isItemActive(item.url)} tooltip={item.title}>
+                      <Link to={item.url}>
+                        {item.icon}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </>
+          )}
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>

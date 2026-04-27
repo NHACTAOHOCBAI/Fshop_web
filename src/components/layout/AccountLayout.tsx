@@ -27,7 +27,7 @@ const sidebarItems = [
     { to: "/my-account/orders", icon: Package, label: "Đơn hàng của tôi" },
     { to: "/my-account/wishlists", icon: Heart, label: "Danh sách yêu thích" },
     { to: "/my-account/notifications", icon: Bell, label: "Thông báo" },
-    { to: "/my-account/support", icon: MessageCircle, label: "Chat" },
+    { to: "/my-account/support", icon: MessageCircle, label: "Nhắn tin" },
 ];
 
 const AccountLayout = () => {
@@ -108,7 +108,7 @@ const AccountLayout = () => {
                     className="flex items-center gap-3 rounded-xl px-3 py-2.5 text-left text-sm font-medium text-slate-600 transition-colors hover:bg-slate-100 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60"
                 >
                     <LogOutIcon className="size-4 shrink-0" />
-                    {isLoggingOut ? "Đang đăng xuất..." : "Logout"}
+                    {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
                 </button>
             </nav>
         </>
