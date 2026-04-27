@@ -17,7 +17,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { useColors, useSizes } from "@/hooks/useAttributes";
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
-import { useProductById, useUpdateProductFull } from "@/hooks/useProducts";
+import {
+    useCreateProductTryonAsset,
+    useDeleteProductTryonAsset,
+    useProductById,
+    useProductTryonAssets,
+    useUpdateProductFull,
+    useUpdateProductTryonAsset,
+} from "@/hooks/useProducts";
+import type { ProductTryonAssetType } from "@/types/product";
 
 type ExistingImageState = {
     id: number;
@@ -38,6 +46,33 @@ type VariantEditorState = {
     isNew: boolean;
 };
 
+type TryonAssetEditorState = {
+    id: number;
+    assetType: ProductTryonAssetType;
+    displayName: string;
+    deeparEffectUrl: string;
+    thumbnailUrl: string;
+    variantId: string;
+    isActive: "true" | "false";
+};
+
+type TryonAssetDraftState = Omit<TryonAssetEditorState, "id">;
+
+const tryonAssetTypes: Array<{ value: ProductTryonAssetType; label: string }> = [
+    { value: "glasses", label: "Glasses" },
+    { value: "hat", label: "Hat" },
+    { value: "accessory", label: "Accessory" },
+];
+
+const createEmptyTryonDraft = (): TryonAssetDraftState => ({
+    assetType: "glasses",
+    displayName: "",
+    deeparEffectUrl: "",
+    thumbnailUrl: "",
+    variantId: "",
+    isActive: "true",
+});
+
 const createEmptyVariant = (): VariantEditorState => ({
     key: `new-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     sku: "",
@@ -55,7 +90,11 @@ export default function EditProductPage() {
     const id = Number(productId);
 
     const { data: productDetail, isLoading, isError } = useProductById(id, Number.isFinite(id) && id > 0);
+    const tryonAssetsQuery = useProductTryonAssets(id, Number.isFinite(id) && id > 0);
     const { mutate: updateProductFull, isPending } = useUpdateProductFull();
+    const { mutate: createTryonAsset, isPending: isCreatingTryonAsset } = useCreateProductTryonAsset();
+    const { mutate: updateTryonAsset, isPending: isUpdatingTryonAsset } = useUpdateProductTryonAsset();
+    const { mutate: deleteTryonAsset, isPending: isDeletingTryonAsset } = useDeleteProductTryonAsset();
 
     const { data: brandsData } = useBrands({ page: 1, limit: 100 });
     const { data: categoriesData } = useCategories({ page: 1, limit: 100 });
@@ -77,6 +116,8 @@ export default function EditProductPage() {
     const [existingImages, setExistingImages] = useState<ExistingImageState[]>([]);
     const [newGalleryImages, setNewGalleryImages] = useState<File[]>([]);
     const [variants, setVariants] = useState<VariantEditorState[]>([]);
+    const [tryonDraft, setTryonDraft] = useState<TryonAssetDraftState>(createEmptyTryonDraft);
+    const [tryonEditors, setTryonEditors] = useState<TryonAssetEditorState[]>([]);
 
     useEffect(() => {
         if (!product) {
@@ -112,6 +153,112 @@ export default function EditProductPage() {
             }))
         );
     }, [product]);
+
+    useEffect(() => {
+        const assets = tryonAssetsQuery.data?.data ?? [];
+        setTryonEditors(
+            assets.map((asset) => ({
+                id: asset.id,
+                assetType: asset.assetType,
+                displayName: asset.displayName,
+                deeparEffectUrl: asset.deeparEffectUrl,
+                thumbnailUrl: asset.thumbnailUrl ?? "",
+                variantId: asset.variantId ? String(asset.variantId) : "",
+                isActive: asset.isActive ? "true" : "false",
+            }))
+        );
+    }, [tryonAssetsQuery.data?.data]);
+
+    const updateTryonEditor = (assetId: number, updater: (asset: TryonAssetEditorState) => TryonAssetEditorState) => {
+        setTryonEditors((prev) => prev.map((item) => (item.id === assetId ? updater(item) : item)));
+    };
+
+    const activeVariantOptions = variants.filter((variant) => !variant.removed && variant.id);
+    const isTryonPending = isCreatingTryonAsset || isUpdatingTryonAsset || isDeletingTryonAsset;
+
+    const validateTryonAsset = (asset: TryonAssetDraftState | TryonAssetEditorState) => {
+        if (!asset.displayName.trim()) {
+            toast.error("AR asset needs a display name");
+            return false;
+        }
+
+        if (!asset.deeparEffectUrl.trim()) {
+            toast.error("DeepAR effect URL is required");
+            return false;
+        }
+
+        try {
+            new URL(asset.deeparEffectUrl.trim());
+            if (asset.thumbnailUrl.trim()) {
+                new URL(asset.thumbnailUrl.trim());
+            }
+        } catch {
+            toast.error("AR asset URLs must be valid URLs");
+            return false;
+        }
+
+        return true;
+    };
+
+    const submitTryonDraft = () => {
+        if (!validateTryonAsset(tryonDraft)) {
+            return;
+        }
+
+        createTryonAsset(
+            {
+                productId: id,
+                assetType: tryonDraft.assetType,
+                displayName: tryonDraft.displayName.trim(),
+                deeparEffectUrl: tryonDraft.deeparEffectUrl.trim(),
+                thumbnailUrl: tryonDraft.thumbnailUrl.trim() || null,
+                variantId: tryonDraft.variantId ? Number(tryonDraft.variantId) : null,
+                isActive: tryonDraft.isActive === "true",
+            },
+            {
+                onSuccess: () => {
+                    toast.success("AR asset created");
+                    setTryonDraft(createEmptyTryonDraft());
+                },
+                onError: (error) => {
+                    toast.error(error.message || "Could not create AR asset");
+                },
+            }
+        );
+    };
+
+    const submitTryonEditor = (asset: TryonAssetEditorState) => {
+        if (!validateTryonAsset(asset)) {
+            return;
+        }
+
+        updateTryonAsset(
+            {
+                productId: id,
+                assetId: asset.id,
+                assetType: asset.assetType,
+                displayName: asset.displayName.trim(),
+                deeparEffectUrl: asset.deeparEffectUrl.trim(),
+                thumbnailUrl: asset.thumbnailUrl.trim() || null,
+                variantId: asset.variantId ? Number(asset.variantId) : null,
+                isActive: asset.isActive === "true",
+            },
+            {
+                onSuccess: () => toast.success("AR asset updated"),
+                onError: (error) => toast.error(error.message || "Could not update AR asset"),
+            }
+        );
+    };
+
+    const removeTryonAsset = (assetId: number) => {
+        deleteTryonAsset(
+            { productId: id, assetId },
+            {
+                onSuccess: () => toast.success("AR asset disabled"),
+                onError: (error) => toast.error(error.message || "Could not disable AR asset"),
+            }
+        );
+    };
 
     const updateVariant = (key: string, updater: (variant: VariantEditorState) => VariantEditorState) => {
         setVariants((prev) => prev.map((item) => (item.key === key ? updater(item) : item)));
@@ -506,6 +653,206 @@ export default function EditProductPage() {
 
                         <p className="text-xs text-slate-500">Bạn có thể thêm, sửa, xóa mềm biến thể và thay đổi ảnh của từng biến thể ngay tại đây.</p>
                     </div>
+                </div>
+
+                <div className="space-y-4 rounded-md border p-4">
+                    <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                            <p className="text-sm font-semibold">AR Try-On assets</p>
+                            <p className="text-xs text-slate-500">DeepAR effect URLs for glasses, hats, and accessories.</p>
+                        </div>
+                    </div>
+
+                    <div className="grid gap-3 rounded-md border bg-slate-50/60 p-3 lg:grid-cols-[160px_1fr_1fr_1fr_140px_auto]">
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-600">Type</label>
+                            <Select
+                                value={tryonDraft.assetType}
+                                onValueChange={(value) => setTryonDraft((prev) => ({ ...prev, assetType: value as ProductTryonAssetType }))}
+                                disabled={isTryonPending}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Type" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {tryonAssetTypes.map((item) => (
+                                        <SelectItem key={item.value} value={item.value}>
+                                            {item.label}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-600">Display name</label>
+                            <Input
+                                value={tryonDraft.displayName}
+                                onChange={(event) => setTryonDraft((prev) => ({ ...prev, displayName: event.target.value }))}
+                                disabled={isTryonPending}
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-600">DeepAR effect URL</label>
+                            <Input
+                                value={tryonDraft.deeparEffectUrl}
+                                onChange={(event) => setTryonDraft((prev) => ({ ...prev, deeparEffectUrl: event.target.value }))}
+                                disabled={isTryonPending}
+                                placeholder="https://..."
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-600">Thumbnail URL</label>
+                            <Input
+                                value={tryonDraft.thumbnailUrl}
+                                onChange={(event) => setTryonDraft((prev) => ({ ...prev, thumbnailUrl: event.target.value }))}
+                                disabled={isTryonPending}
+                                placeholder="https://..."
+                            />
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-xs font-medium text-slate-600">Variant</label>
+                            <Select
+                                value={tryonDraft.variantId || "none"}
+                                onValueChange={(value) => setTryonDraft((prev) => ({ ...prev, variantId: value === "none" ? "" : value }))}
+                                disabled={isTryonPending}
+                            >
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Variant" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="none">Product</SelectItem>
+                                    {activeVariantOptions.map((variant) => (
+                                        <SelectItem key={variant.id} value={String(variant.id)}>
+                                            #{variant.id} {variant.sku || ""}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+
+                        <div className="flex items-end">
+                            <Button type="button" className="w-full" disabled={isTryonPending} onClick={submitTryonDraft}>
+                                Add
+                            </Button>
+                        </div>
+                    </div>
+
+                    {tryonAssetsQuery.isLoading ? (
+                        <div className="flex items-center text-sm text-slate-500">
+                            <Loader2 className="mr-2 size-4 animate-spin" />
+                            Loading AR assets...
+                        </div>
+                    ) : tryonEditors.length === 0 ? (
+                        <p className="rounded-md border border-dashed border-slate-200 p-4 text-sm text-slate-500">
+                            No AR try-on assets yet.
+                        </p>
+                    ) : (
+                        <div className="space-y-3">
+                            {tryonEditors.map((asset) => (
+                                <div key={asset.id} className="grid gap-3 rounded-md border p-3 lg:grid-cols-[160px_1fr_1fr_1fr_140px_120px]">
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-slate-600">Type</label>
+                                        <Select
+                                            value={asset.assetType}
+                                            onValueChange={(value) => updateTryonEditor(asset.id, (item) => ({ ...item, assetType: value as ProductTryonAssetType }))}
+                                            disabled={isTryonPending}
+                                        >
+                                            <SelectTrigger>
+                                                <SelectValue placeholder="Type" />
+                                            </SelectTrigger>
+                                            <SelectContent>
+                                                {tryonAssetTypes.map((item) => (
+                                                    <SelectItem key={item.value} value={item.value}>
+                                                        {item.label}
+                                                    </SelectItem>
+                                                ))}
+                                            </SelectContent>
+                                        </Select>
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-slate-600">Display name</label>
+                                        <Input
+                                            value={asset.displayName}
+                                            onChange={(event) => updateTryonEditor(asset.id, (item) => ({ ...item, displayName: event.target.value }))}
+                                            disabled={isTryonPending}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-slate-600">DeepAR effect URL</label>
+                                        <Input
+                                            value={asset.deeparEffectUrl}
+                                            onChange={(event) => updateTryonEditor(asset.id, (item) => ({ ...item, deeparEffectUrl: event.target.value }))}
+                                            disabled={isTryonPending}
+                                        />
+                                    </div>
+
+                                    <div className="space-y-2">
+                                        <label className="text-xs font-medium text-slate-600">Thumbnail URL</label>
+                                        <Input
+                                            value={asset.thumbnailUrl}
+                                            onChange={(event) => updateTryonEditor(asset.id, (item) => ({ ...item, thumbnailUrl: event.target.value }))}
+                                            disabled={isTryonPending}
+                                        />
+                                    </div>
+
+                                    <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-medium text-slate-600">Variant</label>
+                                            <Select
+                                                value={asset.variantId || "none"}
+                                                onValueChange={(value) => updateTryonEditor(asset.id, (item) => ({ ...item, variantId: value === "none" ? "" : value }))}
+                                                disabled={isTryonPending}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Variant" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="none">Product</SelectItem>
+                                                    {activeVariantOptions.map((variant) => (
+                                                        <SelectItem key={variant.id} value={String(variant.id)}>
+                                                            #{variant.id} {variant.sku || ""}
+                                                        </SelectItem>
+                                                    ))}
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+
+                                        <div className="space-y-2">
+                                            <label className="text-xs font-medium text-slate-600">Status</label>
+                                            <Select
+                                                value={asset.isActive}
+                                                onValueChange={(value) => updateTryonEditor(asset.id, (item) => ({ ...item, isActive: value as "true" | "false" }))}
+                                                disabled={isTryonPending}
+                                            >
+                                                <SelectTrigger>
+                                                    <SelectValue placeholder="Status" />
+                                                </SelectTrigger>
+                                                <SelectContent>
+                                                    <SelectItem value="true">Active</SelectItem>
+                                                    <SelectItem value="false">Hidden</SelectItem>
+                                                </SelectContent>
+                                            </Select>
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col justify-end gap-2">
+                                        <Button type="button" disabled={isTryonPending} onClick={() => submitTryonEditor(asset)}>
+                                            Save
+                                        </Button>
+                                        <Button type="button" variant="destructive" disabled={isTryonPending} onClick={() => removeTryonAsset(asset.id)}>
+                                            Disable
+                                        </Button>
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
                 <div className="flex flex-col gap-3 sm:flex-row">

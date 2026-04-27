@@ -65,6 +65,8 @@ const ClientLayout = () => {
                         ? "tài khoản"
                         : pathname.startsWith("/community")
                             ? "community"
+                        : pathname.startsWith("/livestreams")
+                            ? "live"
                         : pathname.startsWith("/checkout")
                             ? "thanh toán"
                             : pathname.startsWith("/cart")

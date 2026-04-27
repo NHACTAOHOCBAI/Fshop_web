@@ -52,11 +52,47 @@ export type Product = {
     variants?: ProductVariant[];
 };
 
+export type ProductTryonAssetType = "glasses" | "hat" | "accessory";
+
+export type ProductTryonAsset = {
+    id: number;
+    productId: number;
+    variantId?: number | null;
+    assetType: ProductTryonAssetType;
+    displayName: string;
+    deeparEffectUrl: string;
+    thumbnailUrl?: string | null;
+    isActive: boolean;
+    createdAt: string;
+    updatedAt: string;
+    variant?: ProductVariant | null;
+};
+
+export type CreateProductTryonAssetPayload = {
+    productId: number;
+    variantId?: number | null;
+    assetType: ProductTryonAssetType;
+    displayName: string;
+    deeparEffectUrl: string;
+    thumbnailUrl?: string | null;
+    isActive?: boolean;
+};
+
+export type UpdateProductTryonAssetPayload = {
+    productId: number;
+    assetId: number;
+    variantId?: number | null;
+    assetType?: ProductTryonAssetType;
+    displayName?: string;
+    deeparEffectUrl?: string;
+    thumbnailUrl?: string | null;
+    isActive?: boolean;
+};
+
 export type CreateProductVariantPayload = {
     sku?: string;
     colorId: number;
     sizeId: number;
-    price: number;
     image: File;
 };
 
@@ -65,6 +101,7 @@ export type CreateProductPayload = {
     description?: string;
     brandId: number;
     categoryId: number;
+    price: number;
     productImages: File[];
     variants: CreateProductVariantPayload[];
 };

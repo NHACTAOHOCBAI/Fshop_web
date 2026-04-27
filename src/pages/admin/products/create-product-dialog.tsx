@@ -36,7 +36,6 @@ type VariantDraft = {
     sku: string;
     colorId: string;
     sizeId: string;
-    price: string;
     image: File[];
 };
 
@@ -44,7 +43,6 @@ const emptyVariant = (): VariantDraft => ({
     sku: "",
     colorId: "",
     sizeId: "",
-    price: "",
     image: [],
 });
 
@@ -53,6 +51,7 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
 
     const [name, setName] = useState("");
     const [description, setDescription] = useState("");
+    const [price, setPrice] = useState("");
     const [brandId, setBrandId] = useState("");
     const [categoryId, setCategoryId] = useState("");
     const [productImages, setProductImages] = useState<File[]>([]);
@@ -72,7 +71,7 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
         const payload: CreateProductVariantPayload[] = [];
 
         for (const variant of variants) {
-            if (!variant.colorId || !variant.sizeId || !variant.price || variant.image.length === 0) {
+            if (!variant.colorId || !variant.sizeId || variant.image.length === 0) {
                 return null;
             }
 
@@ -80,7 +79,6 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
                 sku: variant.sku || undefined,
                 colorId: Number(variant.colorId),
                 sizeId: Number(variant.sizeId),
-                price: Number(variant.price),
                 image: variant.image[0],
             });
         }
@@ -91,6 +89,7 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
     const resetForm = () => {
         setName("");
         setDescription("");
+        setPrice("");
         setBrandId("");
         setCategoryId("");
         setProductImages([]);
@@ -100,6 +99,11 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
     const submit = () => {
         if (!name.trim()) {
             toast.error("Product name is required");
+            return;
+        }
+
+        if (!price || Number(price) <= 0) {
+            toast.error("Price is required");
             return;
         }
 
@@ -119,6 +123,7 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
                 description: description || undefined,
                 brandId: Number(brandId),
                 categoryId: Number(categoryId),
+                price: Number(price),
                 productImages,
                 variants: variantPayload,
             },
@@ -154,6 +159,11 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Description</label>
                         <Textarea value={description} onChange={(e) => setDescription(e.target.value)} disabled={isPending} />
+                    </div>
+
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Price (VNĐ)</label>
+                        <Input type="number" min={0} value={price} onChange={(e) => setPrice(e.target.value)} disabled={isPending} />
                     </div>
 
                     <div className="grid gap-4 sm:grid-cols-2">
@@ -241,22 +251,6 @@ export function CreateProductDialog({ open, setOpen }: CreateProductDialogProps)
                                                 setVariants((prev) => {
                                                     const next = [...prev];
                                                     next[index].sku = e.target.value;
-                                                    return next;
-                                                })
-                                            }
-                                            disabled={isPending}
-                                        />
-                                    </div>
-
-                                    <div className="space-y-2">
-                                        <label className="text-sm font-medium">Price</label>
-                                        <Input
-                                            type="number"
-                                            value={variant.price}
-                                            onChange={(e) =>
-                                                setVariants((prev) => {
-                                                    const next = [...prev];
-                                                    next[index].price = e.target.value;
                                                     return next;
                                                 })
                                             }

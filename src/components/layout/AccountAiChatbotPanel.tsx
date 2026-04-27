@@ -87,7 +87,7 @@ const AccountAiChatbotPanel = () => {
         setDraft("");
 
         sendMessageMutation.mutate(
-            { sessionId, payload: { message: content } },
+            { sessionId, message: content },
             {
                 onSuccess: () => {
                     setPendingMessage(null);

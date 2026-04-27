@@ -1,5 +1,15 @@
 import axiosInstance from "@/lib/axios";
-import type { CreateProductPayload, ImageSearchResult, Product, UpdateProductFullPayload, UpdateProductPayload, VoiceSearchResponse } from "@/types/product";
+import type {
+    CreateProductPayload,
+    CreateProductTryonAssetPayload,
+    ImageSearchResult,
+    Product,
+    ProductTryonAsset,
+    UpdateProductFullPayload,
+    UpdateProductPayload,
+    UpdateProductTryonAssetPayload,
+    VoiceSearchResponse,
+} from "@/types/product";
 import type { QueryParams } from "@/types/query";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
 
@@ -16,6 +26,26 @@ export const getProductById = async (id: number) => {
     return data;
 };
 
+export const getProductTryonAssets = async (productId: number) => {
+    const { data } = await axiosInstance.get<ApiResponse<ProductTryonAsset[]>>(`/products/${productId}/tryon-assets`);
+    return data;
+};
+
+export const createProductTryonAsset = async ({ productId, ...payload }: CreateProductTryonAssetPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets`, payload);
+    return data;
+};
+
+export const updateProductTryonAsset = async ({ productId, assetId, ...payload }: UpdateProductTryonAssetPayload) => {
+    const { data } = await axiosInstance.patch<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets/${assetId}`, payload);
+    return data;
+};
+
+export const deleteProductTryonAsset = async ({ productId, assetId }: { productId: number; assetId: number }) => {
+    const { data } = await axiosInstance.delete<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets/${assetId}`);
+    return data;
+};
+
 export const deleteProduct = async ({ id }: { id: number }) => {
     return axiosInstance.delete(`/products/${id}`);
 };
@@ -28,6 +58,7 @@ export const createProduct = async (payload: CreateProductPayload) => {
     }
     formData.append("brandId", String(payload.brandId));
     formData.append("categoryId", String(payload.categoryId));
+    formData.append("price", String(payload.price));
 
     payload.productImages.forEach((file) => {
         formData.append("productImages", file);
@@ -37,7 +68,6 @@ export const createProduct = async (payload: CreateProductPayload) => {
         sku: variant.sku,
         colorId: variant.colorId,
         sizeId: variant.sizeId,
-        price: variant.price,
     }));
 
     formData.append("variants", JSON.stringify(variants));
