@@ -53,7 +53,13 @@ export default function LoginPage() {
                     authStorage.setUser(data.user);
                     toast.success("Đăng nhập thành công");
                     form.reset({ email: "", password: "" });
-                    navigate("/admin/dashboard", { replace: true });
+                    if (data.user.role === "admin") {
+                        console.log(data.user.role)
+                        console.log("Redirecting to admin dashboard...");
+                        navigate("/admin/dashboard", { replace: true });
+                    } else {
+                        navigate("/", { replace: true });
+                    }
                 },
                 onError: (error) => {
                     toast.error(extractApiErrorMessage(error, "Đăng nhập thất bại"));

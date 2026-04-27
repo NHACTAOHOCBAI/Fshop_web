@@ -43,6 +43,9 @@ import CommunityPage from "@/pages/shop/community/CommunityPage";
 import LivestreamListPage from "@/pages/shop/livestreams/LivestreamListPage";
 import LivestreamDetailPage from "@/pages/shop/livestreams/LivestreamDetailPage";
 
+import UnauthorizedPage from "@/pages/error/UnauthorizedPage";
+import NotFoundPage from "@/pages/error/NotFoundPage";
+
 const router = createBrowserRouter([
   {
     path: "/",
@@ -155,7 +158,7 @@ const router = createBrowserRouter([
   {
     path: "/admin",
     element: (
-      <ProtectedRoute>
+      <ProtectedRoute requiredRole="admin">
         <AdminLayout />
       </ProtectedRoute>
     ),
@@ -169,36 +172,46 @@ const router = createBrowserRouter([
         element: <DashboardPage />,
       },
       {
-        path: "brands",
-        element: <BrandsPage />,
-      },
-      {
-        path: "categories",
-        element: <CategoriesPage />,
-      },
-      {
-        path: "attributes",
-        element: <AttributesPage />,
-      },
-      {
-        path: "orders",
-        element: <OrdersPage />,
-      },
-      {
-        path: "orders/:orderId",
-        element: <OrderDetailAdminPage />,
-      },
-      {
-        path: "products",
-        element: <ProductsPage />,
-      },
-      {
-        path: "products/create",
-        element: <CreateProductPage />,
-      },
-      {
-        path: "products/:productId/edit",
-        element: <EditProductPage />,
+        path: "my-account",
+        element: (
+          <ProtectedRoute requiredRole="user">
+            <AccountLayout />
+          </ProtectedRoute>
+        ),
+        children: [
+          {
+            index: true,
+            element: <Navigate to="profile" replace />,
+          },
+          {
+            path: "profile",
+            element: <ProfilePage />,
+          },
+          {
+            path: "addresses",
+            element: <AddressesPage />,
+          },
+          {
+            path: "orders",
+            element: <MyOrdersPage />,
+          },
+          {
+            path: "orders/:orderId",
+            element: <OrderDetailPage />,
+          },
+          {
+            path: "wishlists",
+            element: <WishlistsPage />,
+          },
+          {
+            path: "notifications",
+            element: <NotificationsPage />,
+          },
+          {
+            path: "support",
+            element: <SupportPage />,
+          },
+        ],
       },
       {
         path: "users",
@@ -245,6 +258,14 @@ const router = createBrowserRouter([
         element: <BackupRestorePage />,
       },
     ],
+  },
+  {
+    path: "/401",
+    element: <UnauthorizedPage />,
+  },
+  {
+    path: "*",
+    element: <NotFoundPage />,
   },
 ]);
 
