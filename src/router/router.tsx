@@ -217,6 +217,39 @@ const router = createBrowserRouter([
             element: <SupportPage />,
           },
         ],
+       
+      },
+      {
+        path: "products",
+        element: <ProductsPage />,
+      },
+      {
+        path: "products/create",
+        element: <CreateProductPage />,
+      },
+      {
+        path: "products/:productId/edit",
+        element: <EditProductPage />,
+      },
+      {
+        path: "attributes",
+        element: <AttributesPage />,
+      },
+      {
+        path: "brands",
+        element: <BrandsPage />,
+      },
+      {
+        path: "categories",
+        element: <CategoriesPage />,
+      },
+      {
+        path: "orders/:orderId",
+        element: <OrderDetailPage />,
+      },
+      {
+        path: "orders",
+        element: <OrdersPage />,
       },
       {
         path: "users",
