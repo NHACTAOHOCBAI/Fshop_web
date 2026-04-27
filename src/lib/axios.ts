@@ -11,6 +11,8 @@ const axiosInstance = axios.create({
     withCredentials: true,
     headers: {
         "Content-Type": "application/json",
+        // Required to bypass ngrok's browser warning page in development
+        "ngrok-skip-browser-warning": "true",
     },
 });
 

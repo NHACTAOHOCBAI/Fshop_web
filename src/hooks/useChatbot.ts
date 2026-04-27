@@ -16,8 +16,8 @@ export const useAiChatSessions = (enabled = true) => {
     return useQuery({
         queryKey: AI_CHATBOT_SESSIONS_QUERY_KEY,
         queryFn: listAiChatSessions,
-        enabled,
         staleTime: 30_000,
+        enabled,
     });
 };
 

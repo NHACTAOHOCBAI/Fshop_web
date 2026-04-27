@@ -284,6 +284,8 @@ const ClientLayout = () => {
                 <Outlet />
             </main>
 
+            <FloatingAiChatbot />
+
             <footer className="mt-12 bg-primary/35">
                 <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-10 text-sm text-slate-700 md:grid-cols-3 md:px-8">
                     <div>
