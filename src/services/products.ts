@@ -9,9 +9,18 @@ import type {
     UpdateProductPayload,
     UpdateProductTryonAssetPayload,
     VoiceSearchResponse,
+    VoiceTranscriptionResponse,
 } from "@/types/product";
 import type { QueryParams } from "@/types/query";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
+
+const unwrapApiData = <T>(payload: T | ApiResponse<T>): T => {
+    if (payload && typeof payload === "object" && "data" in payload) {
+        return (payload as ApiResponse<T>).data;
+    }
+
+    return payload as T;
+};
 
 export const getProducts = async ({ limit, page, search, sortOrder, sortBy }: QueryParams) => {
     const { data } = await axiosInstance.get<PaginatedApiResponse<Product>>("/products", {
@@ -142,24 +151,39 @@ export const searchByImage = async (file: File, topK: number = 12) => {
     formData.append("file", file);
     formData.append("topK", String(topK));
 
-    const { data } = await axiosInstance.post<ImageSearchResult[]>("/products/search/image", formData, {
+    const { data } = await axiosInstance.post<ApiResponse<ImageSearchResult[]> | ImageSearchResult[]>("/products/search/image", formData, {
         headers: {
             "Content-Type": "multipart/form-data",
         },
     });
 
-    return data;
+    return unwrapApiData(data);
 };
 
 export const searchByVoice = async (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
 
-    const { data } = await axiosInstance.post<VoiceSearchResponse>("/products/search/voice", formData, {
+    const { data } = await axiosInstance.post<ApiResponse<VoiceSearchResponse> | VoiceSearchResponse>("/products/search/voice", formData, {
         headers: {
             "Content-Type": "multipart/form-data",
         },
+        timeout: 60_000,
     });
 
-    return data;
+    return unwrapApiData(data);
+};
+
+export const transcribeVoice = async (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const { data } = await axiosInstance.post<ApiResponse<VoiceTranscriptionResponse> | VoiceTranscriptionResponse>("/products/transcribe/voice", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+        timeout: 45_000,
+    });
+
+    return unwrapApiData(data);
 };

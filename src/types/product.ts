@@ -144,4 +144,23 @@ export type ImageSearchResult = {
 export type VoiceSearchResponse = {
     transcribed_text: string;
     products: ImageSearchResult[];
+    normalized_query?: string;
+    rewritten_query?: string;
+    intent?: string;
+    filters?: Record<string, unknown>;
+    asr_confidence?: number;
+    asr?: {
+        language?: string;
+        language_probability?: number;
+        avg_logprob?: number;
+        no_speech_probability?: number;
+        confidence?: number;
+        model?: string;
+        device?: string;
+        compute_type?: string;
+    };
+    latency_ms?: number;
+    search_debug?: Record<string, unknown> | null;
 };
+
+export type VoiceTranscriptionResponse = Omit<VoiceSearchResponse, "products">;

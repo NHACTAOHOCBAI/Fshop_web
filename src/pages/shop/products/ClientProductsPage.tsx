@@ -21,7 +21,7 @@ import { VoiceSearchDialog } from "@/components/voice-search-dialog";
 import ClientPagination from "@/components/pagination/ClientPagination";
 import { useShopCatalog, type ShopSortOption } from "@/hooks/useShopCatalog";
 import type { DepartmentType } from "@/types/category";
-import type { ImageSearchResult, Product, VoiceSearchResponse } from "@/types/product";
+import type { ImageSearchResult, Product } from "@/types/product";
 import { getProductById } from "@/services/products";
 import ProductCard from "./components/ProductCard";
 
@@ -138,10 +138,8 @@ const ClientProductsPage = () => {
     const [isImageSearchDialogOpen, setIsImageSearchDialogOpen] = useState(false);
     const [isVoiceSearchDialogOpen, setIsVoiceSearchDialogOpen] = useState(false);
     const [imageSearchProducts, setImageSearchProducts] = useState<Product[]>([]);
-    const [voiceSearchProducts, setVoiceSearchProducts] = useState<Product[]>([]);
     const [voiceTranscription, setVoiceTranscription] = useState("");
     const [isLoadingImageResults, setIsLoadingImageResults] = useState(false);
-    const [isLoadingVoiceResults, setIsLoadingVoiceResults] = useState(false);
     const [isFilterSheetOpen, setIsFilterSheetOpen] = useState(false);
 
     const department = useMemo<DepartmentType>(() => {
@@ -193,7 +191,6 @@ const ClientProductsPage = () => {
         try {
             const productDetails = await hydrateProductsFromHits(results);
             setImageSearchProducts(productDetails);
-            setVoiceSearchProducts([]);
             setVoiceTranscription("");
         } catch (error) {
             console.error("Failed to fetch image search product details:", error);
@@ -202,39 +199,22 @@ const ClientProductsPage = () => {
         }
     };
 
-    const handleVoiceSearchSuccess = async (payload: VoiceSearchResponse) => {
-        setIsLoadingVoiceResults(true);
-        try {
-            const productDetails = await hydrateProductsFromHits(payload.products);
-            setVoiceSearchProducts(productDetails);
-            setVoiceTranscription(payload.transcribed_text);
-            setImageSearchProducts([]);
-
-            if (payload.transcribed_text) {
-                onSearchChange(payload.transcribed_text);
-            }
-        } catch (error) {
-            console.error("Failed to fetch voice search product details:", error);
-        } finally {
-            setIsLoadingVoiceResults(false);
-        }
+    // Voice search now returns the edited transcript text — run text search via useShopCatalog
+    const handleVoiceSearchSuccess = (query: string) => {
+        setVoiceTranscription(query);
+        setImageSearchProducts([]);
+        onSearchChange(query);
     };
 
     const handleClearImageSearch = () => {
         setImageSearchProducts([]);
-        setVoiceSearchProducts([]);
         setVoiceTranscription("");
     };
 
-    const hasVoiceResults = voiceSearchProducts.length > 0;
     const hasImageResults = imageSearchProducts.length > 0;
-    const isShowingAiResults = hasVoiceResults || hasImageResults;
+    const isShowingAiResults = hasImageResults;
 
-    const displayProducts = hasVoiceResults
-        ? voiceSearchProducts
-        : hasImageResults
-            ? imageSearchProducts
-            : products;
+    const displayProducts = hasImageResults ? imageSearchProducts : products;
     const displayTotalItems = displayProducts.length;
 
     return (
@@ -308,7 +288,7 @@ const ClientProductsPage = () => {
                             </Button>
 
                             <Select value={sortOption} onValueChange={(value) => onSortChange(value as ShopSortOption)}>
-                                <SelectTrigger className="w-full md:w-[180px]">
+                                <SelectTrigger className="w-full md:w-45">
                                     <SelectValue placeholder="Sắp xếp theo" />
                                 </SelectTrigger>
                                 <SelectContent>
@@ -327,7 +307,6 @@ const ClientProductsPage = () => {
                             Tìm thấy <span className="font-semibold text-primary">{displayTotalItems}</span> sản phẩm
                             {isFetching && !isShowingAiResults ? " (đang cập nhật...)" : ""}
                             {isLoadingImageResults ? " (đang tải...)" : ""}
-                            {isLoadingVoiceResults ? " (đang xử lý giọng nói...)" : ""}
                         </p>
                         {isShowingAiResults && (
                             <button
@@ -363,7 +342,7 @@ const ClientProductsPage = () => {
                     </div>
                 ) : null}
 
-                {isLoading || isLoadingImageResults || isLoadingVoiceResults ? (
+                {isLoading || isLoadingImageResults ? (
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
                         {Array.from({ length: 6 }).map((_, index) => (
                             <div key={index} className="h-67.5 animate-pulse rounded-2xl bg-slate-200" />
