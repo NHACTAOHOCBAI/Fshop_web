@@ -95,3 +95,26 @@ export type AgoraTokenPayload = {
     role: "publisher" | "subscriber";
     expiresAt: number;
 };
+
+export type LivestreamSummaryProduct = {
+    productId: number;
+    name: string;
+    imageUrl?: string;
+    unitsSold: number;
+    revenue: number;
+};
+
+export type LivestreamSummary = {
+    livestreamId: number;
+    title: string;
+    status: LivestreamStatus;
+    scheduledStartAt: string;
+    startedAt?: string;
+    endedAt?: string;
+    durationSeconds: number | null;
+    totalViewers: number;
+    totalComments: number;
+    totalOrders: number;
+    totalRevenue: number;
+    topProducts: LivestreamSummaryProduct[];
+};

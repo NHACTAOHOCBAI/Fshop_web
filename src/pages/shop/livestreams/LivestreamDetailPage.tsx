@@ -13,6 +13,7 @@ import {
     useLivestreamComments,
     useLivestreamRealtime,
 } from "@/hooks/useLivestreams";
+import { LivestreamViewer } from "@/components/livestream/LivestreamViewer";
 import { authStorage } from "@/lib/auth";
 
 const formatCommentTime = (value: string) => {
@@ -137,23 +138,34 @@ const LivestreamDetailPage = () => {
                     <section className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
                         <div className="space-y-4">
                             <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-black">
-                                <div className="aspect-video w-full bg-linear-to-br from-slate-900 via-slate-800 to-slate-700">
-                                    {livestream.coverImageUrl ? (
-                                        <img src={livestream.coverImageUrl} alt={livestream.title} className="h-full w-full object-cover opacity-80" />
-                                    ) : (
-                                        <div className="flex h-full items-center justify-center text-slate-300">
-                                            <Video className="size-10" />
+                                {livestream.status === "live" ? (
+                                    <LivestreamViewer
+                                        livestreamId={livestreamId}
+                                        agoraChannel={livestream.agoraChannel}
+                                        coverImageUrl={livestream.coverImageUrl}
+                                    />
+                                ) : (
+                                    <div className="aspect-video w-full bg-linear-to-br from-slate-900 via-slate-800 to-slate-700">
+                                        {livestream.coverImageUrl ? (
+                                            <img src={livestream.coverImageUrl} alt={livestream.title} className="h-full w-full object-cover opacity-80" />
+                                        ) : (
+                                            <div className="flex h-full items-center justify-center text-slate-300">
+                                                <Video className="size-10" />
+                                            </div>
+                                        )}
+                                    </div>
+                                )}
+                                {livestream.status === "live" && (
+                                    <>
+                                        <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white">
+                                            LIVE
                                         </div>
-                                    )}
-                                </div>
-                                <div className="absolute inset-0 bg-black/20" />
-                                <div className="absolute left-4 top-4 inline-flex items-center gap-2 rounded-full bg-red-500 px-3 py-1 text-xs font-semibold text-white">
-                                    LIVE
-                                </div>
-                                <div className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
-                                    <Users className="size-3.5" />
-                                    {resolvedViewerCount} đang xem
-                                </div>
+                                        <div className="absolute bottom-4 right-4 inline-flex items-center gap-2 rounded-full bg-black/60 px-3 py-1 text-xs font-medium text-white">
+                                            <Users className="size-3.5" />
+                                            {resolvedViewerCount} đang xem
+                                        </div>
+                                    </>
+                                )}
                             </div>
 
                             <div className="rounded-2xl border border-slate-200 bg-white p-4">

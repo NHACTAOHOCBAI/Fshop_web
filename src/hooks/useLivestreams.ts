@@ -10,10 +10,12 @@ import {
     getLivestreamById,
     getLivestreamComments,
     getLivestreams,
+    getLivestreamSummary,
     issueLivestreamAgoraToken,
     LIVESTREAMS_QUERY_KEY,
     livestreamByIdQueryKey,
     livestreamCommentsQueryKey,
+    livestreamSummaryQueryKey,
     pinLivestreamProduct,
     startLivestream,
     unpinLivestreamProduct,
@@ -466,4 +468,12 @@ export const useLivestreamRealtime = ({
             socket.disconnect();
         };
     }, [enabled, livestreamId, queryClient]);
+};
+
+export const useLivestreamSummary = (id: number | null) => {
+    return useQuery({
+        queryKey: id !== null ? livestreamSummaryQueryKey(id) : [],
+        queryFn: () => getLivestreamSummary(id!),
+        enabled: id !== null,
+    });
 };

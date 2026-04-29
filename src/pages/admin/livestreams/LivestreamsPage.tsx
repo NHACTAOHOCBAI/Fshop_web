@@ -1,9 +1,11 @@
 import { useMemo, useState } from "react";
-import { Loader2, Play, Plus, Radio, Square, Tv } from "lucide-react";
+import { BarChart2, Loader2, Play, Plus, Radio, Square, Tv } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { LivestreamPublisher } from "@/components/livestream/LivestreamPublisher";
+import { LivestreamSummaryModal } from "@/components/livestream/LivestreamSummaryModal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -139,6 +141,7 @@ const LivestreamsPage = () => {
     const [openCreate, setOpenCreate] = useState(false);
     const [editing, setEditing] = useState<Livestream | null>(null);
     const [selectedId, setSelectedId] = useState<number | null>(null);
+    const [summaryId, setSummaryId] = useState<number | null>(null);
     const [pinProductId, setPinProductId] = useState("");
     const [pinPosition, setPinPosition] = useState("0");
 
@@ -350,7 +353,12 @@ const LivestreamsPage = () => {
                                             <Button variant="outline" size="sm" onClick={() => handleIssueToken(item.id)}>
                                                 Token
                                             </Button>
-                                            {item.status !== "live" ? (
+                                            {item.status === "ended" ? (
+                                                <Button variant="outline" size="sm" onClick={() => setSummaryId(item.id)}>
+                                                    <BarChart2 className="size-4" />
+                                                    Tổng kết
+                                                </Button>
+                                            ) : item.status !== "live" ? (
                                                 <Button size="sm" onClick={() => handleGoLive(item.id)}>
                                                     <Play className="size-4" />
                                                     Go Live
@@ -397,6 +405,16 @@ const LivestreamsPage = () => {
                                     <p className="text-sm font-medium text-slate-800">{selectedDetail.title}</p>
                                     <p className="text-xs text-slate-500">Status: {selectedDetail.status.toUpperCase()}</p>
                                 </div>
+
+                                {selectedDetail.status === "live" && (
+                                    <div className="space-y-1.5">
+                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Camera & Phát sóng</p>
+                                        <LivestreamPublisher
+                                            livestreamId={selectedDetail.id}
+                                            agoraChannel={selectedDetail.agoraChannel}
+                                        />
+                                    </div>
+                                )}
 
                                 <div className="space-y-2">
                                     <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Pin sản phẩm mới</p>
@@ -472,6 +490,12 @@ const LivestreamsPage = () => {
                     ) : null}
                 </DialogContent>
             </Dialog>
+
+            <LivestreamSummaryModal
+                livestreamId={summaryId}
+                open={Boolean(summaryId)}
+                onClose={() => setSummaryId(null)}
+            />
         </div>
     );
 };

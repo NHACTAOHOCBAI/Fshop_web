@@ -11,6 +11,7 @@ import type {
     LivestreamComment,
     LivestreamDetail,
     LivestreamProduct,
+    LivestreamSummary,
     PinLivestreamProductPayload,
     UpdateLivestreamPayload,
 } from "@/types/livestream";
@@ -123,6 +124,13 @@ export const createLivestreamComment = async (id: number, payload: CreateLivestr
 
 export const issueLivestreamAgoraToken = async (id: number) => {
     const { data } = await axiosInstance.get<ApiResponse<AgoraTokenPayload>>(`${API_BASE}/${id}/agora-token`);
+    return data;
+};
+
+export const livestreamSummaryQueryKey = (id: number) => [...LIVESTREAMS_QUERY_KEY, id, "summary"] as const;
+
+export const getLivestreamSummary = async (id: number) => {
+    const { data } = await axiosInstance.get<ApiResponse<LivestreamSummary>>(`${API_BASE}/${id}/summary`);
     return data;
 };
 
