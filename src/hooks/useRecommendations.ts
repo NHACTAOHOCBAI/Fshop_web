@@ -1,5 +1,6 @@
 import { useQuery } from "@tanstack/react-query";
-import { getFrequentlyBoughtTogether } from "@/services/recommendations";
+import { getFrequentlyBoughtTogether, getPersonalizedRecommendations } from "@/services/recommendations";
+
 
 export const useFrequentlyBoughtTogether = (productId: number, enabled: boolean = true) => {
     return useQuery({
@@ -8,3 +9,12 @@ export const useFrequentlyBoughtTogether = (productId: number, enabled: boolean 
         enabled: enabled && !!productId,
     });
 };
+
+export const usePersonalizedRecommendations = (limit: number = 10, enabled: boolean = true) => {
+    return useQuery({
+        queryKey: ["recommendations", "personalize"],
+        queryFn: () => getPersonalizedRecommendations(limit),
+        enabled: enabled,
+    });
+};
+

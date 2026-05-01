@@ -8,3 +8,11 @@ export const getFrequentlyBoughtTogether = async (productId: number, limit: numb
     });
     return response.data;
 };
+
+export const getPersonalizedRecommendations = async (limit: number = 10) => {
+    const response = await axiosInstance.get<PaginatedApiResponse<Product>>('/recommendations/personalize', {
+        params: { limit },
+    });
+    return response.data;
+};
+

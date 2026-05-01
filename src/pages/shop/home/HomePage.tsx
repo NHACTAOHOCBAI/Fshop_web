@@ -9,6 +9,8 @@ import { useProducts } from "@/hooks/useProducts";
 import { cn } from "@/lib/utils";
 import type { DepartmentType } from "@/types/category";
 import ProductCard from "@/pages/shop/products/components/ProductCard";
+import { usePersonalizedRecommendations } from "@/hooks/useRecommendations";
+
 
 const COLLECTIONS: {
     id: DepartmentType;
@@ -69,6 +71,8 @@ const HomePage = () => {
     const brandsQuery = useBrands({ page: 1, limit: 18, sortBy: "name", sortOrder: "ASC" });
     const categoriesQuery = useCategories({ page: 1, limit: 60, sortBy: "name", sortOrder: "ASC" });
     const productsQuery = useProducts({ page: 1, limit: 12, sortBy: "createdAt", sortOrder: "DESC" });
+    const personalizedQuery = usePersonalizedRecommendations(10);
+
     const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
 
@@ -213,6 +217,34 @@ const HomePage = () => {
                     Chatbot, tìm kiếm hình ảnh và giọng nói được thiết kế để rút ngắn thời gian tìm sản phẩm, đặc biệt trên mobile.
                 </div>
             </section>
+
+            {/* Personalized Recommendations Section */}
+            {!personalizedQuery.isLoading && personalizedQuery.data?.data && personalizedQuery.data.data.length > 0 && (
+                <section className="space-y-6">
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Dành riêng cho bạn</p>
+                            <h2 className="mt-1 text-2xl font-bold text-slate-900">Gợi ý dựa trên sở thích</h2>
+                        </div>
+                    </div>
+                    
+                    <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-4 lg:grid-cols-5">
+                        {personalizedQuery.data.data.map((product) => {
+                            const department = (product.category?.department as DepartmentType) ?? "men";
+                            return (
+                                <div key={product.id} className="transition-transform duration-300 hover:-translate-y-1">
+                                    <ProductCard
+                                        product={product}
+                                        department={department}
+                                        brandName={product.brand?.name ?? "FShop"}
+                                    />
+                                </div>
+                            );
+                        })}
+                    </div>
+                </section>
+            )}
+
 
             <section>
                 <div className="mb-5">
