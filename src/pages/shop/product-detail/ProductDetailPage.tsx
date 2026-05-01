@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import QuantityStepper from "@/components/ui/quantity-stepper";
 import { useColors, useSizes } from "@/hooks/useAttributes";
 import { useAddToCart } from "@/hooks/useCart";
-import { useProductById, useProductTryonAssets, useRelatedProducts } from "@/hooks/useProducts";
+import { useProductById, useProductTryonAssets } from "@/hooks/useProducts";
+import { useFrequentlyBoughtTogether } from "@/hooks/useRecommendations";
 import { useReviewSummary, useReviewsByProduct } from "@/hooks/useReviews";
+
 import { useToggleWishlist, useWishlists } from "@/hooks/useWishlists";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import { authStorage } from "@/lib/auth";
@@ -165,7 +167,9 @@ const ProductDetailPage = () => {
     const reviewCount = reviewSummary?.reviewCount ?? reviews.length;
     const roundedAverageRating = Math.round(averageRating);
 
-    const { relatedProducts, isLoading: isRelatedLoading } = useRelatedProducts(product?.categoryId, product?.id);
+    const { data: recommendationsQuery, isLoading: isRelatedLoading } = useFrequentlyBoughtTogether(productId, !!product);
+    const relatedProducts = recommendationsQuery?.data ?? [];
+
 
     const isInWishlist = useMemo(() => {
         const wishlists = wishlistData?.data ?? [];
@@ -492,7 +496,7 @@ const ProductDetailPage = () => {
             </section>
 
             <section className="space-y-4">
-                <h2 className="text-xl font-semibold text-slate-900">Sản phẩm liên quan</h2>
+                <h2 className="text-xl font-semibold text-slate-900">Gợi ý phối đồ</h2>
                 {isRelatedLoading ? (
                     <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                         {Array.from({ length: 4 }).map((_, index) => (
