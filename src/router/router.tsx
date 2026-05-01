@@ -3,6 +3,8 @@ import PublicRoute from "@/components/auth/PublicRoute";
 import AdminLayout from "@/components/layout/AdminLayout";
 import ClientLayout from "@/components/layout/ClientLayout";
 import BackupRestorePage from "@/pages/admin/backup-restore/BackupRestorePage";
+import ModerationDashboard from "@/pages/admin/moderation/ModerationDashboard";
+import ModerationQueue from "@/pages/admin/moderation/ModerationQueue";
 import AttributesPage from "@/pages/admin/attributes/AttributesPage";
 import BrandsPage from "@/pages/admin/brands/BrandsPage";
 import CategoriesPage from "@/pages/admin/categories/CategoriesPage";
@@ -299,6 +301,14 @@ const router = createBrowserRouter([
       {
         path: "backup-restore",
         element: <BackupRestorePage />,
+      },
+      {
+        path: "moderation",
+        element: <ModerationDashboard />,
+      },
+      {
+        path: "moderation/queue",
+        element: <ModerationQueue />,
       },
     ],
   },
