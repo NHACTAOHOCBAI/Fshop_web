@@ -71,7 +71,7 @@ const HomePage = () => {
     const brandsQuery = useBrands({ page: 1, limit: 18, sortBy: "name", sortOrder: "ASC" });
     const categoriesQuery = useCategories({ page: 1, limit: 60, sortBy: "name", sortOrder: "ASC" });
     const productsQuery = useProducts({ page: 1, limit: 12, sortBy: "createdAt", sortOrder: "DESC" });
-    const personalizedQuery = usePersonalizedRecommendations(10);
+    const personalizedQuery = usePersonalizedRecommendations(100);
 
     const [selectedBrandId, setSelectedBrandId] = useState<number | null>(null);
     const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null);
