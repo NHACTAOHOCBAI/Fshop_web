@@ -5,9 +5,12 @@ import {
     aiChatbotMessagesQueryKey,
     closeAiChatSession,
     createAiChatSession,
+    deleteAiChatSession,
     getAiChatMessages,
+    imageSearchInChatSession,
     listAiChatSessions,
     sendAiChatMessage,
+    voiceSearchInChatSession,
 } from "@/services/chatbot";
 import type { AiChatMessage, AiChatSession } from "@/types/chatbot";
 import type { ApiResponse } from "@/types/response";
@@ -144,6 +147,78 @@ export const useCloseAiChatSession = () => {
                     ...old,
                     data: old.data.filter((item) => item.id !== sessionId),
                 };
+            });
+
+            queryClient.removeQueries({ queryKey: aiChatbotMessagesQueryKey(sessionId) });
+        },
+    });
+};
+
+const appendMessagesToCache = (
+    queryClient: ReturnType<typeof useQueryClient>,
+    sessionId: number,
+    userMessage: AiChatMessage,
+    assistantMessage: AiChatMessage,
+) => {
+    queryClient.setQueryData<ApiResponse<AiChatMessage[]>>(aiChatbotMessagesQueryKey(sessionId), (old) => {
+        const base = old?.data ?? [];
+        const merged = [...base];
+        if (!merged.some((m) => m.id === userMessage.id)) merged.push(userMessage);
+        if (!merged.some((m) => m.id === assistantMessage.id)) merged.push(assistantMessage);
+        merged.sort((a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime());
+        return old
+            ? { ...old, data: merged }
+            : { statusCode: 200, message: "success", path: `/ai-chatbot/sessions/${sessionId}/messages`, data: merged };
+    });
+
+    queryClient.setQueryData<ApiResponse<AiChatSession[]>>(AI_CHATBOT_SESSIONS_QUERY_KEY, (old) => {
+        if (!old) return old;
+        return {
+            ...old,
+            data: old.data
+                .map((s) =>
+                    s.id === sessionId
+                        ? { ...s, title: s.title || userMessage.content.slice(0, 80), lastMessageAt: assistantMessage.createdAt }
+                        : s
+                )
+                .sort((a, b) => new Date(b.lastMessageAt).getTime() - new Date(a.lastMessageAt).getTime()),
+        };
+    });
+};
+
+type MediaSearchArgs = { sessionId: number; file: File };
+
+export const useImageSearchInChatSession = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ sessionId, file }: MediaSearchArgs) => imageSearchInChatSession(sessionId, file),
+        onSuccess: (response) => {
+            const { sessionId, userMessage, assistantMessage } = response.data;
+            appendMessagesToCache(queryClient, sessionId, userMessage, assistantMessage);
+        },
+    });
+};
+
+export const useVoiceSearchInChatSession = () => {
+    const queryClient = useQueryClient();
+    return useMutation({
+        mutationFn: ({ sessionId, file }: MediaSearchArgs) => voiceSearchInChatSession(sessionId, file),
+        onSuccess: (response) => {
+            const { sessionId, userMessage, assistantMessage } = response.data;
+            appendMessagesToCache(queryClient, sessionId, userMessage, assistantMessage);
+        },
+    });
+};
+
+export const useDeleteAiChatSession = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: deleteAiChatSession,
+        onSuccess: (_response, sessionId) => {
+            queryClient.setQueryData<ApiResponse<AiChatSession[]>>(AI_CHATBOT_SESSIONS_QUERY_KEY, (old) => {
+                if (!old) return old;
+                return { ...old, data: old.data.filter((item) => item.id !== sessionId) };
             });
 
             queryClient.removeQueries({ queryKey: aiChatbotMessagesQueryKey(sessionId) });
