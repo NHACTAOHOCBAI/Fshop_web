@@ -24,6 +24,7 @@ import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
 import ProductDetailPage from "@/pages/shop/product-detail/ProductDetailPage";
 import ProductTryonPage from "@/pages/shop/product-detail/ProductTryonPage";
+import ProductVTO2DPage from "@/pages/shop/product-detail/ProductVTO2DPage";
 import CartPage from "@/pages/shop/cart/CartPage";
 import CheckoutPage from "@/pages/shop/checkout/CheckoutPage";
 import AccountLayout from "@/components/layout/AccountLayout";
@@ -70,6 +71,10 @@ const router = createBrowserRouter([
       {
         path: ":department/products/:productId/try-on",
         element: <ProductTryonPage />,
+      },
+      {
+        path: ":department/products/:productId/virtual-tryon-2d",
+        element: <ProductVTO2DPage />,
       },
       {
         path: "cart",

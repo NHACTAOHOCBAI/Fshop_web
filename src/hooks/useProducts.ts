@@ -11,6 +11,7 @@ import {
     updateProduct,
     updateProductFull,
     updateProductTryonAsset,
+    virtualTryon2D,
 } from "@/services/products";
 import type { QueryParams } from "@/types/query";
 
@@ -141,5 +142,19 @@ export const useDeleteProductTryonAsset = () => {
         onSuccess: (_, variables) => {
             queryClient.invalidateQueries({ queryKey: ["product-tryon-assets", variables.productId] });
         },
+    });
+};
+
+export const useVirtualTryon2D = () => {
+    return useMutation({
+        mutationFn: ({
+            productId,
+            personImage,
+            garmentDesc,
+        }: {
+            productId: number;
+            personImage: File;
+            garmentDesc?: string;
+        }) => virtualTryon2D(productId, personImage, garmentDesc),
     });
 };

@@ -1,4 +1,4 @@
-import { ChevronLeft, Glasses, Heart, Loader2, MessageCircle, ShoppingCart, Star } from "lucide-react";
+import { ChevronLeft, Glasses, Heart, Loader2, MessageCircle, Shirt, ShoppingCart, Star } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
@@ -387,9 +387,18 @@ const ProductDetailPage = () => {
                             onClick={() => navigate(`/${department}/products/${product.id}/try-on`)}
                         >
                             <Glasses className="size-4" />
-                            Thử đồ ảo
+                            Thử đồ AR
                         </Button>
                     ) : null}
+                    <Button
+                        type="button"
+                        variant="outline"
+                        className="w-full gap-2"
+                        onClick={() => navigate(`/${department}/products/${product.id}/virtual-tryon-2d`)}
+                    >
+                        <Shirt className="size-4" />
+                        Thử đồ 2D (AI)
+                    </Button>
                 </section>
             </div>
 

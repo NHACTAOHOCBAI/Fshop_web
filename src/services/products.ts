@@ -187,3 +187,24 @@ export const transcribeVoice = async (file: File) => {
 
     return unwrapApiData(data);
 };
+
+export const virtualTryon2D = async (
+    productId: number,
+    personImage: File,
+    garmentDesc?: string,
+): Promise<{ resultImageUrl: string }> => {
+    const formData = new FormData();
+    formData.append("personImage", personImage);
+    if (garmentDesc) formData.append("garmentDesc", garmentDesc);
+
+    const { data } = await axiosInstance.post<ApiResponse<{ resultImageUrl: string }>>(
+        `/products/${productId}/virtual-tryon`,
+        formData,
+        {
+            headers: { "Content-Type": "multipart/form-data" },
+            timeout: 120_000,
+        },
+    );
+
+    return unwrapApiData(data);
+};
