@@ -3,85 +3,99 @@ import { authStorage } from "@/lib/auth";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import type { RefreshTokenResponse } from "@/types/auth";
 
-const BE_URL = import.meta.env.VITE_API_URL || "https://fshop-backend-v19j.onrender.com/api/v1";
+const BE_URL =
+  import.meta.env.VITE_API_URL ||
+  "https://fshop-backend-v19j.onrender.com/api/v1";
 
 const axiosInstance = axios.create({
-    baseURL: BE_URL,
-    timeout: 10000,
-    withCredentials: true,
-    headers: {
-        "Content-Type": "application/json",
-        // Required to bypass ngrok's browser warning page in development
-        "ngrok-skip-browser-warning": "true",
-    },
+  baseURL: BE_URL,
+  timeout: 10000,
+  withCredentials: true,
+  headers: {
+    "Content-Type": "application/json",
+    // Required to bypass ngrok's browser warning page in development
+    "ngrok-skip-browser-warning": "true",
+  },
 });
 
 axiosInstance.interceptors.request.use((config) => {
-    const token = authStorage.getAccessToken();
+  const token = authStorage.getAccessToken();
 
-    if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-    }
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
 
-    return config;
+  return config;
 });
 
 axiosInstance.interceptors.response.use(
-    (response) => response,
-    async (error) => {
-        const normalizeAxiosErrorMessage = (rawError: unknown) => {
-            if (axios.isAxiosError(rawError)) {
-                rawError.message = extractApiErrorMessage(rawError.response?.data, rawError.message);
-            }
-            return rawError;
-        };
+  (response) => response,
+  async (error) => {
+    const normalizeAxiosErrorMessage = (rawError: unknown) => {
+      if (axios.isAxiosError(rawError)) {
+        rawError.message = extractApiErrorMessage(
+          rawError.response?.data,
+          rawError.message,
+        );
+      }
+      return rawError;
+    };
 
-        const originalRequest = error.config as (typeof error.config & { _retry?: boolean }) | undefined;
+    const originalRequest = error.config as
+      | (typeof error.config & { _retry?: boolean })
+      | undefined;
 
-        if (error.response?.status !== 401 || !originalRequest || originalRequest._retry) {
-            return Promise.reject(normalizeAxiosErrorMessage(error));
-        }
-
-        // Never try refresh flow for authentication endpoints that don't require existing session.
-        const requestUrl = String(originalRequest.url || "");
-        if (requestUrl.includes("/auth/login") || requestUrl.includes("/auth/google/login")) {
-            return Promise.reject(normalizeAxiosErrorMessage(error));
-        }
-
-        // Avoid infinite loop when refresh endpoint itself returns 401.
-        if (requestUrl.includes("/auth/refresh-token")) {
-            authStorage.clear();
-            // if (window.location.pathname !== "/login") {
-            //     window.location.href = "/login";
-            // }
-            return Promise.reject(normalizeAxiosErrorMessage(error));
-        }
-
-        originalRequest._retry = true;
-
-        try {
-            const response = await axios.post(
-                `${BE_URL}/auth/refresh-token`,
-                {},
-                { withCredentials: true }
-            );
-            const data = response.data.data as RefreshTokenResponse;
-            console.log("Token refreshed successfully:", data);
-            authStorage.setAccessToken(data.accessToken);
-            originalRequest.headers = {
-                ...originalRequest.headers,
-                Authorization: `Bearer ${data.accessToken}`,
-            };
-
-            return axiosInstance(originalRequest);
-        } catch (refreshError) {
-            authStorage.clear();
-            // if (window.location.pathname !== "/login") {
-            //     window.location.href = "/login";
-            // }
-            return Promise.reject(normalizeAxiosErrorMessage(refreshError));
-        }
+    if (
+      error.response?.status !== 401 ||
+      !originalRequest ||
+      originalRequest._retry
+    ) {
+      return Promise.reject(normalizeAxiosErrorMessage(error));
     }
+
+    // Never try refresh flow for authentication endpoints that don't require existing session.
+    const requestUrl = String(originalRequest.url || "");
+    if (
+      requestUrl.includes("/auth/login") ||
+      requestUrl.includes("/auth/google/login")
+    ) {
+      return Promise.reject(normalizeAxiosErrorMessage(error));
+    }
+
+    // Avoid infinite loop when refresh endpoint itself returns 401.
+    if (requestUrl.includes("/auth/refresh-token")) {
+      authStorage.clear();
+      // if (window.location.pathname !== "/login") {
+      //     window.location.href = "/login";
+      // }
+      return Promise.reject(normalizeAxiosErrorMessage(error));
+    }
+
+    originalRequest._retry = true;
+
+    try {
+      const response = await axios.post(
+        `${BE_URL}/auth/refresh-token`,
+        {},
+        { withCredentials: true },
+      );
+      const data = response.data.data as RefreshTokenResponse;
+      console.log("Token refreshed successfully:", data);
+      authStorage.setAccessToken(data.accessToken);
+      originalRequest.headers = {
+        ...originalRequest.headers,
+        Authorization: `Bearer ${data.accessToken}`,
+      };
+
+      return axiosInstance(originalRequest);
+    } catch (refreshError) {
+      authStorage.clear();
+      // if (window.location.pathname !== "/login") {
+      //     window.location.href = "/login";
+      // }
+      return Promise.reject(normalizeAxiosErrorMessage(refreshError));
+    }
+  },
 );
 
 export default axiosInstance;
