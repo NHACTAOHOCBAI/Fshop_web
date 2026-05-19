@@ -2,7 +2,7 @@ import axiosInstance from '@/lib/axios';
 import type { ApiResponse } from '@/types/response';
 import type { PaymentMethod, PaymentResponse, VerifyReturnResult } from '@/types/payment';
 
-const apiBaseUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:4000/api/v1';
+const apiBaseUrl = import.meta.env.VITE_API_URL ?? 'https://fshop-backend-v19j.onrender.com/api/v1';
 
 export const initiatePayment = async (
     orderId: number,
