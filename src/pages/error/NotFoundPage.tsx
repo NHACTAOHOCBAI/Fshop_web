@@ -1,5 +1,3 @@
-import React from "react";
-
 const NotFoundPage = () => (
   <div style={{ textAlign: "center", marginTop: 80 }}>
     <h1 style={{ fontSize: 64, color: "#1890ff" }}>404</h1>

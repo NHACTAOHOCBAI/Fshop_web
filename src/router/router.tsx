@@ -17,7 +17,6 @@ import EditCouponPage from "@/pages/admin/coupons/EditCouponPage";
 import LivestreamsPage from "@/pages/admin/livestreams/LivestreamsPage";
 import AdminNotificationsPage from "@/pages/admin/notifications/AdminNotificationsPage";
 import OrdersPage from "@/pages/admin/orders/OrdersPage";
-import OrderDetailAdminPage from "@/pages/admin/orders/OrderDetailAdminPage";
 import CreateProductPage from "@/pages/admin/products/CreateProductPage";
 import EditProductPage from "@/pages/admin/products/EditProductPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
@@ -229,7 +228,6 @@ const router = createBrowserRouter([
             element: <SupportPage />,
           },
         ],
-       
       },
       {
         path: "products",
@@ -327,4 +325,4 @@ const router = createBrowserRouter([
   },
 ]);
 
-export default router
+export default router;

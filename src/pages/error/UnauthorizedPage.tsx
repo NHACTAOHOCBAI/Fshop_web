@@ -1,5 +1,3 @@
-import React from "react";
-
 const UnauthorizedPage = () => (
   <div style={{ textAlign: "center", marginTop: 80 }}>
     <h1 style={{ fontSize: 64, color: "#ff4d4f" }}>401</h1>
