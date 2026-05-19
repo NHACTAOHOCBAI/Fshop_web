@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ORDER_STATUS_LABEL, getAdminAllowedNextStatuses } from "@/constants/orderStatus";
 import { useOrderById, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { AddressDisplay } from "@/components/address/AddressDisplay";
 import type { OrderStatus } from "@/types/order";
 
 const OrderDetailAdminPage = () => {
@@ -100,7 +101,7 @@ const OrderDetailAdminPage = () => {
                     <p>Số lượng SP: <span className="font-medium text-slate-800">{totalItems}</span></p>
                     {order.note ? <p className="sm:col-span-2">Ghi chú: <span className="font-medium text-slate-800">{order.note}</span></p> : null}
                     <p className="sm:col-span-2">
-                        Địa chỉ: <span className="font-medium text-slate-800">{order.detailAddress}, {order.commune}, {order.district}, {order.province}</span>
+                        Địa chỉ: <AddressDisplay address={order} className="font-medium text-slate-800" />
                     </p>
                 </div>
             </article>

@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { ORDER_STATUS_LABEL, ORDER_STATUS_OPTIONS, getAdminAllowedNextStatuses } from "@/constants/orderStatus";
 import { useAllOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
 import { formatCurrency } from "@/lib/utils";
+import { AddressDisplay } from "@/components/address/AddressDisplay";
 import type { OrderStatus } from "@/types/order";
 
 const PAGE_SIZES = [2, 4, 10, 20, 25, 30, 40, 50];
@@ -110,7 +111,7 @@ const OrdersPage = () => {
                                         Đơn <span className="font-semibold text-slate-900">#{order.id}</span> - Người nhận: {order.recipientName}
                                     </p>
                                     <p>
-                                        Địa chỉ: {order.detailAddress}, {order.commune}, {order.district}, {order.province}
+                                        Địa chỉ: <AddressDisplay address={order} />
                                     </p>
                                     <p>
                                         Tổng tiền: <span className="font-semibold text-primary">{formatCurrency(Number(order.totalAmount))}</span>

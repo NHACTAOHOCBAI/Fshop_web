@@ -18,6 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCancelOrder, useConfirmDelivery, useMyOrders } from "@/hooks/useOrders";
 import { useCreateReview, useMyReviews } from "@/hooks/useReviews";
 import { buildPaginationItems, cn, formatCurrency } from "@/lib/utils";
+import { AddressDisplay } from "@/components/address/AddressDisplay";
 import type { Order, OrderStatus } from "@/types/order";
 
 const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> = {
@@ -428,7 +429,7 @@ const MyOrdersPage = () => {
                                             Giao đến: <span className="font-medium text-slate-700">{order.recipientName}</span>
                                         </p>
                                         <p className="line-clamp-2">
-                                            {order.detailAddress}, {order.commune}, {order.district}, {order.province}
+                                            <AddressDisplay address={order} />
                                         </p>
                                     </div>
 

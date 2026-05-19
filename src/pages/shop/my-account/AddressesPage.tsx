@@ -1,9 +1,10 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Home, MapPinHouse, Pencil, Plus, Star, Trash2 } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { toast } from "sonner";
 import { z } from "zod";
+import { AddressDisplay } from "@/components/address/AddressDisplay";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -57,10 +58,6 @@ const defaultValues: AddressFormValues = {
     isDefault: false,
 };
 
-const formatAddressLine = (address: Address) =>
-    [address.detailAddress, address.commune, address.district, address.province]
-        .filter(Boolean)
-        .join(", ");
 
 const AddressesPage = () => {
     const [isCreating, setIsCreating] = useState(false);
@@ -80,11 +77,56 @@ const AddressesPage = () => {
     const selectedProvince = form.watch("province");
     const selectedDistrict = form.watch("district");
 
+    const isNumeric = (val?: string) => (val ? /^\d+$/.test(val) : false);
+
     const { data: provinces = [], isLoading: isLoadingProvinces } = useProvinces();
-    const selectedProvinceCode = provinces.find((item) => item.name === selectedProvince)?.code ?? null;
+    const selectedProvinceCode = isNumeric(selectedProvince)
+        ? Number(selectedProvince)
+        : provinces.find((item) => item.name === selectedProvince)?.code ?? null;
+
     const { data: districts = [], isLoading: isLoadingDistricts } = useDistricts(selectedProvinceCode);
-    const selectedDistrictCode = districts.find((item) => item.name === selectedDistrict)?.code ?? null;
+    const selectedDistrictCode = isNumeric(selectedDistrict)
+        ? Number(selectedDistrict)
+        : districts.find((item) => item.name === selectedDistrict)?.code ?? null;
+
     const { data: wards = [], isLoading: isLoadingWards } = useWards(selectedDistrictCode);
+
+    // Auto-heal legacy name strings to GoShip codes inside edit form
+    useEffect(() => {
+        if (editingAddressId !== null) {
+            const currentProvince = form.getValues("province");
+            if (currentProvince && !isNumeric(currentProvince)) {
+                const found = provinces.find((p) => p.name === currentProvince);
+                if (found) {
+                    form.setValue("province", String(found.code), { shouldDirty: true });
+                }
+            }
+        }
+    }, [editingAddressId, provinces, form]);
+
+    useEffect(() => {
+        if (editingAddressId !== null) {
+            const currentDistrict = form.getValues("district");
+            if (currentDistrict && !isNumeric(currentDistrict)) {
+                const found = districts.find((d) => d.name === currentDistrict);
+                if (found) {
+                    form.setValue("district", String(found.code), { shouldDirty: true });
+                }
+            }
+        }
+    }, [editingAddressId, districts, form]);
+
+    useEffect(() => {
+        if (editingAddressId !== null) {
+            const currentCommune = form.getValues("commune");
+            if (currentCommune && !isNumeric(currentCommune)) {
+                const found = wards.find((w) => w.name === currentCommune);
+                if (found) {
+                    form.setValue("commune", String(found.code), { shouldDirty: true });
+                }
+            }
+        }
+    }, [editingAddressId, wards, form]);
 
     const addresses = useMemo(() => data?.data ?? [], [data]);
 
@@ -243,7 +285,7 @@ const AddressesPage = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {provinces.map((item) => (
-                                        <SelectItem key={item.code} value={item.name}>{item.name}</SelectItem>
+                                        <SelectItem key={item.code} value={String(item.code)}>{item.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -273,7 +315,7 @@ const AddressesPage = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {districts.map((item) => (
-                                        <SelectItem key={item.code} value={item.name}>{item.name}</SelectItem>
+                                        <SelectItem key={item.code} value={String(item.code)}>{item.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -302,7 +344,7 @@ const AddressesPage = () => {
                                 </SelectTrigger>
                                 <SelectContent>
                                     {wards.map((item) => (
-                                        <SelectItem key={item.code} value={item.name}>{item.name}</SelectItem>
+                                        <SelectItem key={item.code} value={String(item.code)}>{item.name}</SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
@@ -371,7 +413,7 @@ const AddressesPage = () => {
                                             </span>
                                         ) : null}
                                     </div>
-                                    <p className="text-sm text-slate-600">{formatAddressLine(address)}</p>
+                                    <p className="text-sm text-slate-600"><AddressDisplay address={address} /></p>
                                     <p className="inline-flex items-center gap-1 text-xs text-slate-500">
                                         <Home className="size-3.5" />
                                         {ADDRESS_TYPES.find((item) => item.value === address.type)?.label ?? "Khác"}

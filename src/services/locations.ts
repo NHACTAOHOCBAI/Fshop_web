@@ -2,33 +2,74 @@ import axios from "axios";
 
 import type { District, Province, Ward } from "@/types/location";
 
-const LOCATION_API_BASE = "https://provinces.open-api.vn/api";
+const LOCATION_API_BASE = "https://sandbox.goship.io/api/v2";
 
-type ProvinceWithDistricts = {
-    districts?: District[];
+type GoshipResponse<T> = {
+    code: number;
+    status: string;
+    data: T;
 };
 
-type DistrictWithWards = {
-    wards?: Ward[];
+type GoshipCity = {
+    id: string;
+    name: string;
 };
 
-export const getProvinces = async () => {
-    const { data } = await axios.get<Province[]>(`${LOCATION_API_BASE}/p/`);
-    return data;
+type GoshipDistrict = {
+    id: string;
+    name: string;
+    city_id: string;
 };
 
-export const getDistrictsByProvinceCode = async (provinceCode: number) => {
-    const { data } = await axios.get<ProvinceWithDistricts>(`${LOCATION_API_BASE}/p/${provinceCode}`, {
-        params: { depth: 2 },
+type GoshipWard = {
+    id: number | string;
+    name: string;
+    district_id: string;
+};
+
+const getHeaders = () => {
+    const token = import.meta.env.VITE_GOSHIP_TOKEN;
+    return {
+        Authorization: `Bearer ${token}`,
+        Accept: "application/json",
+    };
+};
+
+export const getProvinces = async (): Promise<Province[]> => {
+    const { data } = await axios.get<GoshipResponse<GoshipCity[]>>(`${LOCATION_API_BASE}/cities`, {
+        headers: getHeaders(),
     });
 
-    return data.districts ?? [];
+    return (data.data ?? []).map((city) => ({
+        code: Number(city.id),
+        name: city.name,
+    }));
 };
 
-export const getWardsByDistrictCode = async (districtCode: number) => {
-    const { data } = await axios.get<DistrictWithWards>(`${LOCATION_API_BASE}/d/${districtCode}`, {
-        params: { depth: 2 },
-    });
+export const getDistrictsByProvinceCode = async (provinceCode: number): Promise<District[]> => {
+    const { data } = await axios.get<GoshipResponse<GoshipDistrict[]>>(
+        `${LOCATION_API_BASE}/cities/${provinceCode}/districts`,
+        {
+            headers: getHeaders(),
+        }
+    );
 
-    return data.wards ?? [];
+    return (data.data ?? []).map((district) => ({
+        code: Number(district.id),
+        name: district.name,
+    }));
+};
+
+export const getWardsByDistrictCode = async (districtCode: number): Promise<Ward[]> => {
+    const { data } = await axios.get<GoshipResponse<GoshipWard[]>>(
+        `${LOCATION_API_BASE}/districts/${districtCode}/wards`,
+        {
+            headers: getHeaders(),
+        }
+    );
+
+    return (data.data ?? []).map((ward) => ({
+        code: Number(ward.id),
+        name: ward.name,
+    }));
 };

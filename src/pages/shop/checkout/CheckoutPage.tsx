@@ -21,6 +21,7 @@ import { useCreateOrder } from "@/hooks/useOrders";
 import { initiatePayment } from "@/services/payments";
 import { clearCheckoutSession, getCheckoutSession } from "@/lib/checkout";
 import { cn, formatCurrency, formatDate, formatDateTime } from "@/lib/utils";
+import { AddressDisplay } from "@/components/address/AddressDisplay";
 import type { Coupon } from "@/types/coupon";
 import type { ShippingMethod } from "@/types/order";
 
@@ -319,7 +320,7 @@ const CheckoutPage = () => {
                                 <span className="mx-2 text-slate-300">|</span>
                                 {selectedAddress.recipientPhone}
                                 <span className="mx-2 text-slate-300">-</span>
-                                {`${selectedAddress.detailAddress}, ${selectedAddress.commune}, ${selectedAddress.district}, ${selectedAddress.province}`}
+                                <AddressDisplay address={selectedAddress} />
                             </div>
                         ) : null}
 
@@ -353,7 +354,7 @@ const CheckoutPage = () => {
                                                 <span className="mx-2 text-slate-300">|</span>
                                                 {address.recipientPhone}
                                                 <span className="mx-2 text-slate-300">-</span>
-                                                {`${address.detailAddress}, ${address.commune}, ${address.district}, ${address.province}`}
+                                                <AddressDisplay address={address} />
                                             </p>
                                         </label>
                                     ))}

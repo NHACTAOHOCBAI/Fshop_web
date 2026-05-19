@@ -5,6 +5,7 @@ import OrderStatusTimeline from "@/components/orders/OrderStatusTimeline";
 import { Button } from "@/components/ui/button";
 import { useMyOrderById } from "@/hooks/useOrders";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { AddressDisplay } from "@/components/address/AddressDisplay";
 
 const OrderDetailPage = () => {
     const params = useParams<{ orderId?: string }>();
@@ -60,7 +61,7 @@ const OrderDetailPage = () => {
                     <p>Số lượng SP: <span className="font-medium text-slate-800">{totalItems}</span></p>
                     {order.note ? <p className="sm:col-span-2">Ghi chú: <span className="font-medium text-slate-800">{order.note}</span></p> : null}
                     <p className="sm:col-span-2">
-                        Địa chỉ: <span className="font-medium text-slate-800">{order.detailAddress}, {order.commune}, {order.district}, {order.province}</span>
+                        Địa chỉ: <AddressDisplay address={order} className="font-medium text-slate-800" />
                     </p>
                 </div>
             </article>
