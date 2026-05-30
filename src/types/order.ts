@@ -4,14 +4,12 @@ export type DecimalValue = number | string;
 export type OrderStatus =
   | "pending"
   | "confirmed"
-  | "processing"
   | "awaiting_pickup"
   | "in_transit"
   | "out_for_delivery"
   | "delivered"
   | "delivery_failed"
-  | "canceled"
-  | "refunded";
+  | "canceled";
 
 export type OrderItem = {
   id: number;
@@ -85,6 +83,13 @@ export type GetAllOrdersParams = GetMyOrdersParams;
 export type UpdateOrderStatusPayload = {
   status: OrderStatus;
   reason?: string;
+  trackingCode?: string;
+  carrierName?: string;
+  trackingUrl?: string;
+  receivedBy?: string;
+  currentLocation?: string;
+  shipperName?: string;
+  shipperPhone?: string;
 };
 
 export type OrderStatusUpdateResponse = {

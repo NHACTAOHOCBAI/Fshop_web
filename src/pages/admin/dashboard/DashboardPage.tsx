@@ -31,14 +31,12 @@ type TimeRange = "7d" | "30d" | "quarter";
 const STATUS_COLORS: Record<string, string> = {
   pending: "bg-amber-400",
   confirmed: "bg-sky-500",
-  processing: "bg-indigo-500",
   awaiting_pickup: "bg-cyan-500",
   in_transit: "bg-violet-500",
   out_for_delivery: "bg-fuchsia-500",
   delivered: "bg-emerald-500",
   delivery_failed: "bg-orange-500",
   canceled: "bg-rose-500",
-  refunded: "bg-cyan-500",
 };
 
 const CATEGORY_COLORS = [

@@ -11,20 +11,17 @@ type TimelineStep = {
 const STATUS_LABEL: Record<OrderStatus, string> = {
   pending: "Chờ xác nhận",
   confirmed: "Đã xác nhận",
-  processing: "Đang xử lý",
   awaiting_pickup: "Chờ lấy hàng",
   in_transit: "Đang vận chuyển",
   out_for_delivery: "Đang giao",
   delivered: "Đã giao",
   delivery_failed: "Giao thất bại",
   canceled: "Đã hủy",
-  refunded: "Đã hoàn tiền",
 };
 
 const MAIN_FLOW: OrderStatus[] = [
   "pending",
   "confirmed",
-  "processing",
   "awaiting_pickup",
   "in_transit",
   "out_for_delivery",
@@ -47,7 +44,6 @@ const buildFlow = (status: OrderStatus): TimelineStep[] => {
     return toSteps([
       "pending",
       "confirmed",
-      "processing",
       "awaiting_pickup",
       "in_transit",
       "out_for_delivery",
@@ -58,9 +54,7 @@ const buildFlow = (status: OrderStatus): TimelineStep[] => {
   return toSteps([
     "pending",
     "confirmed",
-    "processing",
     "canceled",
-    "refunded",
   ] as const);
 };
 

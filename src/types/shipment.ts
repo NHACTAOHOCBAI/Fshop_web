@@ -9,6 +9,14 @@ export type Shipment = {
   shippingFee?: number | string | null;
   shipmentStatus?: string | null;
   shipmentStatusCode?: number | null;
+  shipmentMeta?: {
+    history?: Array<{
+      status: number;
+      status_text: string;
+      status_desc: string;
+      updated_at: string;
+    }>;
+  } | null;
   createdAt: string;
   updatedAt: string;
 };

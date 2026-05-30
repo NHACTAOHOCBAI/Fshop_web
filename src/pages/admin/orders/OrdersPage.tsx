@@ -1,13 +1,12 @@
 import { ChevronLeft, ChevronRight, ChevronsLeft, ChevronsRight, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { Link } from "react-router";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ORDER_STATUS_LABEL, ORDER_STATUS_OPTIONS, getAdminAllowedNextStatuses } from "@/constants/orderStatus";
-import { useAllOrders, useUpdateOrderStatus } from "@/hooks/useOrders";
+import { ORDER_STATUS_LABEL, ORDER_STATUS_OPTIONS } from "@/constants/orderStatus";
+import { useAllOrders } from "@/hooks/useOrders";
 import { formatCurrency } from "@/lib/utils";
 import { AddressDisplay } from "@/components/address/AddressDisplay";
 import type { OrderStatus } from "@/types/order";
@@ -29,21 +28,9 @@ const OrdersPage = () => {
         sortOrder: "DESC",
     });
 
-    const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateOrderStatus();
-
     const orders = data?.data ?? [];
     const total = data?.meta?.pagination?.total ?? orders.length;
     const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-    const handleUpdateStatus = (orderId: number, nextStatus: OrderStatus) => {
-        updateStatus(
-            { id: orderId, payload: { status: nextStatus } },
-            {
-                onSuccess: () => toast.success(`Đã cập nhật đơn #${orderId} -> ${ORDER_STATUS_LABEL[nextStatus]}`),
-                onError: (updateError: Error) => toast.error(updateError.message || "Không thể cập nhật trạng thái."),
-            }
-        );
-    };
 
 
 
@@ -126,29 +113,6 @@ const OrdersPage = () => {
                                     <span className="rounded-full border border-slate-200 px-2.5 py-1 text-xs font-semibold text-slate-600">
                                         {ORDER_STATUS_LABEL[order.status] || order.status}
                                     </span>
-
-                                    <Select
-                                        value={order.status}
-                                        onValueChange={(value) => handleUpdateStatus(order.id, value as OrderStatus)}
-                                        disabled={isUpdatingStatus || getAdminAllowedNextStatuses(order.status).length === 0}
-                                    >
-                                        <SelectTrigger className="w-full sm:w-48">
-                                            <SelectValue placeholder="Cập nhật trạng thái" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            <SelectItem key={`${order.id}-current-${order.status}`} value={order.status} disabled>
-                                                {ORDER_STATUS_LABEL[order.status]} (hiện tại)
-                                            </SelectItem>
-                                            {getAdminAllowedNextStatuses(order.status).map((status) => (
-                                                <SelectItem key={`${order.id}-${status}`} value={status}>
-                                                    {ORDER_STATUS_LABEL[status]}
-                                                </SelectItem>
-                                            ))}
-                                            {getAdminAllowedNextStatuses(order.status).length === 0 ? (
-                                                <div className="px-2 py-1.5 text-xs text-slate-500">Không có trạng thái kế tiếp hợp lệ.</div>
-                                            ) : null}
-                                        </SelectContent>
-                                    </Select>
                                 </div>
                             </div>
                         </article>

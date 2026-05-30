@@ -1,7 +1,7 @@
 import { ArrowLeft, Loader2, Package } from "lucide-react";
 import { Link, useParams } from "react-router";
 
-import OrderStatusTimeline from "@/components/orders/OrderStatusTimeline";
+import ShipmentTrackingTimeline from "@/components/orders/ShipmentTrackingTimeline";
 import { Button } from "@/components/ui/button";
 import { useMyOrderById } from "@/hooks/useOrders";
 import { formatCurrency, formatDateTime } from "@/lib/utils";
@@ -58,10 +58,6 @@ const OrderDetailPage = () => {
           Đơn #{order.id}
         </span>
       </div>
-
-      <article className="rounded-2xl border border-slate-200 bg-white p-5">
-        <OrderStatusTimeline currentStatus={order.status} />
-      </article>
 
       <article className="rounded-2xl border border-slate-200 bg-white p-5">
         <h1 className="text-lg font-bold text-slate-900">Chi tiết đơn hàng</h1>
@@ -156,6 +152,12 @@ const OrderDetailPage = () => {
           </p>
         </div>
       </article>
+
+      {shipment ? (
+        <article className="rounded-2xl border border-slate-200 bg-white p-5">
+          <ShipmentTrackingTimeline orderId={orderId} />
+        </article>
+      ) : null}
 
       <article className="rounded-2xl border border-slate-200 bg-white p-5">
         <h2 className="flex items-center gap-2 text-base font-semibold text-slate-900">

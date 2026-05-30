@@ -30,3 +30,25 @@ export const getGoshipRatesPreview = async (payload: {
   >("/shipments/rates/preview", payload);
   return data;
 };
+
+export const updateShipmentStatus = async (
+  orderId: number,
+  payload: {
+    statusCode: number;
+    statusText: string;
+    trackingCode?: string;
+    carrierName?: string;
+    trackingUrl?: string;
+    currentLocation?: string;
+    shipperName?: string;
+    shipperPhone?: string;
+    receivedBy?: string;
+    cancelReason?: string;
+  },
+) => {
+  const { data } = await axiosInstance.patch<ApiResponse<any>>(
+    `/shipments/order/${orderId}/status`,
+    payload,
+  );
+  return data;
+};

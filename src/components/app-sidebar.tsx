@@ -25,6 +25,7 @@ import {
   ArchiveRestoreIcon,
   BadgePercentIcon,
   BoxesIcon,
+  FlaskConicalIcon,
   FolderTreeIcon,
   LayoutDashboardIcon,
   MessageSquareIcon,
@@ -59,6 +60,10 @@ const adminMenuItems = [
   { title: "Hỗ trợ khách hàng", url: "/admin/support", icon: <Phone /> },
   { title: "Livestream", url: "/admin/livestreams", icon: <VideoIcon /> },
   { title: "Sao lưu & Khôi phục", url: "/admin/backup-restore", icon: <ArchiveRestoreIcon /> },
+]
+
+const simulationMenuItems = [
+  { title: "Giả lập GOSHIP (Sandbox)", url: "/admin/shipments/simulate", icon: <FlaskConicalIcon /> },
 ]
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
@@ -109,9 +114,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          {isAdmin && (
-            <>
+        {isAdmin && (
+          <>
+            <SidebarGroup>
               <SidebarGroupLabel>Quản trị</SidebarGroupLabel>
               <SidebarMenu className="gap-1">
                 {adminMenuItems.map((item) => (
@@ -125,9 +130,25 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   </SidebarMenuItem>
                 ))}
               </SidebarMenu>
-            </>
-          )}
-        </SidebarGroup>
+            </SidebarGroup>
+
+            <SidebarGroup>
+              <SidebarGroupLabel>Giả lập</SidebarGroupLabel>
+              <SidebarMenu className="gap-1">
+                {simulationMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={isItemActive(item.url)} tooltip={item.title}>
+                      <Link to={item.url}>
+                        {item.icon}
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroup>
+          </>
+        )}
       </SidebarContent>
       <SidebarFooter>
         <NavUser

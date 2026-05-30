@@ -47,10 +47,6 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> =
       label: "Đã xác nhận",
       className: "bg-blue-50 text-blue-600 border-blue-200",
     },
-    processing: {
-      label: "Đang xử lý",
-      className: "bg-cyan-50 text-cyan-700 border-cyan-200",
-    },
     awaiting_pickup: {
       label: "Chờ lấy hàng",
       className: "bg-sky-50 text-sky-700 border-sky-200",
@@ -75,20 +71,14 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> =
       label: "Đã huỷ",
       className: "bg-red-50 text-red-600 border-red-200",
     },
-    refunded: {
-      label: "Đã hoàn tiền",
-      className: "bg-emerald-100 text-emerald-700 border-emerald-200",
-    },
   };
 
 const ORDER_TABS: { label: string; status?: OrderStatus }[] = [
   { label: "Tất cả" },
   { label: "Chờ xác nhận", status: "pending" },
-  { label: "Chờ xử lý", status: "processing" },
   { label: "Đang giao", status: "out_for_delivery" },
   { label: "Đã giao", status: "delivered" },
   { label: "Đã huỷ", status: "canceled" },
-  { label: "Hoàn tiền", status: "refunded" },
 ];
 
 const SHIPPING_LABELS = {
@@ -109,8 +99,6 @@ const getStatusHeadline = (status: OrderStatus) => {
       return "Shop đang chờ xác nhận đơn hàng của bạn";
     case "confirmed":
       return "Đơn hàng đã được xác nhận";
-    case "processing":
-      return "Shop đang chuẩn bị hàng";
     case "awaiting_pickup":
       return "Đơn hàng đang chờ hãng vận chuyển lấy";
     case "in_transit":
@@ -123,8 +111,6 @@ const getStatusHeadline = (status: OrderStatus) => {
       return "Đơn hàng giao thất bại, shop sẽ xử lý tiếp";
     case "canceled":
       return "Đơn hàng đã được hủy";
-    case "refunded":
-      return "Đơn hàng đã được hoàn tiền";
     default:
       return "Trạng thái đơn hàng";
   }
