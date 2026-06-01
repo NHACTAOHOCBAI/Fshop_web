@@ -14,6 +14,7 @@ import { useChangePassword, useMe, useUpdateProfile } from "@/hooks/useAuth";
 import { useMyAddresses } from "@/hooks/useAddresses";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import { authStorage } from "@/lib/auth";
+import { useFormattedAddress } from "@/components/address/AddressDisplay";
 
 const profileSchema = z.object({
     fullName: z.string().trim().min(1, "Họ và tên là bắt buộc").max(100, "Họ và tên quá dài"),
@@ -99,10 +100,9 @@ const ProfilePage = () => {
         };
     }, [selectedAvatar]);
 
+    const { formattedText: rawAddressDisplay, isLoading: isLoadingAddress } = useFormattedAddress(defaultAddress);
     const addressDisplay = defaultAddress
-        ? [defaultAddress.detailAddress, defaultAddress.commune, defaultAddress.district, defaultAddress.province]
-            .filter(Boolean)
-            .join(", ")
+        ? (isLoadingAddress ? "Đang tải địa chỉ mặc định..." : (rawAddressDisplay || "Đang tải..."))
         : "Chưa có địa chỉ mặc định";
     const avatarSrc = avatarPreview || profile?.avatar || undefined;
     const avatarFallback = profile?.fullName?.trim().charAt(0).toUpperCase() || profile?.email?.charAt(0).toUpperCase() || "U";
