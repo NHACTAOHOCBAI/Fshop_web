@@ -28,6 +28,14 @@ type TimelineEvent = {
 
 // Map status codes to modern Lucide icons and colors
 const getEventStyles = (status: number) => {
+  if (status === 899) {
+    return {
+      icon: CheckCircle2,
+      colorClass: "bg-blue-50 text-blue-600 border-blue-300",
+      activeColorClass: "bg-blue-600 text-white border-blue-600 shadow-md shadow-blue-600/10",
+      lineColorClass: "bg-blue-300",
+    };
+  }
   if (status === 900) {
     return {
       icon: Package,
@@ -162,8 +170,19 @@ const ShipmentTrackingTimeline = ({ orderId }: ShipmentTrackingTimelineProps) =>
     };
   });
 
+  const orderCreatedAt = shipment?.order?.createdAt || shipment?.createdAt;
   // Combine and sort descending (newest updates first)
   const combined = [...localHistory, ...goshipHistory];
+  combined.forEach(event => {
+    if (event.status === 900) {
+      event.statusText = "Chưa xác nhận";
+      event.statusDesc = "Đơn hàng đã tiếp nhận và đang chờ cửa hàng xác nhận.";
+      if (orderCreatedAt) {
+        event.updatedAt = orderCreatedAt;
+        event.timestamp = new Date(orderCreatedAt).getTime();
+      }
+    }
+  });
   combined.sort((a, b) => b.timestamp - a.timestamp);
 
   // Deduplicate by status code to avoid double entries
@@ -199,25 +218,38 @@ const ShipmentTrackingTimeline = ({ orderId }: ShipmentTrackingTimelineProps) =>
     seenCodes.add(910);
   }
 
-  // 1. Ensure "Chờ lấy hàng" (901) is present if shipment exists
-  if (shipment && !seenCodes.has(901)) {
+  // 1. Ensure "Chờ lấy hàng" (901) is present if shipment exists and order status has progressed beyond confirmed/canceled
+  const hasProgressedBeyondConfirmed = shipment?.order?.status && !["pending", "confirmed", "canceled"].includes(shipment.order.status);
+  if (shipment && hasProgressedBeyondConfirmed && !seenCodes.has(901)) {
     events.push({
       status: 901,
       statusText: "Chờ lấy hàng",
       statusDesc: "Đơn hàng đã được tạo mã vận đơn và chờ shipper tới lấy.",
       updatedAt: shipment.createdAt,
-      timestamp: new Date(shipment.createdAt).getTime(),
+      timestamp: new Date(shipment.createdAt).getTime() + 2000,
     });
     seenCodes.add(901);
   }
 
-  // 2. Ensure "Đơn mới" (900) is always present as the starting event
+  // 1.5. Ensure "Đã xác nhận" (899) is present if shipment exists (meaning order is confirmed or later)
+  if (shipment && !seenCodes.has(899)) {
+    events.push({
+      status: 899,
+      statusText: "Đã xác nhận",
+      statusDesc: "Đơn hàng đã được xác nhận thành công.",
+      updatedAt: shipment.createdAt,
+      timestamp: new Date(shipment.createdAt).getTime() + 1000,
+    });
+    seenCodes.add(899);
+  }
+
+  // 2. Ensure "Chưa xác nhận" (900) is always present as the starting event
   if (shipment && !seenCodes.has(900)) {
     const orderCreatedAt = shipment.order?.createdAt || shipment.createdAt;
     events.push({
       status: 900,
-      statusText: "Đơn mới",
-      statusDesc: "Đơn hàng đã tiếp nhận và đang được xử lý trên hệ thống.",
+      statusText: "Chưa xác nhận",
+      statusDesc: "Đơn hàng đã tiếp nhận và đang chờ cửa hàng xác nhận.",
       updatedAt: orderCreatedAt,
       timestamp: new Date(orderCreatedAt).getTime(),
     });
@@ -233,8 +265,8 @@ const ShipmentTrackingTimeline = ({ orderId }: ShipmentTrackingTimelineProps) =>
     const statusCode = shipment.shipmentStatusCode || 900;
     events.push({
       status: statusCode,
-      statusText: statusText,
-      statusDesc: "Đang được xử lý trên hệ thống.",
+      statusText: statusCode === 900 ? "Chưa xác nhận" : statusText,
+      statusDesc: statusCode === 900 ? "Đơn hàng đã tiếp nhận và đang chờ cửa hàng xác nhận." : "Đang được xử lý trên hệ thống.",
       updatedAt: shipment.updatedAt || shipment.createdAt,
       timestamp: new Date(shipment.updatedAt || shipment.createdAt).getTime(),
     });

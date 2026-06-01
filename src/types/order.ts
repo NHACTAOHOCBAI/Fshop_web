@@ -18,9 +18,12 @@ export type OrderItem = {
   variant: {
     id: number;
     imageUrl?: string | null;
+    color?: string | null;
+    size?: string | null;
     product: {
       id: number;
       name: string;
+      thumbnail?: string | null;
     };
   };
 };

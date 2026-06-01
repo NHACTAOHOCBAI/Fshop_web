@@ -81,7 +81,9 @@ const OrderDetailPage = () => {
           <p>
             Vận chuyển:{" "}
             <span className="font-medium text-slate-800">
-              {order.shippingMethod}
+              {order.shippingCarrierName
+                ? `${order.shippingCarrierName}${order.shippingServiceName ? ` (${order.shippingServiceName})` : ""}`
+                : "Đang cập nhật"}
             </span>
           </p>
           <p>
