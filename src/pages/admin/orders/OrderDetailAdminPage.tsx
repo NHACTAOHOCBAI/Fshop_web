@@ -26,7 +26,7 @@ const OrderDetailAdminPage = () => {
     // Call shipments API only if order is not pending
     const shipmentQuery = useShipmentByOrderId(
         orderId, 
-        Number.isFinite(orderId) && Boolean(order) && order.status !== "pending"
+        Number.isFinite(orderId) && Boolean(order) && order!.status !== "pending"
     );
 
     // Form states for manual order status change (stateless by default to let it fall back to order.status)
@@ -35,7 +35,6 @@ const OrderDetailAdminPage = () => {
     
     // GOSHIP shipment details for manual sync
     const [customTrackingCode, setCustomTrackingCode] = useState<string>("");
-    const [carrierName, setCarrierName] = useState<string>("");
     const [trackingUrl, setTrackingUrl] = useState<string>("");
     const [currentLocation, setCurrentLocation] = useState<string>("");
     const [shipperName, setShipperName] = useState<string>("");
@@ -48,11 +47,9 @@ const OrderDetailAdminPage = () => {
     useEffect(() => {
         if (shipment) {
             setCustomTrackingCode(shipment.trackingCode || "");
-            setCarrierName(shipment.carrierName || shipment.shipmentProvider || "");
             setTrackingUrl(shipment.trackingUrl || "");
         } else {
             setCustomTrackingCode("");
-            setCarrierName("");
             setTrackingUrl("");
         }
         
@@ -427,9 +424,9 @@ const OrderDetailAdminPage = () => {
                     {order.items.map((item) => (
                         <div key={item.id} className="flex items-center justify-between py-3 text-sm">
                             <div className="flex items-center gap-3">
-                                {item.variant.product.thumbnail ? (
+                                {(item.variant.product as any).thumbnail ? (
                                     <img
-                                        src={item.variant.product.thumbnail}
+                                        src={(item.variant.product as any).thumbnail}
                                         alt={item.variant.product.name}
                                         className="size-12 rounded-lg object-cover"
                                     />
@@ -438,7 +435,7 @@ const OrderDetailAdminPage = () => {
                                 )}
                                 <div>
                                     <h4 className="font-semibold text-slate-800">{item.variant.product.name}</h4>
-                                    <p className="text-xs text-slate-400">Phân loại: {item.variant.color} - Size {item.variant.size}</p>
+                                    <p className="text-xs text-slate-400">Phân loại: {(item.variant as any).color} - Size {(item.variant as any).size}</p>
                                 </div>
                             </div>
                             <div className="text-right">

@@ -85,7 +85,7 @@ const ClientLayout = () => {
 
     const { data: notificationsData, isFetching: isFetchingNotifications } = useMyNotifications({
         page: 1,
-        limit: 5,
+        limit: 100,
         sortBy: "createdAt",
         sortOrder: "DESC",
     });
@@ -114,7 +114,7 @@ const ClientLayout = () => {
                                     <Bell className="size-4" />
                                     {unreadCount > 0 && (
                                         <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-white">
-                                            {unreadCount > 9 ? "9+" : unreadCount}
+                                            {unreadCount > 99 ? "99+" : unreadCount}
                                         </span>
                                     )}
                                 </button>
@@ -193,7 +193,7 @@ const ClientLayout = () => {
                             <Bell className="size-4" />
                             {unreadCount > 0 && (
                                 <span className="absolute -right-0.5 -top-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-primary px-1 text-[10px] font-semibold leading-none text-white">
-                                    {unreadCount > 9 ? "9+" : unreadCount}
+                                    {unreadCount > 99 ? "99+" : unreadCount}
                                 </span>
                             )}
                         </button>

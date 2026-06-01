@@ -177,22 +177,22 @@ const ShipmentTrackingTimeline = ({ orderId }: ShipmentTrackingTimelineProps) =>
   }
 
   // Self-healing: Inject delivery failed / canceled if the order is in that state but not present in events
-  if (shipment?.order?.status === "delivery_failed" && !seenCodes.has(906)) {
+  if ((shipment as any)?.order?.status === "delivery_failed" && !seenCodes.has(906)) {
     events.push({
       status: 906,
       statusText: "Giao hàng thất bại",
-      statusDesc: shipment.shipmentMeta?.cancelReason || "Khách không nhận hoặc không liên hệ được.",
+      statusDesc: (shipment as any).shipmentMeta?.cancelReason || "Khách không nhận hoặc không liên hệ được.",
       updatedAt: shipment.updatedAt || shipment.createdAt,
       timestamp: new Date(shipment.updatedAt || shipment.createdAt).getTime(),
     });
     seenCodes.add(906);
   }
 
-  if (shipment?.order?.status === "canceled" && !seenCodes.has(910)) {
+  if ((shipment as any)?.order?.status === "canceled" && !seenCodes.has(910)) {
     events.push({
       status: 910,
       statusText: "Đã hủy đơn",
-      statusDesc: shipment.shipmentMeta?.cancelReason || "Hành trình vận chuyển bị huỷ.",
+      statusDesc: (shipment as any).shipmentMeta?.cancelReason || "Hành trình vận chuyển bị huỷ.",
       updatedAt: shipment.updatedAt || shipment.createdAt,
       timestamp: new Date(shipment.updatedAt || shipment.createdAt).getTime(),
     });
@@ -213,7 +213,7 @@ const ShipmentTrackingTimeline = ({ orderId }: ShipmentTrackingTimelineProps) =>
 
   // 2. Ensure "Đơn mới" (900) is always present as the starting event
   if (shipment && !seenCodes.has(900)) {
-    const orderCreatedAt = shipment.order?.createdAt || shipment.createdAt;
+    const orderCreatedAt = (shipment as any).order?.createdAt || shipment.createdAt;
     events.push({
       status: 900,
       statusText: "Đơn mới",
