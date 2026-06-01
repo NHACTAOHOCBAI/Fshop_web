@@ -48,6 +48,7 @@ import CommunityPage from "@/pages/shop/community/CommunityPage";
 import LivestreamListPage from "@/pages/shop/livestreams/LivestreamListPage";
 import LivestreamDetailPage from "@/pages/shop/livestreams/LivestreamDetailPage";
 import PaymentReturnPage from "@/pages/shop/payment/PaymentReturnPage";
+import MixMatchPage from "@/pages/shop/mix-match/MixMatchPage";
 
 import UnauthorizedPage from "@/pages/error/UnauthorizedPage";
 import NotFoundPage from "@/pages/error/NotFoundPage";
@@ -88,6 +89,10 @@ const router = createBrowserRouter([
       {
         path: "community",
         element: <CommunityPage />,
+      },
+      {
+        path: "mix-match",
+        element: <MixMatchPage />,
       },
       {
         path: "community/create",

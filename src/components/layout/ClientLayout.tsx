@@ -21,6 +21,7 @@ const navItems = [
     { to: "/men", label: "Nam", end: false },
     { to: "/women", label: "Nữ", end: false },
     { to: "/kids", label: "Trẻ em", end: false },
+    { to: "/mix-match", label: "Mix & Match", end: false },
     { to: "/livestreams", label: "Live", end: false },
     { to: "/community", label: "Community", end: false },
 ];
@@ -65,6 +66,8 @@ const ClientLayout = () => {
                         ? "tài khoản"
                         : pathname.startsWith("/community")
                             ? "community"
+                        : pathname.startsWith("/mix-match")
+                            ? "mix & match"
                         : pathname.startsWith("/livestreams")
                             ? "live"
                         : pathname.startsWith("/checkout")
