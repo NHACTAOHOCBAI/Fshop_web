@@ -1,5 +1,5 @@
 import { Bell, CheckCheck, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
-import type { ElementType } from "react";
+import { type ElementType, useState } from "react";
 import { toast } from "sonner";
 
 import {
@@ -9,6 +9,7 @@ import {
 } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import type { Notification, NotificationTypeExtended } from "@/types/notification";
+import ClientPagination from "@/components/pagination/ClientPagination";
 
 const TYPE_CONFIG: Record<NotificationTypeExtended, { icon: ElementType; className: string }> = {
     ORDER: { icon: Package, className: "bg-blue-50 text-blue-600" },
@@ -43,9 +44,12 @@ const getNotificationMessage = (notification: Notification) => {
 };
 
 const NotificationsPage = () => {
+    const [page, setPage] = useState(1);
+    const limit = 20;
+
     const { data, isLoading, isFetching, isError, error } = useMyNotifications({
-        page: 1,
-        limit: 20,
+        page,
+        limit,
         sortBy: "createdAt",
         sortOrder: "DESC",
     });
@@ -53,6 +57,9 @@ const NotificationsPage = () => {
     const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllNotificationsAsRead();
 
     const notifications = data?.data ?? [];
+    const paginationMeta = data?.meta?.pagination;
+    const totalPages = paginationMeta ? Math.max(1, Math.ceil(paginationMeta.total / limit)) : 1;
+
     const unreadCount = notifications.filter((item) => !item.isRead).length;
 
     const handleMarkOneAsRead = (id: number) => {
@@ -171,6 +178,17 @@ const NotificationsPage = () => {
                         <div className="flex items-center justify-center gap-2 py-2 text-xs text-slate-400">
                             <Loader2 className="size-3 animate-spin" />
                             Đang đồng bộ...
+                        </div>
+                    )}
+
+                    {!isLoading && totalPages > 1 && (
+                        <div className="mt-6 flex justify-center pb-8">
+                            <ClientPagination
+                                page={page}
+                                totalPages={totalPages}
+                                onPageChange={setPage}
+                                disabled={isFetching}
+                            />
                         </div>
                     )}
                 </div>

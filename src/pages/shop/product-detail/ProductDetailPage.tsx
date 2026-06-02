@@ -458,7 +458,21 @@ const ProductDetailPage = () => {
                                                 </div>
                                                 <div>
                                                     <p className="text-sm font-semibold text-slate-900">{author}</p>
-                                                    <p className="text-xs text-slate-500">{formatDate(review.createdAt)}</p>
+                                                    <div className="flex items-center gap-2 mt-0.5">
+                                                        <p className="text-xs text-slate-500">{formatDate(review.createdAt)}</p>
+                                                        {review.variantName && (
+                                                            <>
+                                                                <span className="text-slate-300">•</span>
+                                                                <p className="text-xs text-slate-500">Phân loại: {review.variantName}</p>
+                                                            </>
+                                                        )}
+                                                        {review.quantity && (
+                                                            <>
+                                                                <span className="text-slate-300">•</span>
+                                                                <p className="text-xs text-slate-500">Số lượng: {review.quantity}</p>
+                                                            </>
+                                                        )}
+                                                    </div>
                                                 </div>
                                             </div>
                                             <div className="inline-flex items-center gap-1 text-amber-500">

@@ -270,7 +270,7 @@ const ProfilePage = () => {
                     </div>
                 </form>
 
-                <div className="flex flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 md:h-fit">
+                <div className="flex min-w-0 flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-white p-4 sm:p-6 md:h-fit overflow-hidden">
                     <div className="relative">
                         <Avatar className="size-24">
                             <AvatarImage src={avatarSrc} alt={profile.fullName ?? profile.email} />
@@ -296,15 +296,17 @@ const ProfilePage = () => {
                             }}
                         />
                     </div>
-                    <div className="text-center">
-                        <p className="text-sm font-semibold text-slate-800">{profile.fullName || "Chưa cập nhật tên"}</p>
-                        <p className="mt-0.5 text-xs text-slate-500">{profile.email}</p>
+                    <div className="w-full text-center">
+                        <p className="truncate text-sm font-semibold text-slate-800" title={profile.fullName ?? undefined}>{profile.fullName || "Chưa cập nhật tên"}</p>
+                        <p className="mt-0.5 truncate text-xs text-slate-500" title={profile.email}>{profile.email}</p>
                     </div>
                     <p className="text-center text-xs text-slate-400">
                         Dung lượng tối đa 1 MB. Định dạng: JPG, PNG.
                     </p>
                     {selectedAvatar ? (
-                        <p className="text-center text-xs text-slate-500">Ảnh mới: {selectedAvatar.name}</p>
+                        <p className="w-full truncate text-center text-xs text-slate-500 px-2" title={`Ảnh mới: ${selectedAvatar.name}`}>
+                            Ảnh mới: {selectedAvatar.name}
+                        </p>
                     ) : null}
                 </div>
             </div>

@@ -30,6 +30,8 @@ export type ProductReview = {
     images: string[];
     helpfulCount: number;
     createdAt: string;
+    variantName?: string;
+    quantity?: number;
 };
 
 export type ReviewSummary = {

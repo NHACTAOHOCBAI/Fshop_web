@@ -4,9 +4,10 @@ import { Link, useParams } from "react-router";
 import ShipmentTrackingTimeline from "@/components/orders/ShipmentTrackingTimeline";
 import { Button } from "@/components/ui/button";
 import { useMyOrderById } from "@/hooks/useOrders";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { formatCurrency, formatDateTime, formatDate } from "@/lib/utils";
 import { AddressDisplay } from "@/components/address/AddressDisplay";
 import { useShipmentByOrderId } from "@/hooks/useShipments";
+import { ORDER_STATUS_LABEL } from "@/constants/orderStatus";
 
 const OrderDetailPage = () => {
   const params = useParams<{ orderId?: string }>();
@@ -76,24 +77,26 @@ const OrderDetailPage = () => {
           </p>
           <p>
             Trạng thái:{" "}
-            <span className="font-medium text-slate-800">{order.status}</span>
+            <span className="font-medium text-slate-800">{ORDER_STATUS_LABEL[order.status]}</span>
           </p>
           <p>
             Vận chuyển:{" "}
             <span className="font-medium text-slate-800">
-              {order.shippingMethod}
+              {order.shippingCarrierName && order.shippingServiceName 
+                ? `${order.shippingCarrierName} - ${order.shippingServiceName}`
+                : order.shippingCarrierName || order.shippingServiceName || order.shippingMethod}
             </span>
           </p>
           <p>
             Ngày tạo:{" "}
             <span className="font-medium text-slate-800">
-              {formatDateTime(order.createdAt)}
+              {formatDate(order.createdAt)}
             </span>
           </p>
           <p>
             Cập nhật:{" "}
             <span className="font-medium text-slate-800">
-              {formatDateTime(order.updatedAt)}
+              {formatDate(order.updatedAt)}
             </span>
           </p>
           <p>
@@ -103,26 +106,22 @@ const OrderDetailPage = () => {
           {shipment ? (
             <>
               <p>
-                Hãng vận chuyển:{" "}
-                <span className="font-medium text-slate-800">
-                  {shipment.carrierName || shipment.shipmentProvider || "-"}
-                </span>
-              </p>
-              <p>
                 Mã vận đơn:{" "}
                 <span className="font-medium text-slate-800">
-                  {shipment.trackingCode || shipment.shipmentId || "-"}
+                  {(!shipment.trackingCode || String(shipment.trackingCode).toLowerCase() === "null")
+                    ? (shipment.shipmentId || "Chưa có")
+                    : shipment.trackingCode}
                 </span>
               </p>
               <p>
                 Trạng thái vận đơn:{" "}
                 <span className="font-medium text-slate-800">
-                  {shipment.shipmentStatus || "-"}
+                  {shipment.shipmentStatus || "Chưa có"}
                 </span>
               </p>
               <p>
                 Tra cứu:{" "}
-                {shipment.trackingUrl ? (
+                {shipment.trackingUrl && shipment.trackingUrl !== "null" ? (
                   <a
                     className="font-medium text-blue-600 hover:underline"
                     href={shipment.trackingUrl}
@@ -132,7 +131,7 @@ const OrderDetailPage = () => {
                     Mở tracking
                   </a>
                 ) : (
-                  <span className="font-medium text-slate-800">-</span>
+                  <span className="font-medium text-slate-800">Chưa có</span>
                 )}
               </p>
             </>

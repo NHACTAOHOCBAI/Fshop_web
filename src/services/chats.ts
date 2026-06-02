@@ -50,6 +50,10 @@ export const sendChatMessage = async (payload: SendChatMessagePayload) => {
         formData.append("productIds", JSON.stringify(payload.productIds));
     }
 
+    if (payload.orderIds && payload.orderIds.length > 0) {
+        formData.append("orderIds", JSON.stringify(payload.orderIds));
+    }
+
     const { data } = await axiosInstance.post<ApiResponse<ChatMessage>>("/chats/send", formData, {
         headers: {
             "Content-Type": "multipart/form-data",

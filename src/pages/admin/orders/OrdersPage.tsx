@@ -44,7 +44,7 @@ const OrdersPage = () => {
             <div>
                 <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                     <Input
-                        placeholder="Tìm theo ghi chú hoặc địa chỉ..."
+                        placeholder="Bạn có thể tìm theo mã đơn, tên KH, sản phẩm, địa chỉ..."
                         value={search}
                         onChange={(event) => {
                             setSearch(event.target.value);

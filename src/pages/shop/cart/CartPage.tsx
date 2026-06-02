@@ -12,7 +12,6 @@ import { formatCurrency } from "@/lib/utils";
 import type { CartItem } from "@/types/cart";
 import { saveCheckoutSession } from "@/lib/checkout";
 
-const SHIPPING_FEE = 20000;
 
 const CartPage = () => {
     const navigate = useNavigate();
@@ -88,7 +87,7 @@ const CartPage = () => {
         return selectedItems.reduce((sum, item) => sum + item.variant.product.price * item.quantity, 0);
     }, [selectedItems]);
 
-    const total = subtotal + (selectedItems.length > 0 ? SHIPPING_FEE : 0);
+    const total = subtotal;
 
     const handleCheckout = () => {
         if (selectedItems.length === 0) {
@@ -119,7 +118,7 @@ const CartPage = () => {
         saveCheckoutSession({
             items: checkoutItems,
             subtotal,
-            shippingFee: SHIPPING_FEE,
+            shippingFee: 0,
             total,
             createdAt: new Date().toISOString(),
         });
@@ -302,12 +301,7 @@ const CartPage = () => {
                                 {selectedItems.length > 0 ? formatCurrency(subtotal) : "--"}
                             </span>
                         </div>
-                        <div className="flex items-center justify-between text-slate-600">
-                            <span>Phí vận chuyển</span>
-                            <span className="font-medium text-slate-800">
-                                {selectedItems.length > 0 ? formatCurrency(SHIPPING_FEE) : "--"}
-                            </span>
-                        </div>
+
                     </div>
 
                     <div className="my-4 h-[0.5px] bg-slate-200" />

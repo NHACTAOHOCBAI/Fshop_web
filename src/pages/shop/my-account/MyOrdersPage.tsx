@@ -12,7 +12,7 @@ import {
   XCircle,
 } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 import { ImageUpload } from "@/components/image-upload/image-upload";
@@ -117,6 +117,7 @@ const getStatusHeadline = (status: OrderStatus) => {
 };
 
 const MyOrdersPage = () => {
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearchValue, setDebouncedSearchValue] = useState("");
@@ -208,20 +209,22 @@ const MyOrdersPage = () => {
     });
   };
 
-  const handleChatWithShop = async (order: Order) => {
-    const summary = `Đơn hàng #${order.id} - ${order.items
-      .map((item) => item.variant?.product?.name ?? "Sản phẩm")
-      .join(", ")}`;
+  const handleChatWithShop = (order: Order) => {
+    const firstItem = order.items?.[0];
+    const imageUrl = firstItem?.variant?.imageUrl || firstItem?.variant?.product?.images?.[0]?.imageUrl || null;
 
-    try {
-      await navigator.clipboard.writeText(summary);
-      toast.success(
-        `Đã sao chép thông tin đơn #${order.id}. Có thể dùng để nhắn với shop.`,
-      );
-      return;
-    } catch {
-      toast.message(`Nhắn tin với shop cho đơn #${order.id}`);
-    }
+    navigate("/my-account/support", {
+      state: {
+        prefillOrder: {
+          id: order.id,
+          totalAmount: Number(order.totalAmount),
+          status: order.status,
+          createdAt: order.createdAt,
+          itemsCount: order.items?.reduce((sum, item) => sum + item.quantity, 0) || 0,
+          imageUrl,
+        },
+      },
+    });
   };
 
   const resetReviewForm = () => {
@@ -324,12 +327,12 @@ const MyOrdersPage = () => {
             <Input
               value={searchValue}
               onChange={(event) => setSearchValue(event.target.value)}
-              placeholder="Tìm mã đơn, tên, sản phẩm"
+              placeholder="Bạn có thể tìm theo mã đơn hàng (VD: 123) hoặc tên sản phẩm..."
               className="h-10 border-slate-200 bg-white pl-10 text-sm sm:h-11 sm:placeholder:block"
             />
           </div>
           <p className="mt-2 text-xs text-slate-400">
-            Tìm kiếm sẽ gọi API sau khi bạn dừng nhập trong giây lát.
+            Gợi ý: Nhập ID đơn hàng hoặc một phần tên sản phẩm để tra cứu nhanh. Hệ thống sẽ tự động tìm kiếm khi bạn dừng gõ phím.
           </p>
         </div>
       </div>

@@ -21,6 +21,11 @@ export type OrderItem = {
     product: {
       id: number;
       name: string;
+      images?: {
+        id: number;
+        imageUrl: string;
+        isPrimary: boolean;
+      }[];
     };
   };
 };

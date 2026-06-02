@@ -50,14 +50,17 @@ const ProductCard = ({ product, department, actionSlot, brandName }: ProductCard
     const showNewBadge = isCreatedWithinOneDay(product.createdAt);
 
     const cardContent = (
-        <>
-            <div className="relative h-56 w-full overflow-hidden bg-slate-100">
+        <div className="flex h-full flex-col">
+            <div className="relative h-56 w-full shrink-0 overflow-hidden bg-slate-100">
                 {imageUrl ? (
                     <img
                         src={imageUrl}
                         alt={product.name}
                         className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-[1.04]"
                         loading="lazy"
+                        onError={(e) => {
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAlIiBoZWlnaHQ9IjEwMCUiIHZpZXdCb3g9IjAgMCAxMDAgMTAwIiBwcmVzZXJ2ZUFzcGVjdFJhdGlvPSJub25lIj48cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjZjFmNWY5IiAvPjwvc3ZnPg=='; // fallback
+                        }}
                     />
                 ) : (
                     <div className="flex h-full w-full items-center justify-center bg-slate-200 text-xs text-slate-500">
@@ -71,18 +74,20 @@ const ProductCard = ({ product, department, actionSlot, brandName }: ProductCard
                     </span>
                 ) : null}
             </div>
-            <div className="p-3.5 space-y-2">
-                <p className="text-xs text-slate-400 font-medium">{brandName ?? product.brand?.name}</p>
-                <p className="line-clamp-2 text-sm font-semibold text-slate-800">
+            <div className="flex flex-1 flex-col p-3.5 space-y-2">
+                <p className="truncate text-xs font-medium text-slate-400" title={brandName ?? product.brand?.name ?? "FShop"}>
+                    {brandName ?? product.brand?.name ?? '\u00A0'}
+                </p>
+                <p className="line-clamp-2 min-h-[40px] text-sm font-semibold text-slate-800" title={product.name}>
                     {product.name}
                 </p>
-                <div className="flex items-baseline gap-2">
+                <div className="flex flex-wrap items-baseline gap-1.5">
                     {hasCouponDiscount ? (
                         <>
                             <span className="text-base font-bold text-primary">
                                 {formatCurrency(discountedPrice)}
                             </span>
-                            <span className="text-xs text-slate-400 line-through">
+                            <span className="truncate text-xs text-slate-400 line-through">
                                 {formatCurrency(basePrice)}
                             </span>
                         </>
@@ -93,20 +98,23 @@ const ProductCard = ({ product, department, actionSlot, brandName }: ProductCard
                     )}
                 </div>
                 {hasCouponDiscount ? (
-                    <div className="rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
-                        <span className="font-semibold">Giảm tối đa {formatCurrency(maxCouponDiscount)}</span>
-                        {bestCouponCode ? <span> với mã {bestCouponCode}</span> : null}
+                    <div className="truncate rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs text-emerald-700" title={`Giảm tối đa ${formatCurrency(maxCouponDiscount)}${bestCouponCode ? ` với mã ${bestCouponCode}` : ''}`}>
+                        <span className="font-semibold">Giảm {formatCurrency(maxCouponDiscount)}</span>
+                        {bestCouponCode ? <span> mã {bestCouponCode}</span> : null}
                     </div>
                 ) : null}
-                <div className="mt-2 flex items-center gap-1 text-xs">
-                    <Star className="size-3.5 fill-amber-400 text-amber-400" />
-                    <span className="font-semibold text-slate-700">{normalizedRating.toFixed(1)}</span>
+                
+                <div className="mt-auto pt-1 flex flex-wrap items-center gap-1.5 text-xs">
+                    <div className="flex items-center gap-1">
+                        <Star className="size-3.5 fill-amber-400 text-amber-400" />
+                        <span className="font-semibold text-slate-700">{normalizedRating.toFixed(1)}</span>
+                    </div>
                     <span className="text-slate-500">({formatCompactNumber(reviewCount)})</span>
-                    <span className="text-slate-500">Đã bán {formatCompactNumber(soldQuantity)}</span>
+                    <span className="truncate text-slate-500">Đã bán {formatCompactNumber(soldQuantity)}</span>
                 </div>
                 {actionSlot ? <div className="pt-1">{actionSlot}</div> : null}
             </div>
-        </>
+        </div>
     );
 
     if (department) {
