@@ -199,6 +199,16 @@ const AccountSupportChatPanel = ({
     (draft.trim().length > 0 || hasAttachments) &&
     !isSending;
 
+  const isTypeDisabled = (type: "image" | "voice" | "video" | "product" | "order") => {
+    if (isSending) return true;
+    if (imageItems.length > 0 && type !== "image") return true;
+    if (voiceFile && type !== "voice") return true;
+    if (videoFile && type !== "video") return true;
+    if (selectedProducts.length > 0 && type !== "product") return true;
+    if (selectedOrders.length > 0 && type !== "order") return true;
+    return false;
+  };
+
   useEffect(() => {
     if (!conversationId || seenConversationIdRef.current === conversationId) {
       return;
@@ -264,10 +274,27 @@ const AccountSupportChatPanel = ({
     }, 1200);
   };
 
+  const canAddAttachmentType = (type: "image" | "voice" | "video" | "product" | "order") => {
+    const currentTypes = new Set<string>();
+    if (imageItemsRef.current.length > 0) currentTypes.add("image");
+    if (voiceFile) currentTypes.add("voice");
+    if (videoFile) currentTypes.add("video");
+    if (selectedProducts.length > 0) currentTypes.add("product");
+    if (selectedOrders.length > 0) currentTypes.add("order");
+
+    if (currentTypes.size === 0 || (currentTypes.size === 1 && currentTypes.has(type))) {
+      return true;
+    }
+    toast.warning("Chỉ được gửi 1 loại đính kèm cùng lúc (ngoại trừ text).");
+    return false;
+  };
+
   const appendImages = (files: FileList | null) => {
     if (!files || files.length === 0) {
       return;
     }
+
+    if (!canAddAttachmentType("image")) return;
 
     const incoming = Array.from(files).map((file) => ({
       file,
@@ -361,6 +388,9 @@ const AccountSupportChatPanel = ({
 
   const toggleProduct = (product: Product) => {
     const productItem = toComposerProduct(product);
+
+    const isSelected = selectedProducts.some((item) => item.id === productItem.id);
+    if (!isSelected && !canAddAttachmentType("product")) return;
 
     setSelectedProducts((prev) => {
       if (prev.some((item) => item.id === productItem.id)) {
@@ -546,7 +576,8 @@ const AccountSupportChatPanel = ({
               <button
                 type="button"
                 onClick={() => removeImageItem(index)}
-                className="shrink-0 text-white/80 transition-colors hover:text-white"
+                className="shrink-0 text-white/80 transition-colors hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled={isSending}
               >
                 <X className="size-3.5" />
               </button>
@@ -561,7 +592,8 @@ const AccountSupportChatPanel = ({
             <button
               type="button"
               onClick={() => setVoiceFile(null)}
-              className="text-slate-400 transition-colors hover:text-slate-700"
+              className="text-slate-400 transition-colors hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSending}
             >
               <X className="size-3.5" />
             </button>
@@ -575,7 +607,8 @@ const AccountSupportChatPanel = ({
             <button
               type="button"
               onClick={() => setVideoFile(null)}
-              className="text-slate-400 transition-colors hover:text-slate-700"
+              className="text-slate-400 transition-colors hover:text-slate-700 disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSending}
             >
               <X className="size-3.5" />
             </button>
@@ -644,7 +677,8 @@ const AccountSupportChatPanel = ({
                   prev.filter((o) => o.id !== order.id),
                 )
               }
-              className="absolute right-1.5 top-1.5 rounded-full bg-white/80 p-1 text-slate-400 hover:text-red-500 shadow-sm transition-colors"
+              className="absolute right-1.5 top-1.5 rounded-full bg-white/80 p-1 text-slate-400 hover:text-red-500 shadow-sm transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              disabled={isSending}
             >
               <X className="size-3" />
             </button>
@@ -739,7 +773,7 @@ const AccountSupportChatPanel = ({
                   key={message.id}
                   className={`flex ${isUser ? "justify-end" : "justify-start"}`}
                 >
-                  <div className="flex max-w-[88%] flex-col gap-2">
+                  <div className={cn("flex max-w-[88%] flex-col gap-2", isUser ? "items-end" : "items-start")}>
                     {hasAttachmentsContent ? (
                       <div className="max-w-full">
                         {message.attachments
@@ -809,7 +843,8 @@ const AccountSupportChatPanel = ({
               onChange={(event) => syncTyping(event.target.value)}
               onKeyDown={handleComposerKeyDown}
               placeholder="Nhập nội dung cần hỗ trợ..."
-              className="min-h-24 resize-none"
+              className="min-h-10 resize-none"
+              disabled={isSending}
             />
 
             <div className="flex flex-wrap items-center gap-2">
@@ -830,6 +865,10 @@ const AccountSupportChatPanel = ({
                 accept="audio/mpeg,audio/wav,audio/webm,audio/mp4,audio/ogg"
                 className="hidden"
                 onChange={(event) => {
+                  if (event.target.files?.[0] && !canAddAttachmentType("voice")) {
+                    event.currentTarget.value = "";
+                    return;
+                  }
                   setVoiceFile(event.target.files?.[0] ?? null);
                   event.currentTarget.value = "";
                 }}
@@ -840,6 +879,10 @@ const AccountSupportChatPanel = ({
                 accept="video/mp4,video/quicktime,video/x-msvideo,video/webm"
                 className="hidden"
                 onChange={(event) => {
+                  if (event.target.files?.[0] && !canAddAttachmentType("video")) {
+                    event.currentTarget.value = "";
+                    return;
+                  }
                   setVideoFile(event.target.files?.[0] ?? null);
                   event.currentTarget.value = "";
                 }}
@@ -850,6 +893,7 @@ const AccountSupportChatPanel = ({
                 variant="outline"
                 size="sm"
                 onClick={() => imageInputRef.current?.click()}
+                disabled={isTypeDisabled("image")}
               >
                 <ImageIcon className="size-4" />
                 Ảnh
@@ -859,6 +903,7 @@ const AccountSupportChatPanel = ({
                 variant="outline"
                 size="sm"
                 onClick={() => voiceInputRef.current?.click()}
+                disabled={isTypeDisabled("voice")}
               >
                 <AudioLines className="size-4" />
                 Audio
@@ -868,6 +913,7 @@ const AccountSupportChatPanel = ({
                 variant="outline"
                 size="sm"
                 onClick={() => videoInputRef.current?.click()}
+                disabled={isTypeDisabled("video")}
               >
                 <FileVideo className="size-4" />
                 Video
@@ -878,6 +924,7 @@ const AccountSupportChatPanel = ({
                 variant="outline"
                 size="sm"
                 onClick={() => setIsProductPickerOpen(true)}
+                disabled={isTypeDisabled("product")}
               >
                 <Store className="size-4" />
                 Sản phẩm
@@ -893,6 +940,7 @@ const AccountSupportChatPanel = ({
                     variant="ghost"
                     size="sm"
                     onClick={clearComposer}
+                    disabled={isSending}
                   >
                     <Trash2 className="size-4" />
                     Xoá
