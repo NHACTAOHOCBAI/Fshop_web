@@ -518,7 +518,7 @@ const AccountSupportChatPanel = ({
                     {formatDateTime(attachment.order.createdAt)}
                   </span>
                   <span className="inline-flex items-center rounded-md bg-slate-200/60 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700">
-                    {ORDER_STATUS_LABEL[attachment.order.status as any] ||
+                    {ORDER_STATUS_LABEL[attachment.order.status as keyof typeof ORDER_STATUS_LABEL] ||
                       attachment.order.status}
                   </span>
                 </div>

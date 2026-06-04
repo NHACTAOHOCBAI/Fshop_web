@@ -4,7 +4,7 @@ import { Link, useParams } from "react-router";
 import ShipmentTrackingTimeline from "@/components/orders/ShipmentTrackingTimeline";
 import { Button } from "@/components/ui/button";
 import { useMyOrderById } from "@/hooks/useOrders";
-import { formatCurrency, formatDateTime, formatDate } from "@/lib/utils";
+import { formatCurrency, formatDate } from "@/lib/utils";
 import { AddressDisplay } from "@/components/address/AddressDisplay";
 import { useShipmentByOrderId } from "@/hooks/useShipments";
 import { ORDER_STATUS_LABEL } from "@/constants/orderStatus";
@@ -82,9 +82,9 @@ const OrderDetailPage = () => {
           <p>
             Vận chuyển:{" "}
             <span className="font-medium text-slate-800">
-              {order.shippingCarrierName && order.shippingServiceName 
-                ? `${order.shippingCarrierName} - ${order.shippingServiceName}`
-                : order.shippingCarrierName || order.shippingServiceName || order.shippingMethod}
+              {order.shippingCarrierName
+                ? `${order.shippingCarrierName}${order.shippingServiceName ? ` (${order.shippingServiceName})` : ""}`
+                : "Đang cập nhật"}
             </span>
           </p>
           <p>
