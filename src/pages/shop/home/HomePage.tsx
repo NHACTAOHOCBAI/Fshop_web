@@ -1,5 +1,4 @@
 import { ArrowRight, Camera, Compass, MessageCircle, Mic, Sparkles, Tag } from "lucide-react";
-import { useMemo, useState } from "react";
 import { Link } from "react-router";
 
 import { Button } from "@/components/ui/button";

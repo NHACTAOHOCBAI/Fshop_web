@@ -2,10 +2,8 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import {
   AudioLines,
   CheckCheck,
-  ChevronDown,
   Image as ImageIcon,
   Loader2,
-  MessageCircle,
   Plus,
   Send,
   Store,
@@ -28,7 +26,6 @@ import {
   useAiChatSessions,
   useCloseAiChatSession,
   useCreateAiChatSession,
-  useDeleteAiChatSession,
   useImageSearchInChatSession,
   useSendAiChatMessage,
   useVoiceSearchInChatSession,
@@ -116,7 +113,6 @@ const FloatingAiChatbot = () => {
   const sessionsQuery = useAiChatSessions(open && isAuthenticated);
   const createSessionMutation = useCreateAiChatSession();
   const closeSessionMutation = useCloseAiChatSession();
-  const deleteSessionMutation = useDeleteAiChatSession();
   const sendMessageMutation = useSendAiChatMessage();
   const imageSearchMutation = useImageSearchInChatSession();
   const voiceSearchMutation = useVoiceSearchInChatSession();

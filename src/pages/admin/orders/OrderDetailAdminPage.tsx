@@ -15,6 +15,11 @@ import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { AddressDisplay } from "@/components/address/AddressDisplay";
 import type { OrderStatus } from "@/types/order";
 
+const SHIPPING_METHOD_LABELS = {
+    standard: "Vận chuyển tiêu chuẩn",
+    express: "Vận chuyển hỏa tốc",
+} as const;
+
 const OrderDetailAdminPage = () => {
     const params = useParams<{ orderId?: string }>();
     const orderId = Number(params.orderId);
@@ -26,7 +31,7 @@ const OrderDetailAdminPage = () => {
     // Call shipments API only if order is not pending
     const shipmentQuery = useShipmentByOrderId(
         orderId, 
-        Number.isFinite(orderId) && Boolean(order) && order!.status !== "pending"
+        Number.isFinite(orderId) && Boolean(order) && order?.status !== "pending"
     );
 
     // Form states for manual order status change (stateless by default to let it fall back to order.status)
@@ -80,6 +85,9 @@ const OrderDetailAdminPage = () => {
     const subtotal = order.items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
     const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
     const allowedNextStatuses = getAdminAllowedNextStatuses(order.status);
+    const shippingDisplay = order.shippingCarrierName && order.shippingServiceName
+        ? `${order.shippingCarrierName} - ${order.shippingServiceName}`
+        : order.shippingCarrierName || order.shippingServiceName || SHIPPING_METHOD_LABELS[order.shippingMethod] || order.shippingMethod;
 
     return (
         <div className="w-full space-y-4">
@@ -308,7 +316,7 @@ const OrderDetailAdminPage = () => {
                                             status: targetStatus,
                                             reason: (targetStatus === "canceled" || targetStatus !== "confirmed" && targetStatus !== "awaiting_pickup" && targetStatus !== "in_transit" && targetStatus !== "out_for_delivery" && targetStatus !== "delivered") ? updateReason.trim() : undefined,
                                             trackingCode: targetStatus === "awaiting_pickup" ? customTrackingCode.trim() : undefined,
-                                            carrierName: targetStatus === "awaiting_pickup" ? order.shippingMethod : undefined, // Automatically use carrier from order
+                                            carrierName: targetStatus === "awaiting_pickup" ? (order.shippingCarrierName || "GOSHIP") : undefined, // Automatically use carrier from order
                                             trackingUrl: targetStatus === "awaiting_pickup" ? trackingUrl.trim() : undefined,
                                             currentLocation: targetStatus === "in_transit" ? currentLocation.trim() : undefined,
                                             shipperName: targetStatus === "out_for_delivery" ? shipperName.trim() : undefined,
@@ -364,7 +372,7 @@ const OrderDetailAdminPage = () => {
                     <p>SĐT: <span className="font-medium text-slate-800">{order.recipientPhone || "-"}</span></p>
                     <p>Ngày tạo: <span className="font-medium text-slate-800">{formatDateTime(order.createdAt)}</span></p>
                     <p>Cập nhật: <span className="font-medium text-slate-800">{formatDateTime(order.updatedAt)}</span></p>
-                    <p>Vận chuyển: <span className="font-medium text-slate-800">{order.shippingMethod}</span></p>
+                    <p>Vận chuyển: <span className="font-medium text-slate-800">{shippingDisplay}</span></p>
                     <p>Số lượng SP: <span className="font-medium text-slate-800">{totalItems}</span></p>
                     {order.note ? <p className="sm:col-span-2">Ghi chú: <span className="font-medium text-slate-800">{order.note}</span></p> : null}
                     <p className="sm:col-span-2">
@@ -399,7 +407,11 @@ const OrderDetailAdminPage = () => {
 
                                 <div className="grid gap-4 sm:grid-cols-3 rounded-xl bg-slate-50 border border-slate-100 p-4">
                                     <p className="text-xs text-slate-500">
-                                        Hãng: <span className="font-semibold text-slate-800">{shipment.carrierName || shipment.shipmentProvider || "-"}</span>
+                                        Hãng: <span className="font-semibold text-slate-800">
+                                            {(!shipment.carrierName || ["standard", "express"].includes(shipment.carrierName.toLowerCase()))
+                                                ? (order.shippingCarrierName || shipment.shipmentProvider || "-")
+                                                : shipment.carrierName}
+                                        </span>
                                     </p>
                                     <p className="text-xs text-slate-500">
                                         Mã Goship: <span className="font-mono font-medium text-slate-800">{shipment.shipmentId || "-"}</span>

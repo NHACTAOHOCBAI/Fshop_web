@@ -92,11 +92,6 @@ const UserBlogPage = () => {
     );
   }
 
-  const avatarFallback =
-    user.fullName?.trim().charAt(0).toUpperCase() ||
-    user.email?.charAt(0).toUpperCase() ||
-    "U";
-
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-2">
@@ -132,7 +127,7 @@ const UserBlogPage = () => {
               {user.avatar ? (
                 <img
                   src={user.avatar}
-                  alt={user.fullName}
+                  alt={user.fullName ?? "User avatar"}
                   className="h-full w-full object-cover"
                 />
               ) : (

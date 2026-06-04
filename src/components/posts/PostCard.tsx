@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, MoreVertical, Pencil, Trash2, X, User } from "lucide-react";
+import { Heart, MessageCircle, MoreVertical, Pencil, Trash2, X, User as UserIcon } from "lucide-react";
 import { Link } from "react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -28,7 +28,7 @@ import { formatRelativeTime } from "@/lib/utils";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import { authStorage } from "@/lib/auth";
 import type { Post } from "@/types/post";
-import type { User } from "@/types/user";
+import type { User as UserType } from "@/types/user";
 
 interface PostCardProps {
     post: Post;
@@ -53,7 +53,7 @@ const PostCard = ({
     showOwnerActions = true,
     rightActions,
 }: PostCardProps) => {
-    const currentUserId = authStorage.getUser<User>()?.id;
+    const currentUserId = authStorage.getUser<UserType>()?.id;
     const isOwner = currentUserId === post.userId;
 
     const { mutate: toggleLike, isPending: isLikingPost } = useTogglePostLike();
@@ -202,7 +202,7 @@ const PostCard = ({
                             />
                         ) : (
                             <div className={`${compact ? "h-7 w-7" : "h-8 w-8"} flex items-center justify-center rounded-full bg-slate-100 text-slate-500`}>
-                                <User className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
+                                <UserIcon className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
                             </div>
                         )}
                         <div>

@@ -16,9 +16,11 @@ export type Shipment = {
       status_desc: string;
       updated_at: string;
     }>;
+    cancelReason?: string | null;
   } | null;
   createdAt: string;
   updatedAt: string;
+  order?: any;
 };
 
 export type GoshipRateOption = {

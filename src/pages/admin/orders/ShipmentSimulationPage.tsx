@@ -49,7 +49,7 @@ const ShipmentSimulationPage = () => {
     // Call shipments API only if order is loaded and is not pending
     const shipmentQuery = useShipmentByOrderId(
         activeOrderId, 
-        activeOrderId > 0 && Boolean(order) && order!.status !== "pending"
+        activeOrderId > 0 && Boolean(order) && order?.status !== "pending"
     );
     
     const { mutate: updateShipmentStatus, isPending: isUpdatingShipment } = useUpdateShipmentStatus();
@@ -145,7 +145,7 @@ const ShipmentSimulationPage = () => {
                     statusCode: selectedStatusCode,
                     statusText: currentOption.text,
                     trackingCode: customTrackingCode || undefined,
-                    carrierName: selectedStatusCode === 901 ? (order?.shippingMethod || carrierName) : undefined, // Automatically use carrier from order
+                    carrierName: selectedStatusCode === 901 ? (order?.shippingCarrierName || carrierName) : undefined, // Automatically use carrier from order
                     trackingUrl: trackingUrl || undefined,
                     currentLocation: currentLocation || undefined,
                     shipperName: shipperName || undefined,
