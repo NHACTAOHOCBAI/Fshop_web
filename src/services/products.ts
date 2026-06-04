@@ -41,13 +41,50 @@ export const getProductTryonAssets = async (productId: number) => {
 };
 
 export const createProductTryonAsset = async ({ productId, ...payload }: CreateProductTryonAssetPayload) => {
-    const { data } = await axiosInstance.post<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets`, payload);
+    const formData = buildTryonAssetFormData(payload);
+    const { data } = await axiosInstance.post<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
     return data;
 };
 
 export const updateProductTryonAsset = async ({ productId, assetId, ...payload }: UpdateProductTryonAssetPayload) => {
-    const { data } = await axiosInstance.patch<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets/${assetId}`, payload);
+    const formData = buildTryonAssetFormData(payload);
+    const { data } = await axiosInstance.patch<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets/${assetId}`, formData, {
+        headers: { "Content-Type": "multipart/form-data" },
+    });
     return data;
+};
+
+const buildTryonAssetFormData = (payload: Omit<CreateProductTryonAssetPayload, "productId"> | Omit<UpdateProductTryonAssetPayload, "productId" | "assetId">) => {
+    const formData = new FormData();
+
+    if (payload.variantId !== undefined && payload.variantId !== null) {
+        formData.append("variantId", String(payload.variantId));
+    }
+    if (payload.assetType !== undefined) {
+        formData.append("assetType", payload.assetType);
+    }
+    if (payload.displayName !== undefined) {
+        formData.append("displayName", payload.displayName);
+    }
+    if (payload.deeparEffectUrl !== undefined) {
+        formData.append("deeparEffectUrl", payload.deeparEffectUrl);
+    }
+    if (payload.thumbnailUrl !== undefined && payload.thumbnailUrl !== null) {
+        formData.append("thumbnailUrl", payload.thumbnailUrl);
+    }
+    if (payload.isActive !== undefined) {
+        formData.append("isActive", String(payload.isActive));
+    }
+    if (payload.effectFile) {
+        formData.append("effectFile", payload.effectFile);
+    }
+    if (payload.thumbnailFile) {
+        formData.append("thumbnailFile", payload.thumbnailFile);
+    }
+
+    return formData;
 };
 
 export const deleteProductTryonAsset = async ({ productId, assetId }: { productId: number; assetId: number }) => {

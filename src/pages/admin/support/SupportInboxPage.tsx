@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AudioLines, CheckCheck, FileVideo, Image as ImageIcon, Loader2, MessageCircle, Send, Store, Trash2, X } from "lucide-react";
+import { AudioLines, CheckCheck, FileVideo, Image as ImageIcon, Loader2, MessageCircle, Mic, Send, Square, Store, Trash2, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -13,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useMe } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { useAdminChatRealtime, useAdminConversations, useChatRealtime, useConversationMessages, useMarkConversationSeen, useSendChatMessage } from "@/hooks/useChats";
 import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -215,6 +216,13 @@ const SupportInboxPage = () => {
         });
     };
 
+    const voiceRecorder = useVoiceRecorder({
+        onRecorded: (file) => {
+            setVoiceFile(file);
+            toast.success("Đã ghi âm audio");
+        },
+    });
+
     const clearComposer = () => {
         setDraft("");
         imageItemsRef.current.forEach(({ previewUrl }) => URL.revokeObjectURL(previewUrl));
@@ -222,7 +230,23 @@ const SupportInboxPage = () => {
         setVoiceFile(null);
         setVideoFile(null);
         setSelectedProducts([]);
+        if (voiceRecorder.isRecording) {
+            voiceRecorder.cancelRecording();
+        }
         emitTyping(false);
+    };
+
+    const toggleVoiceRecording = async () => {
+        if (voiceRecorder.isRecording) {
+            voiceRecorder.stopRecording();
+            return;
+        }
+
+        try {
+            await voiceRecorder.startRecording();
+        } catch (error) {
+            toast.error(error instanceof Error ? error.message : "Không thể bắt đầu ghi âm.");
+        }
     };
 
     const handleSend = () => {
@@ -591,9 +615,19 @@ const SupportInboxPage = () => {
                                             <ImageIcon className="size-4" />
                                             Ảnh
                                         </Button>
-                                        <Button type="button" variant="outline" size="sm" onClick={() => voiceInputRef.current?.click()}>
+                                        <Button type="button" variant="outline" size="sm" onClick={() => voiceInputRef.current?.click()} disabled={voiceRecorder.isRecording || isSending}>
                                             <AudioLines className="size-4" />
                                             Audio
+                                        </Button>
+                                        <Button
+                                            type="button"
+                                            variant={voiceRecorder.isRecording ? "destructive" : "outline"}
+                                            size="sm"
+                                            onClick={() => void toggleVoiceRecording()}
+                                            disabled={!voiceRecorder.isRecording && isSending}
+                                        >
+                                            {voiceRecorder.isRecording ? <Square className="size-4" /> : <Mic className="size-4" />}
+                                            {voiceRecorder.isRecording ? "Stop" : "Record"}
                                         </Button>
                                         <Button type="button" variant="outline" size="sm" onClick={() => videoInputRef.current?.click()}>
                                             <FileVideo className="size-4" />

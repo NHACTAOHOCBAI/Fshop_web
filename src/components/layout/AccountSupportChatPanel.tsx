@@ -5,8 +5,10 @@ import {
   FileVideo,
   Image as ImageIcon,
   Loader2,
+  Mic,
   Send,
   Store,
+  Square,
   Trash2,
   X,
   Package,
@@ -24,6 +26,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useMe } from "@/hooks/useAuth";
 import { useProducts } from "@/hooks/useProducts";
+import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import {
   useChatRealtime,
   useConversationMessages,
@@ -289,6 +292,28 @@ const AccountSupportChatPanel = ({
     return false;
   };
 
+  const voiceRecorder = useVoiceRecorder({
+    onRecorded: (file) => {
+      setVoiceFile(file);
+      toast.success("Đã ghi âm audio");
+    },
+  });
+
+  const toggleVoiceRecording = async () => {
+    if (voiceRecorder.isRecording) {
+      voiceRecorder.stopRecording();
+      return;
+    }
+
+    if (!canAddAttachmentType("voice")) return;
+
+    try {
+      await voiceRecorder.startRecording();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Không thể bắt đầu ghi âm.");
+    }
+  };
+
   const appendImages = (files: FileList | null) => {
     if (!files || files.length === 0) {
       return;
@@ -336,6 +361,9 @@ const AccountSupportChatPanel = ({
     setVideoFile(null);
     setSelectedProducts([]);
     setSelectedOrders([]);
+    if (voiceRecorder.isRecording) {
+      voiceRecorder.cancelRecording();
+    }
     emitTyping(false);
   };
 
@@ -903,10 +931,20 @@ const AccountSupportChatPanel = ({
                 variant="outline"
                 size="sm"
                 onClick={() => voiceInputRef.current?.click()}
-                disabled={isTypeDisabled("voice")}
+                disabled={isTypeDisabled("voice") || voiceRecorder.isRecording}
               >
                 <AudioLines className="size-4" />
                 Audio
+              </Button>
+              <Button
+                type="button"
+                variant={voiceRecorder.isRecording ? "destructive" : "outline"}
+                size="sm"
+                onClick={() => void toggleVoiceRecording()}
+                disabled={!voiceRecorder.isRecording && isTypeDisabled("voice")}
+              >
+                {voiceRecorder.isRecording ? <Square className="size-4" /> : <Mic className="size-4" />}
+                {voiceRecorder.isRecording ? "Stop" : "Record"}
               </Button>
               <Button
                 type="button"

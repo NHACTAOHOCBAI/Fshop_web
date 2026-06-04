@@ -51,7 +51,9 @@ type TryonAssetEditorState = {
     assetType: ProductTryonAssetType;
     displayName: string;
     deeparEffectUrl: string;
+    effectFile: File[];
     thumbnailUrl: string;
+    thumbnailFile: File[];
     variantId: string;
     isActive: "true" | "false";
 };
@@ -68,7 +70,9 @@ const createEmptyTryonDraft = (): TryonAssetDraftState => ({
     assetType: "glasses",
     displayName: "",
     deeparEffectUrl: "",
+    effectFile: [],
     thumbnailUrl: "",
+    thumbnailFile: [],
     variantId: "",
     isActive: "true",
 });
@@ -162,7 +166,9 @@ export default function EditProductPage() {
                 assetType: asset.assetType,
                 displayName: asset.displayName,
                 deeparEffectUrl: asset.deeparEffectUrl,
+                effectFile: [],
                 thumbnailUrl: asset.thumbnailUrl ?? "",
+                thumbnailFile: [],
                 variantId: asset.variantId ? String(asset.variantId) : "",
                 isActive: asset.isActive ? "true" : "false",
             }))
@@ -176,24 +182,26 @@ export default function EditProductPage() {
     const activeVariantOptions = variants.filter((variant) => !variant.removed && variant.id);
     const isTryonPending = isCreatingTryonAsset || isUpdatingTryonAsset || isDeletingTryonAsset;
 
-    const validateTryonAsset = (asset: TryonAssetDraftState | TryonAssetEditorState) => {
+    const validateTryonAsset = (asset: TryonAssetDraftState | TryonAssetEditorState, mode: "create" | "update") => {
         if (!asset.displayName.trim()) {
             toast.error("AR asset needs a display name");
             return false;
         }
 
-        if (!asset.deeparEffectUrl.trim()) {
-            toast.error("DeepAR effect URL is required");
+        if (mode === "create" && asset.effectFile.length === 0 && !asset.deeparEffectUrl.trim()) {
+            toast.error("Please upload a DeepAR effect file");
             return false;
         }
 
         try {
-            new URL(asset.deeparEffectUrl.trim());
+            if (asset.deeparEffectUrl.trim()) {
+                new URL(asset.deeparEffectUrl.trim());
+            }
             if (asset.thumbnailUrl.trim()) {
                 new URL(asset.thumbnailUrl.trim());
             }
         } catch {
-            toast.error("AR asset URLs must be valid URLs");
+            toast.error("Current AR asset URLs must be valid URLs");
             return false;
         }
 
@@ -201,7 +209,7 @@ export default function EditProductPage() {
     };
 
     const submitTryonDraft = () => {
-        if (!validateTryonAsset(tryonDraft)) {
+        if (!validateTryonAsset(tryonDraft, "create")) {
             return;
         }
 
@@ -210,8 +218,10 @@ export default function EditProductPage() {
                 productId: id,
                 assetType: tryonDraft.assetType,
                 displayName: tryonDraft.displayName.trim(),
-                deeparEffectUrl: tryonDraft.deeparEffectUrl.trim(),
+                deeparEffectUrl: tryonDraft.deeparEffectUrl.trim() || undefined,
+                effectFile: tryonDraft.effectFile[0] ?? null,
                 thumbnailUrl: tryonDraft.thumbnailUrl.trim() || null,
+                thumbnailFile: tryonDraft.thumbnailFile[0] ?? null,
                 variantId: tryonDraft.variantId ? Number(tryonDraft.variantId) : null,
                 isActive: tryonDraft.isActive === "true",
             },
@@ -228,7 +238,7 @@ export default function EditProductPage() {
     };
 
     const submitTryonEditor = (asset: TryonAssetEditorState) => {
-        if (!validateTryonAsset(asset)) {
+        if (!validateTryonAsset(asset, "update")) {
             return;
         }
 
@@ -238,8 +248,10 @@ export default function EditProductPage() {
                 assetId: asset.id,
                 assetType: asset.assetType,
                 displayName: asset.displayName.trim(),
-                deeparEffectUrl: asset.deeparEffectUrl.trim(),
+                deeparEffectUrl: asset.deeparEffectUrl.trim() || undefined,
+                effectFile: asset.effectFile[0] ?? null,
                 thumbnailUrl: asset.thumbnailUrl.trim() || null,
+                thumbnailFile: asset.thumbnailFile[0] ?? null,
                 variantId: asset.variantId ? Number(asset.variantId) : null,
                 isActive: asset.isActive === "true",
             },
@@ -659,11 +671,11 @@ export default function EditProductPage() {
                     <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
                         <div>
                             <p className="text-sm font-semibold">AR Try-On assets</p>
-                            <p className="text-xs text-slate-500">DeepAR effect URLs for glasses, hats, and accessories.</p>
+                            <p className="text-xs text-slate-500">Upload DeepAR effect files for glasses, hats, and accessories.</p>
                         </div>
                     </div>
 
-                    <div className="grid gap-3 rounded-md border bg-slate-50/60 p-3 lg:grid-cols-[160px_1fr_1fr_1fr_140px_auto]">
+                    <div className="grid gap-3 rounded-md border bg-slate-50/60 p-3 lg:grid-cols-[150px_1fr_1fr_1fr_140px_auto]">
                         <div className="space-y-2">
                             <label className="text-xs font-medium text-slate-600">Type</label>
                             <Select
@@ -694,22 +706,25 @@ export default function EditProductPage() {
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-600">DeepAR effect URL</label>
+                            <label className="text-xs font-medium text-slate-600">DeepAR effect file</label>
                             <Input
-                                value={tryonDraft.deeparEffectUrl}
-                                onChange={(event) => setTryonDraft((prev) => ({ ...prev, deeparEffectUrl: event.target.value }))}
+                                type="file"
+                                accept=".deepar,application/octet-stream"
+                                onChange={(event) => setTryonDraft((prev) => ({ ...prev, effectFile: Array.from(event.target.files ?? []).slice(0, 1) }))}
                                 disabled={isTryonPending}
-                                placeholder="https://..."
                             />
+                            {tryonDraft.effectFile[0] ? (
+                                <p className="truncate text-xs text-slate-500">{tryonDraft.effectFile[0].name}</p>
+                            ) : null}
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-xs font-medium text-slate-600">Thumbnail URL</label>
-                            <Input
-                                value={tryonDraft.thumbnailUrl}
-                                onChange={(event) => setTryonDraft((prev) => ({ ...prev, thumbnailUrl: event.target.value }))}
+                            <ImageUpload
+                                value={tryonDraft.thumbnailFile}
+                                onChange={(files) => setTryonDraft((prev) => ({ ...prev, thumbnailFile: files.slice(0, 1) }))}
+                                numOfImage={1}
+                                label="Thumbnail"
                                 disabled={isTryonPending}
-                                placeholder="https://..."
                             />
                         </div>
 
@@ -753,7 +768,7 @@ export default function EditProductPage() {
                     ) : (
                         <div className="space-y-3">
                             {tryonEditors.map((asset) => (
-                                <div key={asset.id} className="grid gap-3 rounded-md border p-3 lg:grid-cols-[160px_1fr_1fr_1fr_140px_120px]">
+                                <div key={asset.id} className="grid gap-3 rounded-md border p-3 lg:grid-cols-[150px_1fr_1fr_1fr_140px_120px]">
                                     <div className="space-y-2">
                                         <label className="text-xs font-medium text-slate-600">Type</label>
                                         <Select
@@ -784,19 +799,40 @@ export default function EditProductPage() {
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-slate-600">DeepAR effect URL</label>
+                                        <label className="text-xs font-medium text-slate-600">DeepAR effect file</label>
+                                        {asset.deeparEffectUrl ? (
+                                            <a
+                                                href={asset.deeparEffectUrl}
+                                                target="_blank"
+                                                rel="noreferrer"
+                                                className="block truncate text-xs text-blue-600 hover:underline"
+                                            >
+                                                Current effect
+                                            </a>
+                                        ) : null}
                                         <Input
-                                            value={asset.deeparEffectUrl}
-                                            onChange={(event) => updateTryonEditor(asset.id, (item) => ({ ...item, deeparEffectUrl: event.target.value }))}
+                                            type="file"
+                                            accept=".deepar,application/octet-stream"
+                                            onChange={(event) => updateTryonEditor(asset.id, (item) => ({ ...item, effectFile: Array.from(event.target.files ?? []).slice(0, 1) }))}
                                             disabled={isTryonPending}
                                         />
+                                        {asset.effectFile[0] ? (
+                                            <p className="truncate text-xs text-slate-500">{asset.effectFile[0].name}</p>
+                                        ) : null}
                                     </div>
 
                                     <div className="space-y-2">
-                                        <label className="text-xs font-medium text-slate-600">Thumbnail URL</label>
-                                        <Input
-                                            value={asset.thumbnailUrl}
-                                            onChange={(event) => updateTryonEditor(asset.id, (item) => ({ ...item, thumbnailUrl: event.target.value }))}
+                                        {asset.thumbnailUrl ? (
+                                            <div className="rounded border p-2">
+                                                <p className="mb-1 text-xs text-slate-500">Current thumbnail</p>
+                                                <img src={asset.thumbnailUrl} alt={asset.displayName} className="h-14 w-14 rounded object-cover" />
+                                            </div>
+                                        ) : null}
+                                        <ImageUpload
+                                            value={asset.thumbnailFile}
+                                            onChange={(files) => updateTryonEditor(asset.id, (item) => ({ ...item, thumbnailFile: files.slice(0, 1) }))}
+                                            numOfImage={1}
+                                            label="Replace thumbnail"
                                             disabled={isTryonPending}
                                         />
                                     </div>

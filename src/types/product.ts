@@ -73,8 +73,10 @@ export type CreateProductTryonAssetPayload = {
     variantId?: number | null;
     assetType: ProductTryonAssetType;
     displayName: string;
-    deeparEffectUrl: string;
+    deeparEffectUrl?: string;
+    effectFile?: File | null;
     thumbnailUrl?: string | null;
+    thumbnailFile?: File | null;
     isActive?: boolean;
 };
 
@@ -85,7 +87,9 @@ export type UpdateProductTryonAssetPayload = {
     assetType?: ProductTryonAssetType;
     displayName?: string;
     deeparEffectUrl?: string;
+    effectFile?: File | null;
     thumbnailUrl?: string | null;
+    thumbnailFile?: File | null;
     isActive?: boolean;
 };
 
