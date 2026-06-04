@@ -1,5 +1,5 @@
 import type { DragEvent } from "react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { Loader2, Plus, Save, Shirt, ShoppingBag, Trash2 } from "lucide-react";
 import { toast } from "sonner";
@@ -59,6 +59,7 @@ const MixMatchPage = () => {
     const [draftItems, setDraftItems] = useState<Partial<Record<OutfitSlot, DraftItem>>>({});
     const [searchTerm, setSearchTerm] = useState("");
     const [draggedSlot, setDraggedSlot] = useState<OutfitSlot | null>(null);
+    const [draggedProduct, setDraggedProduct] = useState<Product | null>(null);
 
     const productsQuery = useProducts({ page: 1, limit: 80, search: searchTerm || undefined });
     const slotTypesQuery = useSlotTypes();
@@ -84,22 +85,26 @@ const MixMatchPage = () => {
     const draftList = Object.values(draftItems).filter(Boolean) as DraftItem[];
     const totalPrice = draftList.reduce((sum, item) => sum + Number(item.variant.price || item.product.price || 0), 0);
 
+    const isProductValidForSlot = useCallback(
+        (product: Product, slotCode: string): boolean => {
+            const targetSlotType = slotTypes.find((st) => st.code === slotCode);
+            if (!targetSlotType) return true;
+            const categorySlotTypeId = product.category?.slotTypeId;
+            if (!categorySlotTypeId) return true;
+            return categorySlotTypeId === targetSlotType.id;
+        },
+        [slotTypes],
+    );
+
     const railProducts = useMemo(
         () =>
             products.filter((product) => {
-                if (!searchTerm.trim()) return true;
-                return product.name.toLowerCase().includes(searchTerm.trim().toLowerCase());
+                const matchSearch = !searchTerm.trim() || product.name.toLowerCase().includes(searchTerm.trim().toLowerCase());
+                const matchSlot = isProductValidForSlot(product, activeSlot);
+                return matchSearch && matchSlot;
             }),
-        [products, searchTerm],
+        [products, searchTerm, activeSlot, isProductValidForSlot],
     );
-
-    const isProductValidForSlot = (product: Product, slotCode: string): boolean => {
-        const targetSlotType = slotTypes.find((st) => st.code === slotCode);
-        if (!targetSlotType) return true;
-        const categorySlotTypeId = product.category?.slotTypeId;
-        if (!categorySlotTypeId) return true;
-        return categorySlotTypeId === targetSlotType.id;
-    };
 
     const getSlotLabelForProduct = (product: Product): string | null => {
         const categorySlotTypeId = product.category?.slotTypeId;
@@ -258,7 +263,11 @@ const MixMatchPage = () => {
                                         key={product.id}
                                         type="button"
                                         draggable={Boolean(variant)}
-                                        onDragStart={(event) => event.dataTransfer.setData("product-id", String(product.id))}
+                                        onDragStart={(event) => {
+                                            event.dataTransfer.setData("product-id", String(product.id));
+                                            setDraggedProduct(product);
+                                        }}
+                                        onDragEnd={() => setDraggedProduct(null)}
                                         onClick={() => assignProductToSlot(product)}
                                         className="flex w-full gap-3 rounded-lg border border-slate-100 bg-white p-2 text-left transition-colors hover:border-primary/40 hover:bg-sky-50/40"
                                     >
@@ -300,15 +309,27 @@ const MixMatchPage = () => {
                             {slotMeta.map((meta) => {
                                 const item = draftItems[meta.slot];
                                 const imageUrl = item ? getProductImage(item.product, item.variant) : "";
+
+                                const isInvalidDrop = draggedProduct
+                                    ? !isProductValidForSlot(draggedProduct, meta.slot)
+                                    : draggedSlot && draftItems[draggedSlot]
+                                    ? !isProductValidForSlot(draftItems[draggedSlot]!.product, meta.slot)
+                                    : false;
+
                                 return (
                                     <div
                                         key={meta.slot}
-                                        onClick={() => setActiveSlot(meta.slot)}
-                                        onDragOver={(event) => event.preventDefault()}
-                                        onDrop={(event) => handleProductDrop(meta.slot, event)}
+                                        onClick={() => !isInvalidDrop && setActiveSlot(meta.slot)}
+                                        onDragOver={(event) => {
+                                            if (!isInvalidDrop) event.preventDefault();
+                                        }}
+                                        onDrop={(event) => {
+                                            if (!isInvalidDrop) handleProductDrop(meta.slot, event);
+                                        }}
                                         className={cn(
                                             "flex min-h-60 flex-col justify-between rounded-xl border-2 border-dashed bg-white/80 p-3 transition-colors",
                                             activeSlot === meta.slot ? "border-primary shadow-sm" : "border-slate-200",
+                                            isInvalidDrop ? "opacity-50 grayscale cursor-not-allowed pointer-events-none" : ""
                                         )}
                                     >
                                         <div className="flex items-center justify-between gap-2">
