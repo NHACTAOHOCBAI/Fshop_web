@@ -15,6 +15,11 @@ import { formatCurrency, formatDateTime } from "@/lib/utils";
 import { AddressDisplay } from "@/components/address/AddressDisplay";
 import type { OrderStatus } from "@/types/order";
 
+const SHIPPING_METHOD_LABELS = {
+    standard: "Vận chuyển tiêu chuẩn",
+    express: "Vận chuyển hỏa tốc",
+} as const;
+
 const OrderDetailAdminPage = () => {
     const params = useParams<{ orderId?: string }>();
     const orderId = Number(params.orderId);
@@ -80,6 +85,9 @@ const OrderDetailAdminPage = () => {
     const subtotal = order.items.reduce((sum, item) => sum + Number(item.price) * item.quantity, 0);
     const totalItems = order.items.reduce((sum, item) => sum + item.quantity, 0);
     const allowedNextStatuses = getAdminAllowedNextStatuses(order.status);
+    const shippingDisplay = order.shippingCarrierName && order.shippingServiceName
+        ? `${order.shippingCarrierName} - ${order.shippingServiceName}`
+        : order.shippingCarrierName || order.shippingServiceName || SHIPPING_METHOD_LABELS[order.shippingMethod] || order.shippingMethod;
 
     return (
         <div className="w-full space-y-4">
@@ -364,7 +372,7 @@ const OrderDetailAdminPage = () => {
                     <p>SĐT: <span className="font-medium text-slate-800">{order.recipientPhone || "-"}</span></p>
                     <p>Ngày tạo: <span className="font-medium text-slate-800">{formatDateTime(order.createdAt)}</span></p>
                     <p>Cập nhật: <span className="font-medium text-slate-800">{formatDateTime(order.updatedAt)}</span></p>
-                    <p>Vận chuyển: <span className="font-medium text-slate-800">{order.shippingMethod}</span></p>
+                    <p>Vận chuyển: <span className="font-medium text-slate-800">{shippingDisplay}</span></p>
                     <p>Số lượng SP: <span className="font-medium text-slate-800">{totalItems}</span></p>
                     {order.note ? <p className="sm:col-span-2">Ghi chú: <span className="font-medium text-slate-800">{order.note}</span></p> : null}
                     <p className="sm:col-span-2">
