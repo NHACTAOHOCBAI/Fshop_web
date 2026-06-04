@@ -93,6 +93,8 @@ const FloatingAiChatbot = () => {
   >([]);
   const [isProductPickerOpen, setIsProductPickerOpen] = useState(false);
   const [productSearch, setProductSearch] = useState("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [voiceFile, setVoiceFile] = useState<File | null>(null);
 
   const imageInputRef = useRef<HTMLInputElement | null>(null);
   const voiceInputRef = useRef<HTMLInputElement | null>(null);
@@ -118,7 +120,25 @@ const FloatingAiChatbot = () => {
   const sendMessageMutation = useSendAiChatMessage();
   const imageSearchMutation = useImageSearchInChatSession();
   const voiceSearchMutation = useVoiceSearchInChatSession();
-  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+
+  const isSending =
+    sendMessageMutation.isPending ||
+    imageSearchMutation.isPending ||
+    voiceSearchMutation.isPending;
+
+  const hasImage = Boolean(imageFile);
+  const hasVoice = Boolean(voiceFile);
+  const hasProduct = selectedProducts.length > 0;
+  const hasText = draft.trim().length > 0;
+
+  const isTypeDisabled = (type: "image" | "voice" | "product" | "text") => {
+    if (isSending) return true;
+    if (hasImage && type !== "image") return true;
+    if (hasVoice && type !== "voice") return true;
+    if (hasProduct && type !== "product") return true;
+    if (hasText && type !== "text") return true;
+    return false;
+  };
 
   const activeSession = useMemo(() => {
     const sessions = sessionsQuery.data?.data ?? [];
@@ -211,19 +231,7 @@ const FloatingAiChatbot = () => {
     );
   };
 
-  const handleDeleteSession = () => {
-    if (!activeSession?.id) return;
-    deleteSessionMutation.mutate(activeSession.id, {
-      onSuccess: () => {
-        setShowDeleteConfirm(false);
-        toast.success("Đã xóa cuộc trò chuyện.");
-      },
-      onError: (error: Error) => {
-        setShowDeleteConfirm(false);
-        toast.error(error.message || "Không thể xóa cuộc trò chuyện.");
-      },
-    });
-  };
+
 
   const handleOpen = () => {
     if (!isAuthenticated) {
@@ -237,39 +245,13 @@ const FloatingAiChatbot = () => {
   const handleImageFileSelect = (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
-
-    const sessionId = activeSession?.id;
-    if (!sessionId) {
-      toast.error("Đang khởi tạo phiên chat, vui lòng thử lại.");
-      return;
-    }
-
-    imageSearchMutation.mutate(
-      { sessionId, file },
-      {
-        onError: (error: Error) =>
-          toast.error(error.message || "Không thể tìm kiếm bằng hình ảnh."),
-      },
-    );
+    setImageFile(file);
   };
 
   const handleVoiceFileSelect = (files: FileList | null) => {
     const file = files?.[0];
     if (!file) return;
-
-    const sessionId = activeSession?.id;
-    if (!sessionId) {
-      toast.error("Đang khởi tạo phiên chat, vui lòng thử lại.");
-      return;
-    }
-
-    voiceSearchMutation.mutate(
-      { sessionId, file },
-      {
-        onError: (error: Error) =>
-          toast.error(error.message || "Không thể tìm kiếm bằng giọng nói."),
-      },
-    );
+    setVoiceFile(file);
   };
 
   const toggleProduct = (product: Product) => {
@@ -286,26 +268,17 @@ const FloatingAiChatbot = () => {
 
   const clearComposer = () => {
     setDraft("");
+    setImageFile(null);
+    setVoiceFile(null);
     setSelectedProducts([]);
+    if (imageInputRef.current) imageInputRef.current.value = "";
+    if (voiceInputRef.current) voiceInputRef.current.value = "";
   };
 
   const handleSend = async () => {
     const normalized = draft.trim();
-    if (!normalized || sendMessageMutation.isPending) {
-      return;
-    }
-
-    const optimisticMessage: AiChatMessage = {
-      id: -Date.now(),
-      role: "user",
-      content: normalized,
-      products: null,
-      latencyMs: null,
-      createdAt: new Date().toISOString(),
-    };
-
-    setPendingMessage(optimisticMessage);
-    setDraft("");
+    if (isSending) return;
+    if (!normalized && !imageFile && !voiceFile) return;
 
     let sessionId = activeSession?.id;
 
@@ -315,17 +288,41 @@ const FloatingAiChatbot = () => {
         sessionId = created.data.id;
       }
 
-      await sendMessageMutation.mutateAsync({
-        sessionId,
-        message: normalized,
-        historyLimit: 12,
-      });
+      if (imageFile) {
+        await imageSearchMutation.mutateAsync({ sessionId, file: imageFile });
+        setImageFile(null);
+        if (imageInputRef.current) imageInputRef.current.value = "";
+      } else if (voiceFile) {
+        await voiceSearchMutation.mutateAsync({ sessionId, file: voiceFile });
+        setVoiceFile(null);
+        if (voiceInputRef.current) voiceInputRef.current.value = "";
+      } else if (normalized) {
+        const optimisticMessage: AiChatMessage = {
+          id: -Date.now(),
+          role: "user",
+          content: normalized,
+          products: null,
+          latencyMs: null,
+          createdAt: new Date().toISOString(),
+        };
 
-      setPendingMessage(null);
+        setPendingMessage(optimisticMessage);
+        setDraft("");
+
+        await sendMessageMutation.mutateAsync({
+          sessionId,
+          message: normalized,
+          historyLimit: 12,
+        });
+
+        setPendingMessage(null);
+      }
       clearComposer();
     } catch (error: unknown) {
       setPendingMessage(null);
-      setDraft(normalized);
+      if (normalized) {
+        setDraft(normalized);
+      }
       const message =
         error instanceof Error
           ? error.message
@@ -340,11 +337,60 @@ const FloatingAiChatbot = () => {
   const isMediaSearching =
     imageSearchMutation.isPending || voiceSearchMutation.isPending;
   const canSend =
-    Boolean(draft.trim()) &&
-    !sendMessageMutation.isPending &&
-    !isMediaSearching;
+    (Boolean(draft.trim()) || Boolean(imageFile) || Boolean(voiceFile)) &&
+    !isSending;
 
   const renderComposerAttachments = () => {
+    if (imageFile) {
+      const imageUrl = URL.createObjectURL(imageFile);
+      return (
+        <div className="mb-3 flex flex-wrap gap-2">
+          <div className="relative h-20 w-20 overflow-hidden rounded-lg border border-slate-200 bg-slate-100">
+            <img
+              src={imageUrl}
+              alt="preview"
+              className="h-full w-full object-cover"
+            />
+            <button
+              type="button"
+              disabled={isSending}
+              onClick={() => {
+                setImageFile(null);
+                if (imageInputRef.current) imageInputRef.current.value = "";
+              }}
+              className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/60 text-white transition-colors hover:bg-slate-900 disabled:opacity-50"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      );
+    }
+
+    if (voiceFile) {
+      return (
+        <div className="mb-3 flex flex-wrap gap-2">
+          <div className="relative flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 p-2 pr-8">
+            <AudioLines className="size-4 text-primary animate-pulse" />
+            <span className="text-xs text-slate-600 truncate max-w-[150px]">
+              {voiceFile.name}
+            </span>
+            <button
+              type="button"
+              disabled={isSending}
+              onClick={() => {
+                setVoiceFile(null);
+                if (voiceInputRef.current) voiceInputRef.current.value = "";
+              }}
+              className="absolute right-1 top-1/2 -translate-y-1/2 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/60 text-white transition-colors hover:bg-slate-900 disabled:opacity-50"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+      );
+    }
+
     if (selectedProducts.length === 0) return null;
 
     return (
@@ -352,8 +398,20 @@ const FloatingAiChatbot = () => {
         {selectedProducts.map((product) => (
           <div
             key={product.id}
-            className="w-40 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
+            className="relative w-40 overflow-hidden rounded-2xl border border-slate-200 bg-slate-50"
           >
+            <button
+              type="button"
+              disabled={isSending}
+              onClick={() => {
+                setSelectedProducts((prev) =>
+                  prev.filter((p) => p.id !== product.id),
+                );
+              }}
+              className="absolute right-1 top-1 z-10 flex h-5 w-5 items-center justify-center rounded-full bg-slate-900/60 text-white transition-colors hover:bg-slate-900 disabled:opacity-50"
+            >
+              ×
+            </button>
             <div className="h-24 bg-slate-100">
               {product.imageUrl ? (
                 <img
@@ -382,29 +440,38 @@ const FloatingAiChatbot = () => {
       <button
         type="button"
         onClick={handleOpen}
-        className="fixed bottom-4 right-4 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full bg-primary text-white shadow-[0_18px_40px_-16px_rgba(37,99,235,0.8)] transition-transform hover:scale-105 sm:bottom-6 sm:right-6"
+        className="fixed bottom-4 right-4 z-40 inline-flex h-14 w-14 items-center justify-center rounded-full bg-white border border-slate-200 shadow-[0_18px_40px_-16px_rgba(0,0,0,0.2)] transition-transform hover:scale-105 sm:bottom-6 sm:right-6 overflow-hidden"
         aria-label="Mở chatbot"
       >
-        <MessageCircle className="size-6" />
+        <img
+          src="/chatbot_2.png"
+          alt="Finn Chatbot"
+          className="h-[80%] w-[80%] object-contain"
+        />
       </button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
+      <Dialog open={open} onOpenChange={setOpen} modal={false}>
         <DialogContent
           showCloseButton={false}
+          showOverlay={false}
           className="fixed bottom-20 right-4 top-auto left-auto z-50 flex h-[min(82vh,52rem)] w-[calc(100vw-2rem)] max-w-[28rem] translate-x-0 translate-y-0 flex-col gap-0 overflow-hidden rounded-2xl border border-slate-200 bg-white p-0 shadow-[0_30px_80px_-24px_rgba(15,23,42,0.55)] sm:bottom-6 sm:right-6 sm:w-[28rem]"
         >
           <DialogHeader className="relative border-b border-slate-100 px-5 py-4">
             <div className="flex items-center justify-between gap-3">
-              <div className="flex min-w-0 items-center gap-3">
-                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10">
-                  <Store className="size-5" />
+              <div className="flex min-w-0 items-center gap-1">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full  overflow-hidden">
+                  <img
+                    src="/chatbot_2.png"
+                    alt="Finn"
+                    className="h-[80%] w-[80%] object-contain"
+                  />
                 </div>
                 <div className="min-w-0">
-                  <DialogTitle className="truncate text-sm font-semibold text-slate-900">
-                    Chat với trợ lý AI
+                  <DialogTitle className="truncate text-sm font-semibold text-[#40BFFF]">
+                    Finn
                   </DialogTitle>
-                  <p className="mt-0.5 text-xs text-slate-500">
-                    Hỗ trợ tìm sản phẩm, tư vấn size và mức giá.
+                  <p className="mt-0.5 text-[10px] text-slate-500 truncate">
+                    Có Finn, mua sắm đỉnh
                   </p>
                 </div>
               </div>
@@ -428,65 +495,11 @@ const FloatingAiChatbot = () => {
                     <Plus className="size-3.5" />
                   )}
                 </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (activeSession?.id) setShowDeleteConfirm(true);
-                  }}
-                  disabled={
-                    !activeSession?.id || deleteSessionMutation.isPending
-                  }
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-600 disabled:opacity-50"
-                  aria-label="Xóa cuộc trò chuyện"
-                  title="Xóa cuộc trò chuyện"
-                >
-                  {deleteSessionMutation.isPending ? (
-                    <Loader2 className="size-3.5 animate-spin" />
-                  ) : (
-                    <Trash2 className="size-3.5" />
-                  )}
-                </button>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-1 text-[11px] font-medium text-emerald-700">
                   <span className="h-2 w-2 rounded-full bg-emerald-500" />
                   Online
                 </span>
-                <button
-                  type="button"
-                  onClick={() => setOpen(false)}
-                  className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-slate-200 text-slate-500 transition-colors hover:bg-slate-50 hover:text-slate-700"
-                  aria-label="Đóng chatbot"
-                >
-                  <ChevronDown className="size-4" />
-                </button>
               </div>
-
-              {showDeleteConfirm ? (
-                <div className="absolute inset-x-4 top-16 z-10 rounded-xl border border-red-200 bg-white p-4 shadow-lg">
-                  <p className="text-sm font-semibold text-slate-800">
-                    Xóa cuộc trò chuyện?
-                  </p>
-                  <p className="mt-1 text-xs text-slate-500">
-                    Toàn bộ lịch sử chat sẽ bị xóa vĩnh viễn.
-                  </p>
-                  <div className="mt-3 flex justify-end gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setShowDeleteConfirm(false)}
-                      className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-50"
-                    >
-                      Hủy
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleDeleteSession}
-                      disabled={deleteSessionMutation.isPending}
-                      className="rounded-lg bg-red-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-red-600 disabled:opacity-50"
-                    >
-                      {deleteSessionMutation.isPending ? "Đang xóa..." : "Xóa"}
-                    </button>
-                  </div>
-                </div>
-              ) : null}
             </div>
           </DialogHeader>
 
@@ -532,10 +545,15 @@ const FloatingAiChatbot = () => {
                   message.role === "user" ? "justify-end" : "justify-start",
                 )}
               >
-                <div className="flex max-w-[88%] flex-col gap-2">
+                <div
+                  className={cn(
+                    "flex max-w-[88%] flex-col gap-2",
+                    message.role === "user" ? "items-end" : "items-start",
+                  )}
+                >
                   <div
                     className={cn(
-                      "rounded-2xl px-3 py-2 text-sm leading-relaxed",
+                      "rounded-2xl px-3 py-2 text-sm leading-relaxed w-fit",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "border border-slate-200 bg-slate-50 text-slate-700",
@@ -649,7 +667,8 @@ const FloatingAiChatbot = () => {
                 value={draft}
                 onChange={(event) => setDraft(event.target.value)}
                 placeholder="Nhập nội dung cần hỗ trợ..."
-                className="min-h-24 resize-none"
+                className="min-h-10 resize-none"
+                disabled={isTypeDisabled("text")}
                 onKeyDown={(event) => {
                   if (event.key === "Enter" && !event.shiftKey) {
                     event.preventDefault();
@@ -685,7 +704,7 @@ const FloatingAiChatbot = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => imageInputRef.current?.click()}
-                  disabled={isMediaSearching}
+                  disabled={isTypeDisabled("image")}
                 >
                   {imageSearchMutation.isPending ? (
                     <Loader2 className="size-3.5 animate-spin" />
@@ -699,7 +718,7 @@ const FloatingAiChatbot = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => voiceInputRef.current?.click()}
-                  disabled={isMediaSearching}
+                  disabled={isTypeDisabled("voice")}
                 >
                   {voiceSearchMutation.isPending ? (
                     <Loader2 className="size-3.5 animate-spin" />
@@ -713,6 +732,7 @@ const FloatingAiChatbot = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setIsProductPickerOpen(true)}
+                  disabled={isTypeDisabled("product")}
                 >
                   <Store className="size-3.5" />
                   Sản phẩm
@@ -722,12 +742,16 @@ const FloatingAiChatbot = () => {
                 </Button>
 
                 <div className="ml-auto flex items-center gap-2">
-                  {draft.trim() || selectedProducts.length > 0 ? (
+                  {draft.trim() ||
+                  selectedProducts.length > 0 ||
+                  imageFile ||
+                  voiceFile ? (
                     <Button
                       type="button"
                       variant="ghost"
                       size="sm"
                       onClick={clearComposer}
+                      disabled={isSending}
                     >
                       <Trash2 className="size-4" />
                       Xoá
@@ -739,7 +763,7 @@ const FloatingAiChatbot = () => {
                     onClick={() => void handleSend()}
                     disabled={!canSend}
                   >
-                    {sendMessageMutation.isPending ? (
+                    {isSending ? (
                       <Loader2 className="size-4 animate-spin" />
                     ) : (
                       <Send className="size-4" />
