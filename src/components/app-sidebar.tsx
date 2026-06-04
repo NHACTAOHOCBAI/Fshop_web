@@ -7,6 +7,16 @@ import { NavUser } from "@/components/nav-user";
 import FShopLogo from "@/components/layout/FShopLogo";
 import { useLogout } from "@/hooks/useAuth";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   useAdminNotificationRealtime,
   useAdminNotifications,
 } from "@/hooks/useNotifications";
@@ -110,10 +120,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return location.pathname === url || location.pathname.startsWith(`${url}/`);
   };
 
+  const [showLogoutConfirm, setShowLogoutConfirm] = React.useState(false);
+
   const handleLogout = () => {
+    setShowLogoutConfirm(true);
+  };
+
+  const confirmLogout = () => {
     logoutMutation(undefined, {
       onSettled: () => {
-        // Always clear local session even if API logout fails.
         authStorage.clear();
         toast.success("Đã đăng xuất");
         navigate("/login", { replace: true });
@@ -186,6 +201,22 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         />
       </SidebarFooter>
       <SidebarRail />
+      <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Xác nhận đăng xuất</AlertDialogTitle>
+            <AlertDialogDescription>
+              Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Hủy</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmLogout}>
+              Đăng xuất
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Sidebar>
   );
 }

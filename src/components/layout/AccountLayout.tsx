@@ -9,6 +9,16 @@ import {
     SheetHeader,
     SheetTitle,
 } from "@/components/ui/sheet";
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useLogout, useMe } from "@/hooks/useAuth";
 import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
@@ -54,7 +64,13 @@ const AccountLayout = () => {
         });
     }, [location.state, navigate]);
 
+    const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
     const handleLogout = () => {
+        setShowLogoutConfirm(true);
+    };
+
+    const confirmLogout = () => {
         logout(undefined, {
             onSettled: () => {
                 authStorage.clear();
@@ -180,6 +196,29 @@ const AccountLayout = () => {
                     <Outlet />
                 </div>
             </div>
+
+            <AlertDialog open={showLogoutConfirm} onOpenChange={setShowLogoutConfirm}>
+                <AlertDialogContent>
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Xác nhận đăng xuất</AlertDialogTitle>
+                        <AlertDialogDescription>
+                            Bạn có chắc chắn muốn đăng xuất khỏi hệ thống không?
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel disabled={isLoggingOut}>Hủy</AlertDialogCancel>
+                        <AlertDialogAction
+                            disabled={isLoggingOut}
+                            onClick={(event) => {
+                                event.preventDefault();
+                                confirmLogout();
+                            }}
+                        >
+                            {isLoggingOut ? "Đang đăng xuất..." : "Đăng xuất"}
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
         </div>
     );
 };
