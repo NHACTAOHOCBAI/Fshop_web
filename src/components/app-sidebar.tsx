@@ -51,6 +51,7 @@ import {
   TagsIcon,
   UsersIcon,
   VideoIcon,
+  Settings,
 } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router";
 
@@ -82,6 +83,11 @@ const adminMenuItems = [
     title: "Sao lưu & Khôi phục",
     url: "/admin/backup-restore",
     icon: <ArchiveRestoreIcon />,
+  },
+  {
+    title: "Cấu hình",
+    url: "/admin/settings",
+    icon: <Settings />,
   },
 ];
 

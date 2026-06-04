@@ -9,6 +9,7 @@ import {
   Sparkles,
   Tag,
   UserRound,
+  AlertCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
 import { format, subDays } from "date-fns";
@@ -61,6 +62,24 @@ const getDefaultRange = () => {
   const endDate = new Date();
   const startDate = subDays(endDate, 6);
   return { startDate, endDate };
+};
+
+const formatWaitingTime = (minutes: number) => {
+  if (minutes < 60) {
+    return `${minutes} phút chờ`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours < 24) {
+    return remainingMinutes > 0
+      ? `${hours} giờ ${remainingMinutes} phút chờ`
+      : `${hours} giờ chờ`;
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return remainingHours > 0
+    ? `${days} ngày ${remainingHours} giờ chờ`
+    : `${days} ngày chờ`;
 };
 
 const DashboardPage = () => {
@@ -496,46 +515,6 @@ const DashboardPage = () => {
         <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">
-              Đơn cần chú ý gấp
-            </h2>
-            <Sparkles className="size-4 text-rose-500" />
-          </div>
-          <div className="space-y-3">
-            {urgentOrders.map((order) => (
-              <Link
-                to={`/admin/orders/${order.id}`}
-                key={order.id}
-                className={`block rounded-xl border p-3 text-sm transition-all hover:opacity-90 hover:shadow-sm cursor-pointer ${priorityStyles[order.priority]}`}
-              >
-                <div className="flex items-start justify-between gap-3">
-                  <div>
-                    <p className="font-semibold text-slate-900">{order.code}</p>
-                    <p className="mt-1 text-xs opacity-80">{order.customerName}</p>
-                  </div>
-                  <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide">
-                    {order.priority}
-                  </span>
-                </div>
-                <div className="mt-3 flex items-center justify-between text-xs opacity-90">
-                  <span>{ORDER_STATUS_LABEL[order.status as OrderStatus] || order.status}</span>
-                  <span>{order.waitingMinutes} phút chờ</span>
-                </div>
-                {order.note && (
-                  <p className="mt-2 text-xs opacity-80">{order.note}</p>
-                )}
-              </Link>
-            ))}
-            {urgentOrders.length === 0 && (
-              <p className="text-sm text-slate-500">
-                Chưa có đơn cần chú ý gấp trong bộ lọc hiện tại.
-              </p>
-            )}
-          </div>
-        </article>
-
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
-          <div className="mb-4 flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-slate-900">
               Top sản phẩm
             </h2>
             <ShoppingCart className="size-4 text-sky-500" />
@@ -609,6 +588,46 @@ const DashboardPage = () => {
             {topCategories.length === 0 && (
               <p className="text-sm text-slate-500">
                 Chưa có dữ liệu top danh mục.
+              </p>
+            )}
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Đơn cần chú ý gấp
+            </h2>
+            <AlertCircle className="size-4 text-rose-500" />
+          </div>
+          <div className="space-y-3">
+            {urgentOrders.map((order) => (
+              <Link
+                to={`/admin/orders/${order.id}`}
+                key={order.id}
+                className={`block rounded-xl border p-3 text-sm transition-all hover:opacity-90 hover:shadow-sm cursor-pointer ${priorityStyles[order.priority]}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{order.code}</p>
+                    <p className="mt-1 text-xs opacity-80">{order.customerName}</p>
+                  </div>
+                  <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide">
+                    {order.priority}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs opacity-90">
+                  <span>{ORDER_STATUS_LABEL[order.status as OrderStatus] || order.status}</span>
+                  <span>{formatWaitingTime(order.waitingMinutes)}</span>
+                </div>
+                {order.note && (
+                  <p className="mt-2 text-xs opacity-80">{order.note}</p>
+                )}
+              </Link>
+            ))}
+            {urgentOrders.length === 0 && (
+              <p className="text-sm text-slate-500">
+                Chưa có đơn cần chú ý gấp trong bộ lọc hiện tại.
               </p>
             )}
           </div>
