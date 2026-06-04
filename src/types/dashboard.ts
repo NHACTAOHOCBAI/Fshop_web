@@ -1,12 +1,12 @@
-export type DashboardTimeRange = '7d' | '30d' | 'quarter';
-
 export type DashboardOverviewParams = {
-  timeRange?: DashboardTimeRange;
+  startDate?: string;
+  endDate?: string;
 };
 
 export type DashboardOverviewResponse = {
   filters: {
-    timeRange: DashboardTimeRange;
+    startDate: string;
+    endDate: string;
   };
   metrics: {
     revenue: {
@@ -42,6 +42,50 @@ export type DashboardOverviewResponse = {
       status: string;
       label: string;
       count: number;
+      percent: number;
+    }>;
+  };
+  analytics?: {
+    conversionFunnel?: Array<{
+      stage: string;
+      count: number;
+      percent: number;
+    }>;
+    channelRevenue?: Array<{
+      channel: string;
+      revenue: number;
+      percent: number;
+    }>;
+    customerMix?: {
+      newCustomers: number;
+      returningCustomers: number;
+      newRate: number;
+      returningRate: number;
+    };
+    performanceRates?: {
+      cancellationRate: number;
+      returnRate: number;
+    };
+    urgentOrders?: Array<{
+      id: number;
+      code: string;
+      customerName: string;
+      status: string;
+      waitingMinutes: number;
+      priority: 'high' | 'medium' | 'low';
+      note?: string;
+    }>;
+    topProducts?: Array<{
+      id: number;
+      name: string;
+      revenue: number;
+      quantity: number;
+      percent: number;
+    }>;
+    topCategories?: Array<{
+      id: number;
+      name: string;
+      revenue: number;
       percent: number;
     }>;
   };
