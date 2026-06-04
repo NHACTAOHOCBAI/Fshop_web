@@ -1,6 +1,7 @@
-export type ContentType = 'review' | 'post_comment' | 'livestream_comment';
+export type ContentType = 'post' | 'review' | 'post_comment' | 'livestream_comment';
 export type ModerationDecision = 'approved' | 'flagged';
 export type ModerationPriority = 'NORMAL' | 'HIGH';
+export type ModerationQueueStatus = 'pending' | 'reviewed' | 'approved' | 'rejected';
 
 export interface ModerationLabel {
   label: string;
@@ -39,12 +40,19 @@ export interface ModerationStats {
   totalFlagged: number;
   pendingReview: number;
   highPriority: number;
+  rejected: number;
   autoApproved: number;
   autoApprovedRate: number;
   labelDistribution: Record<string, number>;
 }
 
+export interface ModerationRecentResponse {
+  flagged: ModerationLog[];
+  rejected: ModerationLog[];
+}
+
 export interface ModerationQueueQuery {
+  status?: ModerationQueueStatus;
   contentType?: ContentType;
   priority?: ModerationPriority;
   page?: number;

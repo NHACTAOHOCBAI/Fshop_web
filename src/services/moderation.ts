@@ -4,6 +4,7 @@ import type {
   ModerationLog,
   ModerationQueueQuery,
   ModerationQueueResponse,
+  ModerationRecentResponse,
   ModerationStats,
 } from "@/types/moderation";
 
@@ -22,6 +23,16 @@ export const getModerationQueue = async (
 export const getModerationStats = async (): Promise<ApiResponse<ModerationStats>> => {
   const { data } = await axiosInstance.get<ApiResponse<ModerationStats>>(
     `${API_BASE}/stats`
+  );
+  return data;
+};
+
+export const getModerationRecent = async (
+  limit = 6,
+): Promise<ApiResponse<ModerationRecentResponse>> => {
+  const { data } = await axiosInstance.get<ApiResponse<ModerationRecentResponse>>(
+    `${API_BASE}/recent`,
+    { params: { limit } },
   );
   return data;
 };

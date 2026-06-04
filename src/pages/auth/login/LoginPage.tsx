@@ -103,7 +103,7 @@ export default function LoginPage() {
                             <div className="relative">
                                 <Input
                                     type="password"
-                                    placeholder="Ít nhất 8 ký tự"
+                                    placeholder="Ít nhất 6 ký tự"
                                     disabled={isPending}
                                     {...form.register("password")}
                                 />

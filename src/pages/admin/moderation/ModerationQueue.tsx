@@ -1,14 +1,21 @@
 import { useState } from "react";
+import { Link, useSearchParams } from "react-router";
 import { toast } from "sonner";
-import { ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
+import { ArrowLeft, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useModerationQueue, useOverrideDecision } from "@/hooks/useModeration";
-import type { ContentType, ModerationLog, ModerationPriority } from "@/types/moderation";
+import type {
+  ContentType,
+  ModerationLog,
+  ModerationPriority,
+  ModerationQueueStatus,
+} from "@/types/moderation";
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
+  post: "Post",
   review: "Review",
   post_comment: "Post Comment",
   livestream_comment: "Livestream",
@@ -20,6 +27,13 @@ const LABEL_COLORS: Record<string, string> = {
   hate_speech: "bg-purple-100 text-purple-800",
   nsfw: "bg-pink-100 text-pink-800",
   off_topic: "bg-gray-100 text-gray-800",
+};
+
+const STATUS_LABELS: Record<ModerationQueueStatus, string> = {
+  pending: "Pending Review",
+  reviewed: "Reviewed",
+  approved: "Approved",
+  rejected: "Rejected",
 };
 
 const ScoreBar = ({ score }: { score: number }) => (
@@ -103,28 +117,40 @@ const LogRow = ({ log }: { log: ModerationLog }) => {
           )}
         </td>
         <td className="px-4 py-3 text-xs text-muted-foreground">
-          {new Date(log.createdAt).toLocaleDateString("vi-VN")}
+          {new Date(log.reviewedAt ?? log.createdAt).toLocaleDateString("vi-VN")}
         </td>
         <td className="px-4 py-3">
           <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-green-500 text-green-600 hover:bg-green-50"
-              onClick={handleApprove}
-              disabled={isPending}
-            >
-              Approve
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="border-red-500 text-red-600 hover:bg-red-50"
-              onClick={handleReject}
-              disabled={isPending}
-            >
-              Reject
-            </Button>
+            {log.isOverridden ? (
+              <Badge
+                variant={
+                  log.overrideDecision === "rejected" ? "destructive" : "outline"
+                }
+              >
+                {log.overrideDecision === "rejected" ? "Rejected" : "Approved"}
+              </Badge>
+            ) : (
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-green-500 text-green-600 hover:bg-green-50"
+                  onClick={handleApprove}
+                  disabled={isPending}
+                >
+                  Approve
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="border-red-500 text-red-600 hover:bg-red-50"
+                  onClick={handleReject}
+                  disabled={isPending}
+                >
+                  Reject
+                </Button>
+              </>
+            )}
           </div>
         </td>
       </tr>
@@ -172,12 +198,23 @@ const LogRow = ({ log }: { log: ModerationLog }) => {
 };
 
 const ModerationQueue = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialStatus = searchParams.get("status");
+  const safeInitialStatus: ModerationQueueStatus =
+    initialStatus === "reviewed" ||
+    initialStatus === "approved" ||
+    initialStatus === "rejected"
+      ? initialStatus
+      : "pending";
+
+  const [status, setStatus] = useState<ModerationQueueStatus>(safeInitialStatus);
   const [contentType, setContentType] = useState<ContentType | "all">("all");
   const [priority, setPriority] = useState<ModerationPriority | "all">("all");
   const [page, setPage] = useState(1);
   const LIMIT = 20;
 
   const queryParams = {
+    status,
     contentType: contentType === "all" ? undefined : contentType,
     priority: priority === "all" ? undefined : priority,
     page,
@@ -187,12 +224,49 @@ const ModerationQueue = () => {
   const { data, isLoading, refetch } = useModerationQueue(queryParams);
   const items = data?.data?.items ?? [];
   const totalPages = data?.data?.totalPages ?? 1;
+  const emptyText =
+    status === "pending"
+      ? "No flagged content pending review."
+      : `No ${STATUS_LABELS[status].toLowerCase()} moderation records.`;
+
+  const handleStatusChange = (value: ModerationQueueStatus) => {
+    setStatus(value);
+    setPage(1);
+    setSearchParams(value === "pending" ? {} : { status: value });
+  };
 
   return (
     <div className="space-y-4 p-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-2xl font-bold">Moderation Queue</h1>
         <div className="flex items-center gap-3">
+          <Button variant="ghost" size="sm" asChild>
+            <Link to="/admin/moderation" className="gap-1.5">
+              <ArrowLeft className="size-4" />
+              Back to Dashboard
+            </Link>
+          </Button>
+          <div>
+            <h1 className="text-2xl font-bold">Moderation Queue</h1>
+            <p className="text-sm text-muted-foreground">
+              {STATUS_LABELS[status]}
+            </p>
+          </div>
+        </div>
+        <div className="flex items-center gap-3">
+          <Select
+            value={status}
+            onValueChange={(v) => handleStatusChange(v as ModerationQueueStatus)}
+          >
+            <SelectTrigger className="w-40">
+              <SelectValue placeholder="Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="pending">Pending</SelectItem>
+              <SelectItem value="reviewed">Reviewed</SelectItem>
+              <SelectItem value="approved">Approved</SelectItem>
+              <SelectItem value="rejected">Rejected</SelectItem>
+            </SelectContent>
+          </Select>
           <Select
             value={contentType}
             onValueChange={(v) => {
@@ -205,6 +279,7 @@ const ModerationQueue = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All types</SelectItem>
+              <SelectItem value="post">Post</SelectItem>
               <SelectItem value="review">Review</SelectItem>
               <SelectItem value="post_comment">Post Comment</SelectItem>
               <SelectItem value="livestream_comment">Livestream</SelectItem>
@@ -239,7 +314,7 @@ const ModerationQueue = () => {
         </div>
       ) : items.length === 0 ? (
         <div className="flex h-64 items-center justify-center text-muted-foreground">
-          No flagged content pending review.
+          {emptyText}
         </div>
       ) : (
         <div className="overflow-x-auto rounded-lg border">
