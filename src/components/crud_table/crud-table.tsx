@@ -13,6 +13,7 @@ interface CrudTableProps<T extends { id: number }> {
     useQuery: (params: QueryParams) => UseQueryResult<unknown, Error>;
     filterPlaceholder?: string;
     children?: React.ReactNode;
+    renderCustomView?: (data: T[], isFetching: boolean) => React.ReactNode;
 }
 
 export default function CrudTable<T extends { id: number }>({
@@ -20,6 +21,7 @@ export default function CrudTable<T extends { id: number }>({
     useQuery,
     filterPlaceholder = "Tìm kiếm...",
     children,
+    renderCustomView,
 }: CrudTableProps<T>) {
     const { table, isFetching, filter, setFilter, setPagination } = useTable<T>({
         use: useQuery,
@@ -39,15 +41,22 @@ export default function CrudTable<T extends { id: number }>({
                     }}
                 />
                 <div className="ml-auto flex items-center">
-                    <DataTableViewOptions table={table} />
+                    {!renderCustomView && <DataTableViewOptions table={table} />}
                     {children}
                 </div>
             </div>
 
             <div>
-                <div className="overflow-hidden rounded-md border">
-                    <CustomTable onLoading={isFetching} columns={columns} table={table} />
-                </div>
+                {renderCustomView ? (
+                    renderCustomView(
+                        table.getRowModel().rows.map((row) => row.original),
+                        isFetching
+                    )
+                ) : (
+                    <div className="overflow-hidden rounded-md border">
+                        <CustomTable onLoading={isFetching} columns={columns} table={table} />
+                    </div>
+                )}
                 <div className="space-x-2 py-4">
                     <DataTablePagination table={table} />
                 </div>

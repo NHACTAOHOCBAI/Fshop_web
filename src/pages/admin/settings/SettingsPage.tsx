@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { AlertCircle, Save, Settings, Loader2 } from "lucide-react";
+import { AlertCircle, Save, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSystemSettings, updateSystemSettings } from "@/services/settings";
 

@@ -6,7 +6,6 @@ import {
   Package,
   ShoppingBag,
   ShoppingCart,
-  Sparkles,
   Tag,
   UserRound,
   AlertCircle,

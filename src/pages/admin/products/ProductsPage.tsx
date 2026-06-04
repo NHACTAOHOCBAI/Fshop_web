@@ -1,7 +1,8 @@
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, LayoutGrid, LayoutList } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
+import ProductCard from "@/pages/shop/products/components/ProductCard";
 
 import CrudTable from "@/components/crud_table/crud-table";
 import {
@@ -29,6 +30,7 @@ import { productColumns } from "./product-columns";
 
 const ProductsPage = () => {
     const navigate = useNavigate();
+    const [viewMode, setViewMode] = useState<"table" | "card">("table");
     const [detailProductId, setDetailProductId] = useState<number | null>(null);
     const [pendingDeleteProductId, setPendingDeleteProductId] = useState<number | null>(null);
     const { mutate: deleteItem, isPending: isDeleting } = useDeleteProduct();
@@ -73,7 +75,89 @@ const ProductsPage = () => {
                     columns={productColumns(handleViewItem, handleEditItem, handleDeleteItem)}
                     useQuery={useProducts}
                     filterPlaceholder="Lọc theo tên sản phẩm..."
+                    renderCustomView={viewMode === "card" ? (data, isFetching) => {
+                        if (isFetching) {
+                            return (
+                                <div className="flex h-[200px] w-full items-center justify-center">
+                                    <Loader2 className="h-8 w-8 animate-spin text-[#40BFFF]" />
+                                </div>
+                            );
+                        }
+                        return (
+                            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 py-4">
+                                {data.map((product) => (
+                                    <ProductCard
+                                        key={product.id}
+                                        product={product as any}
+                                        actionSlot={
+                                            <div className="flex gap-2 justify-end w-full pt-2 border-t mt-2">
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-7 text-xs px-2"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleViewItem(product.id);
+                                                    }}
+                                                >
+                                                    Chi tiết
+                                                </Button>
+                                                <Button
+                                                    variant="outline"
+                                                    size="sm"
+                                                    className="h-7 text-xs px-2"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleEditItem(product.id);
+                                                    }}
+                                                >
+                                                    Sửa
+                                                </Button>
+                                                <Button
+                                                    variant="destructive"
+                                                    size="sm"
+                                                    className="h-7 text-xs px-2"
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        e.stopPropagation();
+                                                        handleDeleteItem(product.id);
+                                                    }}
+                                                >
+                                                    Xóa
+                                                </Button>
+                                            </div>
+                                        }
+                                    />
+                                ))}
+                                {data.length === 0 && (
+                                    <div className="col-span-full py-8 text-center text-sm text-slate-500">
+                                        Không tìm thấy sản phẩm nào.
+                                    </div>
+                                )}
+                            </div>
+                        );
+                    } : undefined}
                 >
+                    <div className="flex items-center gap-1 border rounded-lg p-0.5 ml-2 h-8">
+                        <Button
+                            variant={viewMode === "table" ? "secondary" : "ghost"}
+                            size="icon"
+                            className="size-7"
+                            onClick={() => setViewMode("table")}
+                        >
+                            <LayoutList className="size-4" />
+                        </Button>
+                        <Button
+                            variant={viewMode === "card" ? "secondary" : "ghost"}
+                            size="icon"
+                            className="size-7"
+                            onClick={() => setViewMode("card")}
+                        >
+                            <LayoutGrid className="size-4" />
+                        </Button>
+                    </div>
                     <Button
                         variant="outline"
                         size="sm"
