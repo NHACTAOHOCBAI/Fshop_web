@@ -1,6 +1,6 @@
 import type { Product, ProductVariant } from "@/types/product";
 
-export type OutfitSlot = "top" | "bottom" | "shoes" | "accessory";
+export type OutfitSlot = string;
 
 export type OutfitItemLayout = {
     x?: number;

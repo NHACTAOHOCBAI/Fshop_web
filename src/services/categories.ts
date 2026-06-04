@@ -36,12 +36,16 @@ export const createCategory = async (data: {
     department: "men" | "women" | "kids";
     image: File;
     description?: string;
+    slotTypeId?: number;
 }) => {
     const formData = new FormData();
     formData.append("name", data.name);
     formData.append("department", data.department);
     if (data.description) {
         formData.append("description", data.description);
+    }
+    if (data.slotTypeId !== undefined) {
+        formData.append("slotTypeId", String(data.slotTypeId));
     }
     formData.append("image", data.image);
 
@@ -62,6 +66,7 @@ export const updateCategory = async ({
         department?: "men" | "women" | "kids";
         image?: File;
         description?: string;
+        slotTypeId?: number;
     };
 }) => {
     const formData = new FormData();
@@ -73,6 +78,9 @@ export const updateCategory = async ({
     }
     if (data.description) {
         formData.append("description", data.description);
+    }
+    if (data.slotTypeId !== undefined) {
+        formData.append("slotTypeId", String(data.slotTypeId));
     }
     if (data.image) {
         formData.append("image", data.image);

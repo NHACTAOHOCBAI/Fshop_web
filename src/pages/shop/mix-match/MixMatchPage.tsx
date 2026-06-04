@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useAddOutfitToCart, useCreateOutfit, useDeleteOutfit, useMyOutfits, useUpdateOutfit } from "@/hooks/useOutfits";
 import { useProducts } from "@/hooks/useProducts";
+import { useSlotTypes } from "@/hooks/useSlotTypes";
 import { authStorage } from "@/lib/auth";
 import { cn, formatCurrency } from "@/lib/utils";
 import type { Outfit, OutfitItemPayload, OutfitSlot } from "@/types/outfit";
@@ -18,19 +19,15 @@ type DraftItem = OutfitItemPayload & {
     variant: ProductVariant;
 };
 
-const SLOT_META: Array<{ slot: OutfitSlot; label: string; hint: string }> = [
-    { slot: "top", label: "Áo", hint: "Áo thun, sơ mi, áo khoác" },
-    { slot: "bottom", label: "Quần/Váy", hint: "Quần jeans, chân váy" },
-    { slot: "shoes", label: "Giày", hint: "Sneaker, sandal, giày cao gót" },
-    { slot: "accessory", label: "Phụ kiện", hint: "Túi, mũ, balo" },
-];
-
-const SLOT_LAYOUT: Record<OutfitSlot, { x: number; y: number; scale: number; zIndex: number }> = {
+const DEFAULT_SLOT_LAYOUT: Record<string, { x: number; y: number; scale: number; zIndex: number }> = {
     top: { x: 50, y: 18, scale: 1, zIndex: 4 },
     bottom: { x: 50, y: 48, scale: 1, zIndex: 3 },
     shoes: { x: 50, y: 76, scale: 0.92, zIndex: 2 },
     accessory: { x: 77, y: 34, scale: 0.82, zIndex: 5 },
 };
+
+const getSlotLayout = (slotCode: string) =>
+    DEFAULT_SLOT_LAYOUT[slotCode] || { x: 50, y: 50, scale: 1, zIndex: 1 };
 
 const getProductImage = (product: Product, variant?: ProductVariant) =>
     variant?.imageUrl || product.images?.[0]?.imageUrl || "";
@@ -45,7 +42,7 @@ const toDraftItems = (outfit: Outfit): Partial<Record<OutfitSlot, DraftItem>> =>
             productId: item.product.id,
             variantId: item.variant.id,
             quantity: item.quantity || 1,
-            layout: item.layout || SLOT_LAYOUT[item.slot],
+            layout: item.layout || getSlotLayout(item.slot),
             product: item.product,
             variant: item.variant,
         };
@@ -64,11 +61,24 @@ const MixMatchPage = () => {
     const [draggedSlot, setDraggedSlot] = useState<OutfitSlot | null>(null);
 
     const productsQuery = useProducts({ page: 1, limit: 80, search: searchTerm || undefined });
+    const slotTypesQuery = useSlotTypes();
     const outfitsQuery = useMyOutfits(isAuthenticated);
     const createOutfit = useCreateOutfit();
     const updateOutfit = useUpdateOutfit();
     const deleteOutfit = useDeleteOutfit();
     const addOutfitToCart = useAddOutfitToCart();
+
+    const slotTypes = slotTypesQuery.data?.data ?? [];
+    const slotMeta = useMemo(
+        () =>
+            slotTypes.map((st) => ({
+                slot: st.code as OutfitSlot,
+                label: st.name,
+                hint: st.hint || "",
+                slotTypeId: st.id,
+            })),
+        [slotTypes],
+    );
 
     const products = productsQuery.data?.data ?? [];
     const draftList = Object.values(draftItems).filter(Boolean) as DraftItem[];
@@ -83,10 +93,31 @@ const MixMatchPage = () => {
         [products, searchTerm],
     );
 
+    const isProductValidForSlot = (product: Product, slotCode: string): boolean => {
+        const targetSlotType = slotTypes.find((st) => st.code === slotCode);
+        if (!targetSlotType) return true;
+        const categorySlotTypeId = product.category?.slotTypeId;
+        if (!categorySlotTypeId) return true;
+        return categorySlotTypeId === targetSlotType.id;
+    };
+
+    const getSlotLabelForProduct = (product: Product): string | null => {
+        const categorySlotTypeId = product.category?.slotTypeId;
+        if (!categorySlotTypeId) return null;
+        const st = slotTypes.find((s) => s.id === categorySlotTypeId);
+        return st?.name || null;
+    };
+
     const assignProductToSlot = (product: Product, slot: OutfitSlot = activeSlot) => {
         const variant = getDefaultVariant(product);
         if (!variant) {
             toast.error("Sản phẩm này chưa có biến thể để thêm vào outfit.");
+            return;
+        }
+        if (!isProductValidForSlot(product, slot)) {
+            const correctLabel = getSlotLabelForProduct(product);
+            const targetMeta = slotMeta.find((m) => m.slot === slot);
+            toast.error(`Sản phẩm không phù hợp với ô "${targetMeta?.label || slot}".${correctLabel ? ` Sản phẩm này thuộc ô "${correctLabel}".` : ""}`);
             return;
         }
         setDraftItems((current) => ({
@@ -96,7 +127,7 @@ const MixMatchPage = () => {
                 productId: product.id,
                 variantId: variant.id,
                 quantity: 1,
-                layout: SLOT_LAYOUT[slot],
+                layout: getSlotLayout(slot),
                 product,
                 variant,
             },
@@ -107,12 +138,19 @@ const MixMatchPage = () => {
     const handleProductDrop = (slot: OutfitSlot, event: DragEvent<HTMLDivElement>) => {
         event.preventDefault();
         if (draggedSlot) {
+            const source = draftItems[draggedSlot];
+            if (source && !isProductValidForSlot(source.product, slot)) {
+                const targetMeta = slotMeta.find((m) => m.slot === slot);
+                toast.error(`Không thể di chuyển sản phẩm vào ô "${targetMeta?.label || slot}".`);
+                setDraggedSlot(null);
+                return;
+            }
             setDraftItems((current) => {
-                const source = current[draggedSlot];
-                if (!source) return current;
+                const s = current[draggedSlot];
+                if (!s) return current;
                 const next = { ...current };
                 delete next[draggedSlot];
-                next[slot] = { ...source, slot, layout: SLOT_LAYOUT[slot] };
+                next[slot] = { ...s, slot, layout: getSlotLayout(slot) };
                 return next;
             });
             setDraggedSlot(null);
@@ -144,7 +182,7 @@ const MixMatchPage = () => {
             productId,
             variantId,
             quantity: quantity || 1,
-            layout: layout || SLOT_LAYOUT[slot],
+            layout: layout || getSlotLayout(slot),
         })),
     });
 
@@ -259,7 +297,7 @@ const MixMatchPage = () => {
                     <div className="relative min-h-[34rem] overflow-hidden rounded-xl border border-slate-200 bg-slate-50 p-4">
                         <div className="absolute inset-x-0 top-0 h-16 bg-linear-to-b from-white to-transparent" />
                         <div className="relative grid min-h-[31rem] grid-cols-1 gap-3 sm:grid-cols-2">
-                            {SLOT_META.map((meta) => {
+                            {slotMeta.map((meta) => {
                                 const item = draftItems[meta.slot];
                                 const imageUrl = item ? getProductImage(item.product, item.variant) : "";
                                 return (
@@ -304,11 +342,11 @@ const MixMatchPage = () => {
                                                 className="mt-3 cursor-grab rounded-lg border border-slate-100 bg-white p-3 shadow-sm active:cursor-grabbing"
                                             >
                                                 <div className="mx-auto h-36 max-w-44 overflow-hidden rounded-lg bg-slate-100">
-                                                    {imageUrl ? <img src={imageUrl} alt={item.product.name} className="h-full w-full object-contain" /> : null}
+                                                    {imageUrl ? <img src={imageUrl} alt={item.product.name} className="h-full w-full object-cover" /> : null}
                                                 </div>
                                                 <p className="mt-2 line-clamp-2 text-center text-sm font-semibold text-slate-800">{item.product.name}</p>
-                                                <p className="text-center text-xs text-slate-500">
-                                                    {item.variant.color?.name || "Màu"} / {item.variant.size?.name || "Size"}
+                                                <p className="text-center text-xs font-semibold text-primary">
+                                                    {formatCurrency(Number(item.variant.price || item.product.price || 0))}
                                                 </p>
                                             </div>
                                         ) : (
