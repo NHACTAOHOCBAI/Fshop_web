@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useCreateCategory } from "@/hooks/useCategories";
+import { useSlotTypes } from "@/hooks/useSlotTypes";
 
 const departmentOptions = ["men", "women", "kids"] as const;
 
@@ -37,6 +38,7 @@ const createCategorySchema = z.object({
         error: "Phân khu là bắt buộc",
     }),
     description: z.string().optional(),
+    slotTypeId: z.string().optional(),
     image: z.array(z.instanceof(File)).min(1, "Bạn phải chọn một ảnh"),
 });
 
@@ -47,6 +49,8 @@ interface CreateCategoryDialogProps {
 
 export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProps) {
     const { mutate: createItem, isPending } = useCreateCategory();
+    const { data: slotTypesQuery } = useSlotTypes();
+    const slotTypes = slotTypesQuery?.data ?? [];
 
     const form = useForm<z.infer<typeof createCategorySchema>>({
         resolver: zodResolver(createCategorySchema),
@@ -54,6 +58,7 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
             name: "",
             department: undefined,
             description: "",
+            slotTypeId: "",
             image: [],
         },
     });
@@ -64,6 +69,7 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
                 name: values.name,
                 department: values.department,
                 description: values.description,
+                slotTypeId: (values.slotTypeId && values.slotTypeId !== "none") ? Number(values.slotTypeId) : undefined,
                 image: values.image[0],
             },
             {
@@ -74,7 +80,7 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
                     toast.error(`Tạo thất bại: ${error.message}`);
                 },
                 onSettled: () => {
-                    form.reset({ name: "", department: undefined, description: "", image: [] });
+                    form.reset({ name: "", department: undefined, description: "", slotTypeId: "", image: [] });
                     setOpen(false);
                 },
             }
@@ -82,7 +88,7 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
     };
 
     const handleCancel = () => {
-        form.reset({ name: "", department: undefined, description: "", image: [] });
+        form.reset({ name: "", department: undefined, description: "", slotTypeId: "", image: [] });
         setOpen(false);
     };
 
@@ -145,6 +151,33 @@ export function CreateCategoryDialog({ open, setOpen }: CreateCategoryDialogProp
                         <p className="text-sm text-destructive">
                             {form.formState.errors.department?.message}
                         </p>
+                    </div>
+ 
+                    <div className="space-y-2">
+                        <label className="text-sm font-medium">Vị trí phối đồ (Slot Type)</label>
+                        <Controller
+                            control={form.control}
+                            name="slotTypeId"
+                            render={({ field }) => (
+                                <Select
+                                    value={field.value || "none"}
+                                    onValueChange={field.onChange}
+                                    disabled={isPending}
+                                >
+                                    <SelectTrigger className="w-full">
+                                        <SelectValue placeholder="Không chọn (None)" />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="none">Không chọn (None)</SelectItem>
+                                        {slotTypes.map((slot) => (
+                                            <SelectItem key={slot.id} value={String(slot.id)}>
+                                                {slot.name} ({slot.code})
+                                            </SelectItem>
+                                        ))}
+                                    </SelectContent>
+                                </Select>
+                            )}
+                        />
                     </div>
 
                     <div className="space-y-2">

@@ -24,6 +24,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { useUpdateCategory } from "@/hooks/useCategories";
+import { useSlotTypes } from "@/hooks/useSlotTypes";
 import type { Category } from "@/types/category";
 
 type PreviewFile = File & { preview?: string };
@@ -42,6 +43,7 @@ const updateCategorySchema = z.object({
         error: "Phân khu là bắt buộc",
     }),
     description: z.string().optional(),
+    slotTypeId: z.string().optional(),
     image: z.array(z.instanceof(File)).min(1, "Bạn phải chọn một ảnh"),
 });
 
@@ -59,6 +61,8 @@ export function UpdateCategoryDialog({
     setUpdatedItem,
 }: UpdateCategoryDialogProps) {
     const { mutate: updateItem, isPending } = useUpdateCategory();
+    const { data: slotTypesQuery } = useSlotTypes();
+    const slotTypes = slotTypesQuery?.data ?? [];
     const [isImageLoading, setIsImageLoading] = useState(false);
 
     const closeDialog = () => {
@@ -72,6 +76,7 @@ export function UpdateCategoryDialog({
             name: "",
             department: undefined,
             description: "",
+            slotTypeId: "",
             image: [],
         },
     });
@@ -88,6 +93,7 @@ export function UpdateCategoryDialog({
                     name: values.name,
                     department: values.department,
                     description: values.description,
+                    slotTypeId: (values.slotTypeId && values.slotTypeId !== "none") ? Number(values.slotTypeId) : undefined,
                     image: values.image[0],
                 },
             },
@@ -106,7 +112,7 @@ export function UpdateCategoryDialog({
     };
 
     const handleCancel = () => {
-        form.reset({ name: "", department: undefined, description: "", image: [] });
+        form.reset({ name: "", department: undefined, description: "", slotTypeId: "", image: [] });
         closeDialog();
     };
 
@@ -135,6 +141,7 @@ export function UpdateCategoryDialog({
             name: updatedItem.name,
             department: updatedItem.department,
             description: updatedItem.description ?? "",
+            slotTypeId: updatedItem.slotTypeId ? String(updatedItem.slotTypeId) : "none",
             image,
         });
     }, [form, updatedItem]);
@@ -205,6 +212,33 @@ export function UpdateCategoryDialog({
                             <p className="text-sm text-destructive">
                                 {form.formState.errors.department?.message}
                             </p>
+                        </div>
+
+                        <div className="space-y-2">
+                            <label className="text-sm font-medium">Vị trí phối đồ (Slot Type)</label>
+                            <Controller
+                                control={form.control}
+                                name="slotTypeId"
+                                render={({ field }) => (
+                                    <Select
+                                        value={field.value || "none"}
+                                        onValueChange={field.onChange}
+                                        disabled={isPending}
+                                    >
+                                        <SelectTrigger className="w-full">
+                                            <SelectValue placeholder="Không chọn (None)" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Không chọn (None)</SelectItem>
+                                            {slotTypes.map((slot) => (
+                                                <SelectItem key={slot.id} value={String(slot.id)}>
+                                                    {slot.name} ({slot.code})
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                )}
+                            />
                         </div>
 
                         <div className="space-y-2">

@@ -8,6 +8,7 @@ import ModerationQueue from "@/pages/admin/moderation/ModerationQueue";
 import AttributesPage from "@/pages/admin/attributes/AttributesPage";
 import BrandsPage from "@/pages/admin/brands/BrandsPage";
 import CategoriesPage from "@/pages/admin/categories/CategoriesPage";
+import SlotTypesPage from "@/pages/admin/slot-types/SlotTypesPage";
 import AdminCommunityPage from "@/pages/admin/community/CommunityPage";
 import SupportInboxPage from "@/pages/admin/support/SupportInboxPage";
 import CouponsPage from "@/pages/admin/coupons/CouponsPage";
@@ -264,6 +265,10 @@ const router = createBrowserRouter([
       {
         path: "categories",
         element: <CategoriesPage />,
+      },
+      {
+        path: "slot-types",
+        element: <SlotTypesPage />,
       },
       {
         path: "orders/:orderId",
