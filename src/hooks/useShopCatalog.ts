@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 
 import { useBrands } from "@/hooks/useBrands";
 import { useCategories } from "@/hooks/useCategories";
@@ -33,6 +33,7 @@ export const useShopCatalog = (department: DepartmentType) => {
         page: 1,
         limit: PRODUCT_FETCH_LIMIT,
         search: debouncedSearch.trim() || undefined,
+        department,
         sortBy: sortQuery.sortBy,
         sortOrder: sortQuery.sortOrder,
     });
@@ -56,23 +57,28 @@ export const useShopCatalog = (department: DepartmentType) => {
         return allCategories.filter((category) => category.department === department);
     }, [categoriesQuery.data?.data, department]);
 
-    useEffect(() => {
-        if (!selectedCategoryId) {
-            return;
-        }
+    const categoryIdsByDepartment = useMemo(() => {
+        return new Set(categoriesByDepartment.map((category) => category.id));
+    }, [categoriesByDepartment]);
 
-        const belongsToDepartment = categoriesByDepartment.some((category) => category.id === selectedCategoryId);
-        if (!belongsToDepartment) {
-            setSelectedCategoryId(null);
-            setPage(1);
-        }
-    }, [categoriesByDepartment, selectedCategoryId]);
+    const effectiveSelectedCategoryId = selectedCategoryId && categoryIdsByDepartment.has(selectedCategoryId)
+        ? selectedCategoryId
+        : null;
 
     const filteredProducts = useMemo(() => {
         const allProducts = productsQuery.data?.data ?? [];
 
         return allProducts.filter((product) => {
-            if (selectedCategoryId && product.categoryId !== selectedCategoryId) {
+            const productDepartment = product.category?.department;
+            const belongsToDepartment = productDepartment
+                ? productDepartment === department
+                : categoryIdsByDepartment.has(product.categoryId);
+
+            if (!belongsToDepartment) {
+                return false;
+            }
+
+            if (effectiveSelectedCategoryId && product.categoryId !== effectiveSelectedCategoryId) {
                 return false;
             }
 
@@ -82,18 +88,18 @@ export const useShopCatalog = (department: DepartmentType) => {
 
             return true;
         });
-    }, [productsQuery.data?.data, selectedBrandId, selectedCategoryId]);
+    }, [categoryIdsByDepartment, department, effectiveSelectedCategoryId, productsQuery.data?.data, selectedBrandId]);
 
     const totalItems = filteredProducts.length;
     const totalPages = Math.max(1, Math.ceil(totalItems / PAGE_SIZE));
+    const visiblePage = Math.min(page, totalPages);
 
     const paginatedProducts = useMemo(() => {
-        const safePage = Math.min(page, totalPages);
-        const start = (safePage - 1) * PAGE_SIZE;
+        const start = (visiblePage - 1) * PAGE_SIZE;
         const end = start + PAGE_SIZE;
 
         return filteredProducts.slice(start, end);
-    }, [filteredProducts, page, totalPages]);
+    }, [filteredProducts, visiblePage]);
 
     const updatePage = (newPage: number) => {
         if (newPage < 1 || newPage > totalPages) {
@@ -128,13 +134,13 @@ export const useShopCatalog = (department: DepartmentType) => {
     };
 
     return {
-        page,
+        page: visiblePage,
         pageSize: PAGE_SIZE,
         totalItems,
         totalPages,
         searchInput,
         sortOption,
-        selectedCategoryId,
+        selectedCategoryId: effectiveSelectedCategoryId,
         selectedBrandId,
         products: paginatedProducts,
         categories: categoriesByDepartment,

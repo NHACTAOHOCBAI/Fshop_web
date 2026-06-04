@@ -22,9 +22,9 @@ const unwrapApiData = <T>(payload: T | ApiResponse<T>): T => {
     return payload as T;
 };
 
-export const getProducts = async ({ limit, page, search, sortOrder, sortBy }: QueryParams) => {
+export const getProducts = async ({ limit, page, search, department, sortOrder, sortBy }: QueryParams) => {
     const { data } = await axiosInstance.get<PaginatedApiResponse<Product>>("/products", {
-        params: { limit, page, search, sortOrder, sortBy },
+        params: { limit, page, search, department, sortOrder, sortBy },
     });
 
     return data;
