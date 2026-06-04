@@ -16,14 +16,7 @@ import {
     AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-} from "@/components/ui/dialog";
-import { useDeleteProduct, useProductById, useProducts } from "@/hooks/useProducts";
-import { formatCurrency, formatDateTime } from "@/lib/utils";
+import { useDeleteProduct, useProducts } from "@/hooks/useProducts";
 import type { Product } from "@/types/product";
 
 import { productColumns } from "./product-columns";
@@ -31,11 +24,8 @@ import { productColumns } from "./product-columns";
 const ProductsPage = () => {
     const navigate = useNavigate();
     const [viewMode, setViewMode] = useState<"table" | "card">("table");
-    const [detailProductId, setDetailProductId] = useState<number | null>(null);
     const [pendingDeleteProductId, setPendingDeleteProductId] = useState<number | null>(null);
     const { mutate: deleteItem, isPending: isDeleting } = useDeleteProduct();
-    const detailQuery = useProductById(detailProductId ?? 0, Boolean(detailProductId));
-    const detailProduct = detailQuery.data?.data;
 
     const handleDeleteItem = (id: number) => {
         setPendingDeleteProductId(id);
@@ -59,7 +49,7 @@ const ProductsPage = () => {
     };
 
     const handleViewItem = (id: number) => {
-        setDetailProductId(id);
+        navigate(`/admin/products/${id}`);
     };
 
     const handleEditItem = (id: number) => {
@@ -172,37 +162,6 @@ const ProductsPage = () => {
                 </CrudTable>
             </div>
 
-            <Dialog open={Boolean(detailProductId)} onOpenChange={(open) => !open && setDetailProductId(null)}>
-                <DialogContent className="w-[calc(100vw-1rem)] max-h-[90vh] overflow-y-auto sm:max-w-2xl sm:w-full">
-                    <DialogHeader>
-                        <DialogTitle>Chi tiết sản phẩm</DialogTitle>
-                    </DialogHeader>
-
-                    {detailQuery.isLoading ? (
-                        <div className="flex items-center justify-center py-8 text-sm text-slate-500">
-                            <Loader2 className="mr-2 size-4 animate-spin" />
-                            Đang tải chi tiết sản phẩm...
-                        </div>
-                    ) : detailQuery.isError ? (
-                        <div className="rounded-md border border-red-200 bg-red-50 p-3 text-sm text-red-600">
-                            Không thể tải chi tiết sản phẩm.
-                        </div>
-                    ) : detailProduct ? (
-                        <div className="space-y-3 text-sm">
-                            <p><span className="font-medium">ID:</span> #{detailProduct.id}</p>
-                            <p><span className="font-medium">Tên:</span> {detailProduct.name}</p>
-                            <p><span className="font-medium">Giá:</span> {formatCurrency(Number(detailProduct.price || 0))}</p>
-                            <p><span className="font-medium">Thương hiệu:</span> {detailProduct.brand?.name ?? `#${detailProduct.brandId}`}</p>
-                            <p><span className="font-medium">Danh mục:</span> {detailProduct.category?.name ?? `#${detailProduct.categoryId}`}</p>
-                            <p><span className="font-medium">Trạng thái:</span> {detailProduct.isActive ? "Đang hoạt động" : "Tạm ẩn"}</p>
-                            <p><span className="font-medium">Cập nhật:</span> {formatDateTime(detailProduct.updatedAt)}</p>
-                            {detailProduct.description ? (
-                                <p><span className="font-medium">Mô tả:</span> {detailProduct.description}</p>
-                            ) : null}
-                        </div>
-                    ) : null}
-                </DialogContent>
-            </Dialog>
 
             <AlertDialog
                 open={Boolean(pendingDeleteProductId)}

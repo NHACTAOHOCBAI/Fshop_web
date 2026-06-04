@@ -22,6 +22,7 @@ import OrderDetailAdminPage from "@/pages/admin/orders/OrderDetailAdminPage";
 import ShipmentSimulationPage from "@/pages/admin/orders/ShipmentSimulationPage";
 import CreateProductPage from "@/pages/admin/products/CreateProductPage";
 import EditProductPage from "@/pages/admin/products/EditProductPage";
+import AdminProductDetailPage from "@/pages/admin/products/AdminProductDetailPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
 import SettingsPage from "@/pages/admin/settings/SettingsPage";
@@ -254,6 +255,10 @@ const router = createBrowserRouter([
       {
         path: "products/:productId/edit",
         element: <EditProductPage />,
+      },
+      {
+        path: "products/:productId",
+        element: <AdminProductDetailPage />,
       },
       {
         path: "attributes",
