@@ -4,6 +4,7 @@ import type { ModerationQueueQuery } from "@/types/moderation";
 
 export const MODERATION_QUEUE_KEY = ["moderation", "queue"];
 export const MODERATION_STATS_KEY = ["moderation", "stats"];
+export const MODERATION_RECENT_KEY = ["moderation", "recent"];
 
 export const useModerationQueue = (params?: ModerationQueueQuery) => {
   return useQuery({
@@ -21,6 +22,14 @@ export const useModerationStats = () => {
   });
 };
 
+export const useModerationRecent = (limit = 6) => {
+  return useQuery({
+    queryKey: [...MODERATION_RECENT_KEY, limit],
+    queryFn: () => moderationService.getModerationRecent(limit),
+    staleTime: 30_000,
+  });
+};
+
 export const useOverrideDecision = () => {
   const queryClient = useQueryClient();
 
@@ -35,6 +44,7 @@ export const useOverrideDecision = () => {
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: MODERATION_QUEUE_KEY });
       void queryClient.invalidateQueries({ queryKey: MODERATION_STATS_KEY });
+      void queryClient.invalidateQueries({ queryKey: MODERATION_RECENT_KEY });
     },
   });
 };
