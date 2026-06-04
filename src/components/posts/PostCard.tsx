@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, MoreVertical, Pencil, Trash2, X } from "lucide-react";
+import { Heart, MessageCircle, MoreVertical, Pencil, Trash2, X, User } from "lucide-react";
 import { Link } from "react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -189,17 +189,27 @@ const PostCard = ({
         <div className="overflow-hidden rounded-3xl border border-[#EAF0FF] bg-white transition-shadow hover:shadow-sm">
             <div className={`flex items-center justify-between border-b border-[#F1F5F9] ${compact ? "px-2.5 py-2" : "px-3 py-2.5"}`}>
                 <div className="flex items-center gap-3">
-                    <div className="rounded-full bg-app-primary p-0.5">
-                        <img
-                            src={post.user.avatar || "https://via.placeholder.com/80"}
-                            alt={post.user.fullName}
-                            className={`${compact ? "h-7 w-7" : "h-8 w-8"} rounded-full border-2 border-white object-cover`}
-                        />
-                    </div>
-                    <div>
-                        <p className="text-sm font-bold text-[#223263]">{post.user.fullName}</p>
-                        <p className="text-xs text-[#9098B1]">{formatRelativeTime(post.createdAt)}</p>
-                    </div>
+                    <Link
+                        to={`/community/user/${post.userId}`}
+                        state={{ user: post.user }}
+                        className="flex items-center gap-3 hover:opacity-85 transition-opacity"
+                    >
+                        {post.user.avatar ? (
+                            <img
+                                src={post.user.avatar}
+                                alt={post.user.fullName}
+                                className={`${compact ? "h-7 w-7" : "h-8 w-8"} rounded-full object-cover`}
+                            />
+                        ) : (
+                            <div className={`${compact ? "h-7 w-7" : "h-8 w-8"} flex items-center justify-center rounded-full bg-slate-100 text-slate-500`}>
+                                <User className={`${compact ? "h-4 w-4" : "h-5 w-5"}`} />
+                            </div>
+                        )}
+                        <div>
+                            <p className="text-sm font-bold text-[#223263]">{post.user.fullName}</p>
+                            <p className="text-xs text-[#9098B1]">{formatRelativeTime(post.createdAt)}</p>
+                        </div>
+                    </Link>
                 </div>
 
                 <div className="flex items-center gap-2" onClick={(e) => e.preventDefault()}>

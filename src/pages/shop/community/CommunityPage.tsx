@@ -11,6 +11,11 @@ import type { Post } from "@/types/post";
 import PostDetailPage from "./PostDetailPage";
 import CreatePostPage from "./CreatePostPage";
 import PostCard from "@/components/posts/PostCard";
+import { cn } from "@/lib/utils";
+import { authStorage } from "@/lib/auth";
+import type { User } from "@/types/user";
+import { toast } from "sonner";
+import ActivateBlogModal from "@/components/community/ActivateBlogModal";
 
 const CommunityPage = () => {
     const navigate = useNavigate();
@@ -20,6 +25,16 @@ const CommunityPage = () => {
     const [searchInput, setSearchInput] = useState("");
     const [searchQuery, setSearchQuery] = useState("");
     const [selectedHashtag, setSelectedHashtag] = useState("");
+    const [isFocused, setIsFocused] = useState(false);
+    const [filterTab, setFilterTab] = useState<"all" | "my-posts">("all");
+    const [sortOption, setSortOption] = useState<"newest" | "popular">("newest");
+    const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+        try {
+            return JSON.parse(localStorage.getItem("fshop_recent_community_searches") || "[]");
+        } catch {
+            return [];
+        }
+    });
     const limit = 10;
     const queryParams = useMemo(
         () => ({
@@ -39,6 +54,20 @@ const CommunityPage = () => {
     const selectedPostId = Number(postId);
     const isDetailOpen = Number.isFinite(selectedPostId) && selectedPostId > 0;
     const isCreateOpen = !!createRouteMatch;
+    const [isActivateModalOpen, setIsActivateModalOpen] = useState(false);
+
+    useEffect(() => {
+        if (isCreateOpen) {
+            const currentUser = authStorage.getUser<User>();
+            if (!currentUser) {
+                toast.error("Vui lòng đăng nhập để viết bài đăng.");
+                navigate("/login");
+            } else if (!currentUser.isBlogActive) {
+                navigate("/community");
+                setIsActivateModalOpen(true);
+            }
+        }
+    }, [isCreateOpen, navigate]);
 
     useEffect(() => {
         setPage(1);
@@ -60,9 +89,34 @@ const CommunityPage = () => {
             .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
     }, [posts]);
 
+    const currentUserId = authStorage.getUser<User>()?.id;
+    const processedPosts = useMemo(() => {
+        let result = [...posts];
+
+        if (filterTab === "my-posts" && currentUserId) {
+            result = result.filter((post) => post.userId === currentUserId);
+        }
+
+        if (sortOption === "popular") {
+            result.sort((a, b) => b.totalLikes - a.totalLikes);
+        } else {
+            result.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        }
+
+        return result;
+    }, [posts, filterTab, sortOption, currentUserId]);
+
     const handleSearchSubmit = useCallback((event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
-        setSearchQuery(searchInput.trim());
+        const trimmed = searchInput.trim();
+        setSearchQuery(trimmed);
+        if (trimmed) {
+            setRecentSearches((prev) => {
+                const next = [trimmed, ...prev.filter((q) => q !== trimmed)].slice(0, 5);
+                localStorage.setItem("fshop_recent_community_searches", JSON.stringify(next));
+                return next;
+            });
+        }
     }, [searchInput]);
 
     const handleClearSearch = useCallback(() => {
@@ -119,36 +173,165 @@ const CommunityPage = () => {
                                 <Input
                                     value={searchInput}
                                     onChange={(event) => setSearchInput(event.target.value)}
+                                    onFocus={() => setIsFocused(true)}
+                                    onBlur={() => setTimeout(() => setIsFocused(false), 200)}
                                     placeholder="Tìm theo nội dung hoặc hashtag..."
-                                    className="h-11 rounded-xl border-[#E2E8F0] bg-white pl-10"
+                                    className="h-11 rounded-xl border-[#E2E8F0] bg-white pl-10 pr-16 focus-visible:ring-[#40BFFF]"
                                 />
+                                <button
+                                    type="submit"
+                                    className="absolute right-1.5 top-1/2 -translate-y-1/2 h-8 rounded-lg bg-primary px-3 text-xs font-semibold text-white transition-colors hover:bg-primary/90"
+                                >
+                                    Tìm
+                                </button>
+
+                                {isFocused && (
+                                    <div className="absolute left-0 right-0 top-full z-50 mt-1 rounded-xl border border-slate-100 bg-white p-3 shadow-lg">
+                                        {recentSearches.length > 0 && !searchInput && (
+                                            <div className="mb-3">
+                                                <p className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">Tìm kiếm gần đây</p>
+                                                <div className="mt-1.5 flex flex-col gap-1">
+                                                    {recentSearches.map((item) => (
+                                                        <div
+                                                            key={item}
+                                                            onClick={() => {
+                                                                setSearchInput(item);
+                                                                setSearchQuery(item);
+                                                                setRecentSearches((prev) => {
+                                                                    const next = [item, ...prev.filter((q) => q !== item)].slice(0, 5);
+                                                                    localStorage.setItem("fshop_recent_community_searches", JSON.stringify(next));
+                                                                    return next;
+                                                                });
+                                                            }}
+                                                            className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 hover:bg-slate-50"
+                                                        >
+                                                            <span className="text-xs text-slate-700">{item}</span>
+                                                            <button
+                                                                type="button"
+                                                                onClick={(e) => {
+                                                                    e.stopPropagation();
+                                                                    setRecentSearches((prev) => {
+                                                                        const next = prev.filter((q) => q !== item);
+                                                                        localStorage.setItem("fshop_recent_community_searches", JSON.stringify(next));
+                                                                        return next;
+                                                                    });
+                                                                }}
+                                                                className="text-slate-400 hover:text-slate-600 text-xs"
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div>
+                                            <p className="text-[10px] font-semibold tracking-wider text-slate-400 uppercase">
+                                                {searchInput ? "Hashtag phù hợp" : "Hashtag phổ biến"}
+                                            </p>
+                                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                                                {(searchInput
+                                                    ? hashtagOptions.filter(tag => tag.name.toLowerCase().includes(searchInput.toLowerCase().replace("#", "")))
+                                                    : hashtagOptions
+                                                ).slice(0, 6).map((tag) => (
+                                                    <button
+                                                        key={tag.name}
+                                                        type="button"
+                                                        onClick={() => {
+                                                            setSelectedHashtag(tag.name);
+                                                            setIsFocused(false);
+                                                        }}
+                                                        className="rounded-full border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs text-slate-600 hover:bg-primary/5 hover:text-primary hover:border-primary/20"
+                                                    >
+                                                        #{tag.name}
+                                                    </button>
+                                                ))}
+                                                {(searchInput
+                                                    ? hashtagOptions.filter(tag => tag.name.toLowerCase().includes(searchInput.toLowerCase().replace("#", "")))
+                                                    : hashtagOptions
+                                                ).length === 0 && (
+                                                    <p className="text-xs text-slate-400">Không tìm thấy hashtag nào</p>
+                                                )}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
+                    </form>
 
-                        <div className="flex gap-2">
-                            <Button type="submit" className="h-11 rounded-xl px-4 font-semibold">
-                                Tìm
-                            </Button>
-                            {(searchQuery || selectedHashtag) && (
-                                <Button type="button" variant="outline" className="h-11 rounded-xl border-slate-300 px-4" onClick={clearFilters}>
-                                    <X className="mr-2 h-4 w-4" />
-                                    Xóa lọc
-                                </Button>
+                    <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between border-t border-[#EAF0FF]/60 pt-3.5">
+                        <div className="flex items-center gap-1.5">
+                            <button
+                                type="button"
+                                onClick={() => setFilterTab("all")}
+                                className={cn(
+                                    "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
+                                    filterTab === "all"
+                                        ? "bg-primary text-white"
+                                        : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                                )}
+                            >
+                                Tất cả bài viết
+                            </button>
+                            {currentUserId && (
+                                <button
+                                    type="button"
+                                    onClick={() => setFilterTab("my-posts")}
+                                    className={cn(
+                                        "rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
+                                        filterTab === "my-posts"
+                                            ? "bg-primary text-white"
+                                            : "bg-white text-slate-600 border border-slate-200 hover:bg-slate-50"
+                                    )}
+                                >
+                                    Bài viết của tôi
+                                </button>
                             )}
                         </div>
-                    </form>
+
+                        <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-slate-400">Sắp xếp:</span>
+                            <button
+                                type="button"
+                                onClick={() => setSortOption("newest")}
+                                className={cn(
+                                    "text-xs font-semibold transition-colors",
+                                    sortOption === "newest"
+                                        ? "text-primary"
+                                        : "text-slate-500 hover:text-slate-800"
+                                )}
+                            >
+                                Mới nhất
+                            </button>
+                            <span className="text-slate-300 text-xs">|</span>
+                            <button
+                                type="button"
+                                onClick={() => setSortOption("popular")}
+                                className={cn(
+                                    "text-xs font-semibold transition-colors",
+                                    sortOption === "popular"
+                                        ? "text-primary"
+                                        : "text-slate-500 hover:text-slate-800"
+                                )}
+                            >
+                                Nổi bật
+                            </button>
+                        </div>
+                    </div>
                 </div>
 
                 {(searchQuery || selectedHashtag) && (
-                    <div className="mt-4 flex flex-wrap gap-2 text-sm">
+                    <div className="mt-4 flex flex-wrap gap-2 text-xs">
                         {searchQuery ? (
                             <button
                                 type="button"
                                 onClick={handleClearSearch}
-                                className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-white px-3 py-1.5 font-medium text-primary"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-primary/10 bg-primary/5 backdrop-blur-xs px-3 py-1 font-medium text-primary hover:bg-primary/10 transition-colors"
                             >
                                 Từ khóa: {searchQuery}
-                                <X className="h-3.5 w-3.5" />
+                                <X className="h-3 w-3" />
                             </button>
                         ) : null}
 
@@ -156,10 +339,10 @@ const CommunityPage = () => {
                             <button
                                 type="button"
                                 onClick={() => setSelectedHashtag("")}
-                                className="inline-flex items-center gap-2 rounded-full border border-slate-300 bg-white px-3 py-1.5 font-medium text-slate-700"
+                                className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-slate-100/50 backdrop-blur-xs px-3 py-1 font-medium text-slate-600 hover:bg-slate-100 transition-colors"
                             >
                                 #{selectedHashtag}
-                                <X className="h-3.5 w-3.5" />
+                                <X className="h-3 w-3" />
                             </button>
                         ) : null}
                     </div>
@@ -199,7 +382,7 @@ const CommunityPage = () => {
                     ) : (
                         <>
                             <div className="space-y-5">
-                                {posts.map((post) => (
+                                {processedPosts.map((post) => (
                                     <PostCard
                                         key={post.id}
                                         post={post}
@@ -286,6 +469,14 @@ const CommunityPage = () => {
                     {isCreateOpen ? <CreatePostPage onClose={() => navigate("/community")} /> : null}
                 </DialogContent>
             </Dialog>
+
+            <ActivateBlogModal
+                isOpen={isActivateModalOpen}
+                onOpenChange={setIsActivateModalOpen}
+                onSuccess={() => {
+                    navigate("/community/create");
+                }}
+            />
         </div>
     );
 };

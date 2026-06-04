@@ -1,4 +1,4 @@
-﻿import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2 } from "lucide-react";
 import { useCallback, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useNavigate, useParams } from "react-router";
@@ -48,6 +48,12 @@ type CommentRepliesProps = {
     deletingCommentId: number | null;
     isExpanded: boolean;
     canDelete: boolean;
+    editingCommentId: number | null;
+    editingContent: string;
+    setEditingContent: (val: string) => void;
+    onCancelEdit: () => void;
+    onSubmitEdit: (commentId: number) => void;
+    isUpdatingComment: boolean;
 };
 
 type PostDetailPageProps = {
@@ -71,6 +77,12 @@ const CommentReplies = ({
     deletingCommentId,
     isExpanded,
     canDelete,
+    editingCommentId,
+    editingContent,
+    setEditingContent,
+    onCancelEdit,
+    onSubmitEdit,
+    isUpdatingComment,
 }: CommentRepliesProps) => {
     const repliesQuery = useCommentReplies(postId, parentComment.id, {
         page: 1,
@@ -122,6 +134,12 @@ const CommentReplies = ({
                         onDelete={onDelete}
                         canDelete={canDelete}
                         isDeleting={deletingCommentId === reply.id}
+                        isEditing={editingCommentId === reply.id}
+                        editContent={editingContent}
+                        onEditContentChange={setEditingContent}
+                        onSaveEdit={() => onSubmitEdit(reply.id)}
+                        onCancelEdit={onCancelEdit}
+                        isSavingEdit={isUpdatingComment}
                     />
 
                     {reply.replyCount > 0 ? (
@@ -150,6 +168,12 @@ const CommentReplies = ({
                         canDelete={canDelete}
                         deletingCommentId={deletingCommentId}
                         isExpanded={!!expandedReplies[reply.id]}
+                        editingCommentId={editingCommentId}
+                        editingContent={editingContent}
+                        setEditingContent={setEditingContent}
+                        onCancelEdit={onCancelEdit}
+                        onSubmitEdit={onSubmitEdit}
+                        isUpdatingComment={isUpdatingComment}
                     />
                 </div>
             ))}
@@ -314,6 +338,7 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride, allow
                         toast.success("Đã cập nhật bình luận");
                         setEditingCommentId(null);
                         setEditingContent("");
+                        void refreshPostCommentsData();
                     },
                     onError: (error) => {
                         toast.error(extractApiErrorMessage(error));
@@ -321,7 +346,7 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride, allow
                 },
             );
         },
-        [id, editingContent, updateComment],
+        [id, editingContent, updateComment, refreshPostCommentsData],
     );
 
     const handleDeleteComment = useCallback(
@@ -435,7 +460,7 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride, allow
 
                     {/* Post Detail */}
                     <div className="bg-white rounded-lg  overflow-hidden mb-6">
-                        <PostCard post={post} compact />
+                        <PostCard post={post} compact onPostDeleted={handleClose} />
                     </div>
 
                     {/* Comments Section */}
@@ -463,42 +488,22 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride, allow
                                             highlightedCommentId === comment.id ? "rounded-md bg-sky-50" : ""
                                         }`}
                                     >
-                                        {editingCommentId === comment.id ? (
-                                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-3">
-                                                <Textarea
-                                                    value={editingContent}
-                                                    onChange={(e) => setEditingContent(e.target.value)}
-                                                    className="min-h-22.5 resize-none"
-                                                />
-                                                <div className="mt-3 flex items-center justify-end gap-2">
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={handleCancelEdit}
-                                                    >
-                                                        Hủy
-                                                    </Button>
-                                                    <Button
-                                                        size="sm"
-                                                        onClick={() => handleSubmitEdit(comment.id)}
-                                                        disabled={isUpdatingComment || !editingContent.trim()}
-                                                    >
-                                                        {isUpdatingComment ? "Đang lưu..." : "Lưu"}
-                                                    </Button>
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <CommentItem
-                                                comment={comment}
-                                                onReply={handleReply}
-                                                onEdit={handleStartEdit}
-                                                onDelete={handleDeleteComment}
-                                                canDelete={allowAdminDelete}
-                                                isDeleting={
-                                                    (isDeletingComment || isDeletingAdminComment) && deletingCommentId === comment.id
-                                                }
-                                            />
-                                        )}
+                                        <CommentItem
+                                            comment={comment}
+                                            onReply={handleReply}
+                                            onEdit={handleStartEdit}
+                                            onDelete={handleDeleteComment}
+                                            canDelete={allowAdminDelete}
+                                            isDeleting={
+                                                (isDeletingComment || isDeletingAdminComment) && deletingCommentId === comment.id
+                                            }
+                                            isEditing={editingCommentId === comment.id}
+                                            editContent={editingContent}
+                                            onEditContentChange={setEditingContent}
+                                            onSaveEdit={() => handleSubmitEdit(comment.id)}
+                                            onCancelEdit={handleCancelEdit}
+                                            isSavingEdit={isUpdatingComment}
+                                        />
 
                                         {comment.replyCount > 0 ? (
                                             <button
@@ -525,6 +530,12 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride, allow
                                             canDelete={allowAdminDelete}
                                             deletingCommentId={deletingCommentId}
                                             isExpanded={!!expandedReplies[comment.id]}
+                                            editingCommentId={editingCommentId}
+                                            editingContent={editingContent}
+                                            setEditingContent={setEditingContent}
+                                            onCancelEdit={handleCancelEdit}
+                                            onSubmitEdit={handleSubmitEdit}
+                                            isUpdatingComment={isUpdatingComment}
                                         />
                                     </div>
                                 ))}

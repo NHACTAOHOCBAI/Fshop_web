@@ -75,3 +75,8 @@ export const getUserById = async (id: number) => {
     const { data } = await axiosInstance.get<ApiResponse<User>>(`/users/${id}`);
     return data;
 };
+
+export const toggleFollowUser = async (id: number) => {
+    const { data } = await axiosInstance.post<ApiResponse<{ followed: boolean }>>(`/users/${id}/toggle-follow`);
+    return data.data;
+};

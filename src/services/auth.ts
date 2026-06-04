@@ -114,3 +114,18 @@ export const resetForgotPassword = async (payload: ForgotPasswordResetPayload) =
     const { data } = await axiosInstance.post<ApiResponse<{ message: string }>>("/auth/forgot-password/reset", payload);
     return data.data;
 };
+
+export const activateBlogProfile = async (payload: { bio: string; coverImage: File }) => {
+    const formData = new FormData();
+    formData.append("bio", payload.bio);
+    formData.append("coverImage", payload.coverImage);
+    formData.append("isBlogActive", "true");
+
+    const { data } = await axiosInstance.patch<ApiResponse<User>>("/auth/me", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+
+    return data.data;
+};

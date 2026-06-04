@@ -10,6 +10,12 @@ export type User = {
     role: RoleType;
     isActive: boolean;
     isVerified: boolean;
+    isBlogActive: boolean;
+    bio: string | null;
+    coverImage: string | null;
+    followersCount: number;
+    followingCount: number;
+    isFollowing?: boolean;
     createdAt: string;
     updatedAt: string;
 };

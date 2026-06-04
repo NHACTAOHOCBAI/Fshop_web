@@ -45,6 +45,7 @@ import ProductsPage from "@/pages/admin/products/ProductsPage";
 import AdminProfilePage from "@/pages/admin/profile/AdminProfilePage";
 import HomePage from "@/pages/shop/home/HomePage";
 import CommunityPage from "@/pages/shop/community/CommunityPage";
+import UserBlogPage from "@/pages/shop/community/UserBlogPage";
 import LivestreamListPage from "@/pages/shop/livestreams/LivestreamListPage";
 import LivestreamDetailPage from "@/pages/shop/livestreams/LivestreamDetailPage";
 import PaymentReturnPage from "@/pages/shop/payment/PaymentReturnPage";
@@ -101,6 +102,10 @@ const router = createBrowserRouter([
       {
         path: "community/:postId",
         element: <CommunityPage />,
+      },
+      {
+        path: "community/user/:userId",
+        element: <UserBlogPage />,
       },
       {
         path: "livestreams",
