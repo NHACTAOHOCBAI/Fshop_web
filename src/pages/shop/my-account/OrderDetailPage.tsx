@@ -114,12 +114,6 @@ const OrderDetailPage = () => {
                 </span>
               </p>
               <p>
-                Trạng thái vận đơn:{" "}
-                <span className="font-medium text-slate-800">
-                  {shipment.shipmentStatus || "Chưa có"}
-                </span>
-              </p>
-              <p>
                 Tra cứu:{" "}
                 {shipment.trackingUrl && shipment.trackingUrl !== "null" ? (
                   <a
