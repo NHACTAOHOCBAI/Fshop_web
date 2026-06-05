@@ -22,8 +22,10 @@ import OrderDetailAdminPage from "@/pages/admin/orders/OrderDetailAdminPage";
 import ShipmentSimulationPage from "@/pages/admin/orders/ShipmentSimulationPage";
 import CreateProductPage from "@/pages/admin/products/CreateProductPage";
 import EditProductPage from "@/pages/admin/products/EditProductPage";
+import AdminProductDetailPage from "@/pages/admin/products/AdminProductDetailPage";
 import StocksPage from "@/pages/admin/stocks/StocksPage";
 import UsersPage from "@/pages/admin/users/UsersPage";
+import SettingsPage from "@/pages/admin/settings/SettingsPage";
 import ProductDetailPage from "@/pages/shop/product-detail/ProductDetailPage";
 import ProductTryonPage from "@/pages/shop/product-detail/ProductTryonPage";
 import ProductVTO2DPage from "@/pages/shop/product-detail/ProductVTO2DPage";
@@ -255,6 +257,10 @@ const router = createBrowserRouter([
         element: <EditProductPage />,
       },
       {
+        path: "products/:productId",
+        element: <AdminProductDetailPage />,
+      },
+      {
         path: "attributes",
         element: <AttributesPage />,
       },
@@ -289,6 +295,10 @@ const router = createBrowserRouter([
       {
         path: "profile",
         element: <AdminProfilePage />,
+      },
+      {
+        path: "settings",
+        element: <SettingsPage />,
       },
       {
         path: "coupons",

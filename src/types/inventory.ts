@@ -1,3 +1,5 @@
+import type { ProductVariant } from "@/types/product";
+
 export type InventoryType = "IMPORT" | "EXPORT" | "RETURN" | "ADJUSTMENT";
 
 export type Inventory = {
@@ -6,6 +8,7 @@ export type Inventory = {
     quantity: number;
     createdAt: string;
     updatedAt: string;
+    variant?: ProductVariant;
 };
 
 export type InventoryTransaction = {

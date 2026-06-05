@@ -35,7 +35,12 @@ const BrandsPage = () => {
 
     return (
         <div className="space-y-4  w-full">
-            <h1 className="text-2xl font-semibold">Thương hiệu</h1>
+            <div>
+                <h1 className="text-2xl font-semibold">Thương hiệu</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Quản lý danh sách các thương hiệu, hãng sản xuất và nhà cung cấp sản phẩm liên kết với cửa hàng.
+                </p>
+            </div>
 
             <CrudTable<Brand>
                 columns={brandColumns(handleUpdateBtn, handleDeleteItem)}

@@ -35,7 +35,12 @@ const CategoriesPage = () => {
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Danh mục</h1>
+            <div>
+                <h1 className="text-2xl font-semibold">Danh mục</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Quản lý hệ thống phân loại danh mục sản phẩm thời trang (ví dụ: áo, quần, váy, phụ kiện).
+                </p>
+            </div>
 
             <CrudTable<Category>
                 columns={categoryColumns(handleUpdateBtn, handleDeleteItem)}

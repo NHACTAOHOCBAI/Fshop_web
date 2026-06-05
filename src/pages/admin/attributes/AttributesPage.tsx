@@ -93,7 +93,12 @@ export default function AttributesPage() {
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Thuộc tính</h1>
+            <div>
+                <h1 className="text-2xl font-semibold">Thuộc tính</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Cấu hình các phân loại kích cỡ (Size Type), kích thước cụ thể (Size) và bảng mã màu sắc (Color) của sản phẩm.
+                </p>
+            </div>
 
             <div className="flex flex-wrap gap-2">
                 <Button variant={tab === "size-types" ? "default" : "outline"} onClick={() => setTab("size-types")}>Loại kích thước</Button>

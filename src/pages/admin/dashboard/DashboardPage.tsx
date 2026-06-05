@@ -1,22 +1,24 @@
 import {
   ArrowUpRight,
   CircleDollarSign,
+  CalendarRange,
+  MoveRight,
   Package,
   ShoppingBag,
-  TriangleAlert,
+  ShoppingCart,
+  Tag,
   UserRound,
+  AlertCircle,
 } from "lucide-react";
 import { useMemo, useState } from "react";
+import { format, subDays } from "date-fns";
 
 import { useDashboardOverview } from "@/hooks/useDashboard";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import type { DashboardTimeRange } from "@/types/dashboard";
+import { Button } from "@/components/ui/button";
+import { DatePicker } from "@/components/ui/date-picker";
+import { ORDER_STATUS_LABEL } from "@/constants/orderStatus";
+import type { OrderStatus } from "@/types/order";
+import { Link } from "react-router";
 
 type OverviewMetric = {
   title: string;
@@ -26,20 +28,9 @@ type OverviewMetric = {
   icon: typeof CircleDollarSign;
 };
 
-type TimeRange = "7d" | "30d" | "quarter";
+type PriorityLevel = "high" | "medium" | "low";
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-amber-400",
-  confirmed: "bg-sky-500",
-  awaiting_pickup: "bg-cyan-500",
-  in_transit: "bg-violet-500",
-  out_for_delivery: "bg-fuchsia-500",
-  delivered: "bg-emerald-500",
-  delivery_failed: "bg-orange-500",
-  canceled: "bg-rose-500",
-};
-
-const CATEGORY_COLORS = [
+const CHANNEL_COLORS = [
   "#40BFFF",
   "#22C55E",
   "#F59E0B",
@@ -47,6 +38,8 @@ const CATEGORY_COLORS = [
   "#F97316",
   "#06B6D4",
 ];
+
+const CATEGORY_COLORS = CHANNEL_COLORS;
 
 const formatCurrency = (value: number) =>
   new Intl.NumberFormat("vi-VN", {
@@ -61,20 +54,60 @@ const toNumber = (value: number | string) => {
   return Number.isFinite(parsed) ? parsed : 0;
 };
 
-const getRangeLabel = (range: TimeRange) => {
-  if (range === "30d") return "30 ngày";
-  if (range === "quarter") return "quý gần nhất";
-  return "7 ngày";
+const formatDisplayDate = (date: Date) =>
+  format(date, "dd/MM/yyyy");
+
+const getDefaultRange = () => {
+  const endDate = new Date();
+  const startDate = subDays(endDate, 6);
+  return { startDate, endDate };
+};
+
+const formatWaitingTime = (minutes: number) => {
+  if (minutes < 60) {
+    return `${minutes} phút chờ`;
+  }
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours < 24) {
+    return remainingMinutes > 0
+      ? `${hours} giờ ${remainingMinutes} phút chờ`
+      : `${hours} giờ chờ`;
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return remainingHours > 0
+    ? `${days} ngày ${remainingHours} giờ chờ`
+    : `${days} ngày chờ`;
 };
 
 const DashboardPage = () => {
-  const [timeRange, setTimeRange] = useState<DashboardTimeRange>("7d");
+  const defaultRange = useMemo(() => getDefaultRange(), []);
+  const [draftStartDate, setDraftStartDate] = useState<Date | undefined>(
+    defaultRange.startDate,
+  );
+  const [draftEndDate, setDraftEndDate] = useState<Date | undefined>(
+    defaultRange.endDate,
+  );
+  const [appliedStartDate, setAppliedStartDate] = useState<Date>(
+    defaultRange.startDate,
+  );
+  const [appliedEndDate, setAppliedEndDate] = useState<Date>(
+    defaultRange.endDate,
+  );
 
-  const overviewQuery = useDashboardOverview({
-    timeRange,
-  });
+  const overviewQuery = useDashboardOverview(
+    useMemo(
+      () => ({
+        startDate: format(appliedStartDate, "yyyy-MM-dd"),
+        endDate: format(appliedEndDate, "yyyy-MM-dd"),
+      }),
+      [appliedStartDate, appliedEndDate],
+    ),
+  );
 
   const overview = overviewQuery.data?.data;
+  const rangeLabel = `${formatDisplayDate(appliedStartDate)} - ${formatDisplayDate(appliedEndDate)}`;
 
   const metricsSource = overview?.metrics;
   const revenueGrowth = toNumber(metricsSource?.revenue.changePercent ?? 0);
@@ -83,21 +116,21 @@ const DashboardPage = () => {
 
   const metrics: OverviewMetric[] = [
     {
-      title: `Doanh thu ${getRangeLabel(timeRange)}`,
+      title: "Doanh thu",
       value: formatCurrency(toNumber(metricsSource?.revenue.value ?? 0)),
       change: `${revenueGrowth >= 0 ? "+" : ""}${revenueGrowth.toFixed(1)}% so với kỳ trước`,
       positive: revenueGrowth >= 0,
       icon: CircleDollarSign,
     },
     {
-      title: `Đơn hàng ${getRangeLabel(timeRange)}`,
+      title: "Đơn hàng",
       value: String(metricsSource?.orders.value ?? 0),
       change: `${orderGrowth >= 0 ? "+" : ""}${orderGrowth.toFixed(1)}% so với kỳ trước`,
       positive: orderGrowth >= 0,
       icon: ShoppingBag,
     },
     {
-      title: `Khách hàng mới ${getRangeLabel(timeRange)}`,
+      title: "Khách hàng mới",
       value: String(metricsSource?.newUsers.value ?? 0),
       change: `${userGrowth >= 0 ? "+" : ""}${userGrowth.toFixed(1)}% so với kỳ trước`,
       positive: userGrowth >= 0,
@@ -110,15 +143,6 @@ const DashboardPage = () => {
       icon: Package,
     },
   ];
-
-  const orderStatus = (overview?.charts.orderStatusSeries ?? []).map(
-    (item) => ({
-      label: item.label,
-      value: item.count,
-      color: STATUS_COLORS[item.status] ?? "bg-slate-400",
-      percent: item.percent,
-    }),
-  );
 
   const filteredRevenueSeries = (overview?.charts.revenueSeries ?? []).map(
     (item) => ({
@@ -135,13 +159,38 @@ const DashboardPage = () => {
     }),
   );
 
-  const recentActivities = overview?.recentActivities ?? [];
+  const chartLabel = useMemo(
+    () => `Biểu đồ doanh thu ${rangeLabel}`,
+    [rangeLabel],
+  );
 
-  const chartLabel = useMemo(() => {
-    if (timeRange === "30d") return "Biểu đồ doanh thu 30 ngày";
-    if (timeRange === "quarter") return "Biểu đồ doanh thu quý gần nhất";
-    return "Biểu đồ doanh thu 7 ngày";
-  }, [timeRange]);
+  const analyticsSource = overview?.analytics;
+  const conversionFunnel = analyticsSource?.conversionFunnel ?? [];
+  const customerMix = analyticsSource?.customerMix;
+  const performanceRates = analyticsSource?.performanceRates;
+  const urgentOrders = analyticsSource?.urgentOrders ?? [];
+  const topProducts = analyticsSource?.topProducts ?? [];
+  const topCategories = analyticsSource?.topCategories ?? [];
+
+  const handleApplyDateRange = () => {
+    if (!draftStartDate || !draftEndDate) {
+      return;
+    }
+
+    const startDate = draftStartDate <= draftEndDate ? draftStartDate : draftEndDate;
+    const endDate = draftStartDate <= draftEndDate ? draftEndDate : draftStartDate;
+
+    setAppliedStartDate(startDate);
+    setAppliedEndDate(endDate);
+  };
+
+  const handleResetDateRange = () => {
+    const resetRange = getDefaultRange();
+    setDraftStartDate(resetRange.startDate);
+    setDraftEndDate(resetRange.endDate);
+    setAppliedStartDate(resetRange.startDate);
+    setAppliedEndDate(resetRange.endDate);
+  };
 
   const chartWidth = 560;
   const chartHeight = 210;
@@ -178,6 +227,14 @@ const DashboardPage = () => {
     return `conic-gradient(${segments.join(", ")})`;
   })();
 
+
+
+  const priorityStyles: Record<PriorityLevel, string> = {
+    high: "border-rose-100 bg-rose-50 text-rose-700",
+    medium: "border-amber-100 bg-amber-50 text-amber-700",
+    low: "border-sky-100 bg-sky-50 text-sky-700",
+  };
+
   const isLoading = overviewQuery.isLoading;
   const hasError = overviewQuery.isError;
 
@@ -203,20 +260,34 @@ const DashboardPage = () => {
       </section>
 
       <section className="rounded-2xl border border-slate-200/80 bg-white p-4">
-        <div className="flex justify-end">
-          <Select
-            value={timeRange}
-            onValueChange={(value) => setTimeRange(value as DashboardTimeRange)}
-          >
-            <SelectTrigger className="w-full lg:w-44">
-              <SelectValue placeholder="Khoảng thời gian" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7d">7 ngày gần nhất</SelectItem>
-              <SelectItem value="30d">30 ngày gần nhất</SelectItem>
-              <SelectItem value="quarter">Theo quý</SelectItem>
-            </SelectContent>
-          </Select>
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 text-sm font-semibold text-slate-900">
+              <CalendarRange className="size-4 text-primary" />
+              Bộ lọc thời gian
+            </div>
+            <p className="text-xs text-slate-500">
+              Chọn ngày bắt đầu và ngày kết thúc để tải lại số liệu dashboard.
+            </p>
+          </div>
+          <div className="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto_auto] lg:min-w-[760px]">
+            <DatePicker
+              date={draftStartDate}
+              onChange={setDraftStartDate}
+              placeholder="Ngày bắt đầu"
+            />
+            <DatePicker
+              date={draftEndDate}
+              onChange={setDraftEndDate}
+              placeholder="Ngày kết thúc"
+            />
+            <Button type="button" onClick={handleApplyDateRange}>
+              Áp dụng
+            </Button>
+            <Button type="button" variant="outline" onClick={handleResetDateRange}>
+              Xóa
+            </Button>
+          </div>
         </div>
       </section>
 
@@ -390,85 +461,263 @@ const DashboardPage = () => {
             )}
           </div>
         </article>
+      </section>
 
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-5 xl:col-span-2">
+      <section className="grid gap-4">
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
           <div className="mb-4 flex items-center justify-between">
             <h2 className="text-lg font-semibold text-slate-900">
-              Trạng thái đơn hàng
+              Phễu chuyển đổi
             </h2>
-            <span className="text-xs font-medium text-slate-500">Hôm nay</span>
+            <span className="text-xs font-medium text-slate-500">
+              Theo bộ lọc hiện tại
+            </span>
           </div>
 
           <div className="space-y-4">
-            {orderStatus.map((status) => (
-              <div key={status.label} className="space-y-2">
+            {conversionFunnel.map((stage, index) => (
+              <div key={stage.stage} className="space-y-2">
                 <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium text-slate-700">
-                    {status.label}
-                  </span>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-slate-900 text-[11px] font-semibold text-white">
+                      {index + 1}
+                    </span>
+                    <span className="font-medium text-slate-700">
+                      {stage.stage}
+                    </span>
+                  </div>
                   <span className="font-semibold text-slate-900">
-                    {status.value}
+                    {stage.count.toLocaleString("vi-VN")}
                   </span>
                 </div>
-                <div className="h-2.5 w-full overflow-hidden rounded-full bg-slate-100">
+                <div className="h-3 overflow-hidden rounded-full bg-slate-100">
                   <div
-                    className={`h-full rounded-full ${status.color}`}
-                    style={{ width: `${Math.min(status.percent, 100)}%` }}
+                    className="h-full rounded-full"
+                    style={{
+                      width: `${Math.min(stage.percent, 100)}%`,
+                      backgroundColor: "#40BFFF",
+                    }}
                   />
                 </div>
               </div>
             ))}
-            {orderStatus.length === 0 && (
+            {conversionFunnel.length === 0 && (
               <p className="text-sm text-slate-500">
-                Không có đơn hàng trong bộ lọc hiện tại.
+                Chưa có dữ liệu phễu chuyển đổi cho khoảng thời gian này.
+              </p>
+            )}
+          </div>
+        </article>
+      </section>
+
+      <section className="grid gap-4 xl:grid-cols-3">
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Top sản phẩm
+            </h2>
+            <ShoppingCart className="size-4 text-sky-500" />
+          </div>
+          <div className="space-y-4">
+            {topProducts.map((product, index) => (
+              <div key={product.id} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700">
+                      {index + 1}
+                    </span>
+                    <span className="font-medium text-slate-700">
+                      {product.name}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-slate-900">
+                    {formatCurrency(product.revenue)}
+                  </span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-sky-500"
+                    style={{ width: `${Math.min(product.percent, 100)}%` }}
+                  />
+                </div>
+                <p className="text-xs text-slate-500">
+                  {product.quantity} sản phẩm bán ra
+                </p>
+              </div>
+            ))}
+            {topProducts.length === 0 && (
+              <p className="text-sm text-slate-500">
+                Chưa có dữ liệu top sản phẩm.
               </p>
             )}
           </div>
         </article>
 
-        <article className="rounded-2xl border border-slate-200/80 bg-white p-5 xl:col-span-1">
-          <h2 className="mb-4 text-lg font-semibold text-slate-900">
-            Việc cần xử lý
-          </h2>
-          <ul className="space-y-3">
-            <li className="rounded-xl border border-rose-100 bg-rose-50 p-3 text-sm text-rose-700">
-              <div className="flex items-start gap-2">
-                <TriangleAlert className="mt-0.5 size-4" />
-                {metricsSource?.lowStock.value ?? 0} sản phẩm dưới ngưỡng tồn
-                kho tối thiểu.
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Top danh mục
+            </h2>
+            <Tag className="size-4 text-emerald-500" />
+          </div>
+          <div className="space-y-4">
+            {topCategories.map((category, index) => (
+              <div key={category.id} className="space-y-2">
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-flex size-6 items-center justify-center rounded-full bg-slate-100 text-[11px] font-semibold text-slate-700">
+                      {index + 1}
+                    </span>
+                    <span className="font-medium text-slate-700">
+                      {category.name}
+                    </span>
+                  </div>
+                  <span className="font-semibold text-slate-900">
+                    {formatCurrency(category.revenue)}
+                  </span>
+                </div>
+                <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    className="h-full rounded-full bg-emerald-500"
+                    style={{ width: `${Math.min(category.percent, 100)}%` }}
+                  />
+                </div>
               </div>
-            </li>
-            <li className="rounded-xl border border-amber-100 bg-amber-50 p-3 text-sm text-amber-700">
-              Tổng đơn trong kỳ lọc: {metricsSource?.orders.value ?? 0} đơn.
-            </li>
-          </ul>
+            ))}
+            {topCategories.length === 0 && (
+              <p className="text-sm text-slate-500">
+                Chưa có dữ liệu top danh mục.
+              </p>
+            )}
+          </div>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Đơn cần chú ý gấp
+            </h2>
+            <AlertCircle className="size-4 text-rose-500" />
+          </div>
+          <div className="space-y-3">
+            {urgentOrders.map((order) => (
+              <Link
+                to={`/admin/orders/${order.id}`}
+                key={order.id}
+                className={`block rounded-xl border p-3 text-sm transition-all hover:opacity-90 hover:shadow-sm cursor-pointer ${priorityStyles[order.priority]}`}
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div>
+                    <p className="font-semibold text-slate-900">{order.code}</p>
+                    <p className="mt-1 text-xs opacity-80">{order.customerName}</p>
+                  </div>
+                  <span className="rounded-full bg-white/70 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide">
+                    {order.priority}
+                  </span>
+                </div>
+                <div className="mt-3 flex items-center justify-between text-xs opacity-90">
+                  <span>{ORDER_STATUS_LABEL[order.status as OrderStatus] || order.status}</span>
+                  <span>{formatWaitingTime(order.waitingMinutes)}</span>
+                </div>
+                {order.note && (
+                  <p className="mt-2 text-xs opacity-80">{order.note}</p>
+                )}
+              </Link>
+            ))}
+            {urgentOrders.length === 0 && (
+              <p className="text-sm text-slate-500">
+                Chưa có đơn cần chú ý gấp trong bộ lọc hiện tại.
+              </p>
+            )}
+          </div>
         </article>
       </section>
 
-      <section className="rounded-2xl border border-slate-200/80 bg-white p-5">
-        <h2 className="mb-4 text-lg font-semibold text-slate-900">
-          Hoạt động gần đây
-        </h2>
-        <div className="grid gap-3 md:grid-cols-2">
-          {recentActivities.map((activity) => (
-            <div
-              key={`${activity.type}-${activity.title}-${activity.time}`}
-              className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-700"
-            >
-              <p className="font-medium text-slate-800">{activity.title}</p>
-              <p className="mt-1">{activity.description}</p>
-              <p className="mt-1 text-xs text-slate-500">
-                {new Date(activity.time).toLocaleString("vi-VN")}
-              </p>
+      <section className="grid gap-4 xl:grid-cols-2">
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-slate-900">
+              Khách hàng mới vs quay lại
+            </h2>
+            <MoveRight className="size-4 text-slate-400" />
+          </div>
+          {customerMix ? (
+            <div className="space-y-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-xs font-medium text-slate-500">Khách mới</p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">
+                    {customerMix.newCustomers.toLocaleString("vi-VN")}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {customerMix.newRate}% tổng khách hàng
+                  </p>
+                </div>
+                <div className="rounded-xl border border-slate-100 bg-slate-50 p-4">
+                  <p className="text-xs font-medium text-slate-500">
+                    Khách quay lại
+                  </p>
+                  <p className="mt-2 text-2xl font-bold text-slate-900">
+                    {customerMix.returningCustomers.toLocaleString("vi-VN")}
+                  </p>
+                  <p className="mt-1 text-xs text-slate-500">
+                    {customerMix.returningRate}% tổng khách hàng
+                  </p>
+                </div>
+              </div>
+              <div className="h-3 overflow-hidden rounded-full bg-slate-100">
+                <div className="flex h-full w-full overflow-hidden rounded-full">
+                  <div
+                    className="bg-sky-500"
+                    style={{ width: `${customerMix.newRate}%` }}
+                  />
+                  <div
+                    className="bg-emerald-500"
+                    style={{ width: `${customerMix.returningRate}%` }}
+                  />
+                </div>
+              </div>
             </div>
-          ))}
-          {recentActivities.length === 0 && (
-            <div className="rounded-xl border border-slate-100 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-              Chưa có hoạt động trong bộ lọc hiện tại.
-            </div>
+          ) : (
+            <p className="text-sm text-slate-500">
+              Chưa có dữ liệu phân tách khách hàng mới và quay lại.
+            </p>
           )}
-        </div>
+        </article>
+
+        <article className="rounded-2xl border border-slate-200/80 bg-white p-5">
+          <h2 className="mb-4 text-lg font-semibold text-slate-900">
+            Tỷ lệ hủy và hoàn
+          </h2>
+          {performanceRates ? (
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="rounded-xl border border-rose-100 bg-rose-50 p-4">
+                <p className="text-xs font-medium text-rose-600">Tỷ lệ hủy</p>
+                <p className="mt-2 text-2xl font-bold text-rose-700">
+                  {performanceRates.cancellationRate}%
+                </p>
+                <p className="mt-1 text-xs text-rose-600/80">
+                  Đơn bị hủy trong khoảng thời gian đã lọc
+                </p>
+              </div>
+              <div className="rounded-xl border border-amber-100 bg-amber-50 p-4">
+                <p className="text-xs font-medium text-amber-600">Tỷ lệ hoàn</p>
+                <p className="mt-2 text-2xl font-bold text-amber-700">
+                  {performanceRates.returnRate}%
+                </p>
+                <p className="mt-1 text-xs text-amber-600/80">
+                  Đơn hoàn/đổi trong khoảng thời gian đã lọc
+                </p>
+              </div>
+            </div>
+          ) : (
+            <p className="text-sm text-slate-500">
+              Chưa có dữ liệu tỷ lệ hủy và hoàn.
+            </p>
+          )}
+        </article>
       </section>
+
     </div>
   );
 };
