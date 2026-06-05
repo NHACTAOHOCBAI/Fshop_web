@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 
-import { Plus } from "lucide-react";
+import { AlertCircle, AlertTriangle, Package, Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import CrudTable from "@/components/crud_table/crud-table";
@@ -44,6 +44,8 @@ export default function StocksPage() {
 
     const { mutate: deleteItem } = useDeleteInventory();
     const { data: lowStockData } = useLowStockInventories(10);
+    const { data: allInventoriesData } = useInventories({ page: 1, limit: 1 });
+    const totalSKUs = allInventoriesData?.pagination?.total ?? 0;
 
     const handleDeleteItem = (id: number) => {
         deleteItem(
@@ -56,37 +58,126 @@ export default function StocksPage() {
     };
 
     return (
-        <div className="space-y-4 w-full">
+        <div className="space-y-6 w-full">
             <h1 className="text-2xl font-semibold">Tồn kho</h1>
 
-            <div className="rounded-md border p-3 text-sm">
-                Sản phẩm sắp hết hàng (&lt;=10): <strong>{lowStockData?.length ?? 0}</strong>
+            {/* KPI Metrics Cards */}
+            <div className="grid gap-4 sm:grid-cols-3">
+                {/* Total SKUs */}
+                <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-blue-50 text-blue-600">
+                        <Package className="size-5" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-slate-500">Tổng mặt hàng (SKU)</p>
+                        <h3 className="text-2xl font-bold text-slate-900 mt-0.5">{totalSKUs}</h3>
+                    </div>
+                </div>
+
+                {/* Low Stock Warning */}
+                <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-amber-50 text-amber-600">
+                        <AlertTriangle className="size-5" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-slate-500 font-medium">Sắp hết hàng (&le;10)</p>
+                        <h3 className="text-2xl font-bold text-slate-900 mt-0.5">{lowStockData?.length ?? 0}</h3>
+                    </div>
+                </div>
+
+                {/* Out of Stock Warning */}
+                <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">
+                    <div className="p-3 rounded-xl bg-rose-50 text-rose-600">
+                        <AlertCircle className="size-5" />
+                    </div>
+                    <div>
+                        <p className="text-sm font-medium text-slate-500">Đã hết hàng (0)</p>
+                        <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
+                            {lowStockData?.filter((item) => item.quantity === 0).length ?? 0}
+                        </h3>
+                    </div>
+                </div>
             </div>
 
-            <CrudTable<Inventory>
-                columns={inventoryColumns(
-                    (item) => {
-                        setSelectedInventory(item);
-                        setOpenUpdate(true);
-                    },
-                    (item) => {
-                        setSelectedInventory(item);
-                        setOpenTxn(true);
-                    },
-                    (item) => {
-                        setSelectedInventory(item);
-                        setOpenHistory(true);
-                    },
-                    handleDeleteItem
-                )}
-                useQuery={useInventories}
-                filterPlaceholder="Lọc theo mã biến thể..."
-            >
-                <Button variant="outline" size="sm" className="ml-2 h-8" onClick={() => setOpenCreate(true)}>
-                    <Plus className="size-4" />
-                    Thêm tồn kho
-                </Button>
-            </CrudTable>
+            <div className="grid gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                {/* Main Table */}
+                <div className="lg:col-span-2 xl:col-span-3 space-y-4">
+                    <CrudTable<Inventory>
+                        columns={inventoryColumns(
+                            (item) => {
+                                setSelectedInventory(item);
+                                setOpenUpdate(true);
+                            },
+                            (item) => {
+                                setSelectedInventory(item);
+                                setOpenTxn(true);
+                            },
+                            (item) => {
+                                setSelectedInventory(item);
+                                setOpenHistory(true);
+                            },
+                            handleDeleteItem
+                        )}
+                        useQuery={useInventories}
+                        filterPlaceholder="Lọc theo mã biến thể..."
+                    >
+                        <Button variant="outline" size="sm" className="ml-2 h-8" onClick={() => setOpenCreate(true)}>
+                            <Plus className="size-4" />
+                            Thêm tồn kho
+                        </Button>
+                    </CrudTable>
+                </div>
+
+                {/* Sidebar Alerts */}
+                <div className="space-y-4">
+                    <div className="rounded-2xl border border-slate-200/80 bg-white">
+                        <div className="flex flex-col space-y-1.5 p-5 border-b pb-4">
+                            <h3 className="font-semibold text-base leading-none text-slate-900">Cảnh báo nhập kho</h3>
+                            <p className="text-xs text-muted-foreground">Sản phẩm sắp hết hoặc đã hết hàng</p>
+                        </div>
+                        <div className="p-5 pt-4 space-y-4 max-h-[500px] overflow-y-auto">
+                            {!lowStockData || lowStockData.length === 0 ? (
+                                <p className="text-xs text-muted-foreground text-center py-4">Tất cả sản phẩm đều đủ hàng</p>
+                            ) : (
+                                lowStockData.slice(0, 5).map((item) => {
+                                    const productName = item.variant?.product?.name ?? `Biến thể #${item.variantId}`;
+                                    const sku = item.variant?.sku ?? `ID: ${item.variantId}`;
+                                    const isOutOfStock = item.quantity === 0;
+
+                                    return (
+                                        <div key={item.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                                            <div className="space-y-1 max-w-[65%]">
+                                                <p className="text-xs font-semibold truncate text-slate-700" title={productName}>
+                                                    {productName}
+                                                </p>
+                                                <p className="text-[10px] text-muted-foreground font-mono">
+                                                    SKU: {sku}
+                                                </p>
+                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                                                    isOutOfStock ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
+                                                }`}>
+                                                    Tồn: {item.quantity}
+                                                </span>
+                                            </div>
+                                            <Button
+                                                variant="outline"
+                                                size="sm"
+                                                className="h-7 text-[11px] px-2 text-slate-700 hover:text-slate-900"
+                                                onClick={() => {
+                                                    setSelectedInventory(item);
+                                                    setOpenTxn(true);
+                                                }}
+                                            >
+                                                Nhập nhanh
+                                            </Button>
+                                        </div>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <CreateInventoryDialog open={openCreate} setOpen={setOpenCreate} />
             <UpdateInventoryDialog
