@@ -14,6 +14,8 @@ interface CrudTableProps<T extends { id: number }> {
     filterPlaceholder?: string;
     children?: React.ReactNode;
     renderCustomView?: (data: T[], isFetching: boolean) => React.ReactNode;
+    dependencies?: any[];
+    filterElement?: React.ReactNode;
 }
 
 export default function CrudTable<T extends { id: number }>({
@@ -22,15 +24,18 @@ export default function CrudTable<T extends { id: number }>({
     filterPlaceholder = "Tìm kiếm...",
     children,
     renderCustomView,
+    dependencies,
+    filterElement,
 }: CrudTableProps<T>) {
     const { table, isFetching, filter, setFilter, setPagination } = useTable<T>({
         use: useQuery,
         columns,
+        dependencies,
     });
 
     return (
         <div>
-            <div className="flex items-center py-4">
+            <div className="flex flex-wrap items-center gap-2 py-4">
                 <Input
                     placeholder={filterPlaceholder}
                     className="max-w-sm"
@@ -40,7 +45,8 @@ export default function CrudTable<T extends { id: number }>({
                         setPagination((prev) => ({ ...prev, pageIndex: 0 }));
                     }}
                 />
-                <div className="ml-auto flex items-center">
+                {filterElement}
+                <div className="ml-auto flex items-center gap-2">
                     {!renderCustomView && <DataTableViewOptions table={table} />}
                     {children}
                 </div>

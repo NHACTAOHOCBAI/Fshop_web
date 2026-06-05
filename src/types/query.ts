@@ -5,4 +5,5 @@ export type QueryParams = {
     department?: "men" | "women" | "kids";
     sortOrder?: "ASC" | "DESC";
     sortBy?: string;
+    role?: string;
 };

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import type { UseQueryResult } from "@tanstack/react-query";
 import {
@@ -39,6 +39,7 @@ interface UseTableProps<T> {
     use: (params: QueryParams) => UseQueryResult<unknown, Error>;
     columns: ColumnDef<T>[];
     defaultPageSize?: number;
+    dependencies?: any[];
 }
 
 function isTableDataPayload<T>(value: unknown): value is TableDataPayload<T> {
@@ -89,7 +90,7 @@ const normalizePayload = <T,>(
     };
 };
 
-const useTable = <T,>({ use, columns, defaultPageSize = 10 }: UseTableProps<T>) => {
+const useTable = <T,>({ use, columns, defaultPageSize = 10, dependencies = [] }: UseTableProps<T>) => {
     const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
     const [pagination, setPagination] = useState({
         pageIndex: 0,
@@ -97,6 +98,10 @@ const useTable = <T,>({ use, columns, defaultPageSize = 10 }: UseTableProps<T>) 
     });
     const [filter, setFilter] = useState("");
     const [sorting, setSorting] = useState<SortingState>([]);
+
+    useEffect(() => {
+        setPagination((prev) => ({ ...prev, pageIndex: 0 }));
+    }, dependencies);
 
     const { data, isFetching, isError, error, refetch } = use({
         page: pagination.pageIndex + 1,

@@ -3,9 +3,9 @@ import type { QueryParams } from "@/types/query";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
 import type { RoleType, User } from "@/types/user";
 
-export const getUsers = async ({ limit, page, search, sortOrder, sortBy }: QueryParams) => {
+export const getUsers = async ({ limit, page, search, sortOrder, sortBy, role }: QueryParams) => {
     const { data } = await axiosInstance.get<PaginatedApiResponse<User>>("/users", {
-        params: { limit, page, search, sortOrder, sortBy },
+        params: { limit, page, search, sortOrder, sortBy, role },
     });
 
     return data;
