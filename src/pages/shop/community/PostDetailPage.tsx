@@ -459,7 +459,7 @@ const PostDetailPage = ({ isModal = true, onClose, postId: postIdOverride, allow
 
                     {/* Post Detail */}
                     <div className="bg-white rounded-lg  overflow-hidden mb-6">
-                        <PostCard post={post} compact onPostDeleted={handleClose} />
+                        <PostCard post={post} compact imageMode="carousel" onPostDeleted={handleClose} />
                     </div>
 
                     {/* Comments Section */}

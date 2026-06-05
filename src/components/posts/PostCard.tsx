@@ -1,4 +1,4 @@
-import { Heart, MessageCircle, MoreVertical, Pencil, Trash2, X, User as UserIcon } from "lucide-react";
+import { ChevronLeft, ChevronRight, Heart, MessageCircle, MoreVertical, Pencil, Trash2, X, User as UserIcon } from "lucide-react";
 import { Link } from "react-router";
 import { useEffect, useMemo, useState, type ReactNode } from "react";
 import { toast } from "sonner";
@@ -38,6 +38,7 @@ interface PostCardProps {
     disableLink?: boolean;
     showOwnerActions?: boolean;
     rightActions?: ReactNode;
+    imageMode?: "grid" | "carousel";
 }
 
 const toSafeLikeCount = (value: unknown, fallback = 0) => {
@@ -52,6 +53,7 @@ const PostCard = ({
     disableLink = false,
     showOwnerActions = true,
     rightActions,
+    imageMode = "grid",
 }: PostCardProps) => {
     const currentUserId = authStorage.getUser<UserType>()?.id;
     const isOwner = currentUserId === post.userId;
@@ -64,6 +66,7 @@ const PostCard = ({
     const [showEditDialog, setShowEditDialog] = useState(false);
     const [isUserLiked, setIsUserLiked] = useState(Boolean(post.isLiked));
     const [likeCount, setLikeCount] = useState(() => toSafeLikeCount(post.totalLikes, 0));
+    const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [editContent, setEditContent] = useState(post.content ?? "");
     const [editHashtags, setEditHashtags] = useState<string[]>(
         post.postHashtags.map((item) => item.hashtag.name)
@@ -76,10 +79,34 @@ const PostCard = ({
         setEditContent(post.content ?? "");
         setEditHashtags(post.postHashtags.map((item) => item.hashtag.name));
         setHashtagInput("");
+        setCurrentImageIndex(0);
     }, [post.id, post.isLiked, post.totalLikes, post.content, post.postHashtags]);
 
-    const displayImages = useMemo(() => post.images.slice(0, 4), [post.images]);
-    const remainingImages = Math.max(0, post.images.length - 4);
+    const displayImages = useMemo(
+        () => post.images.filter((image) => Boolean(image.imageUrl)),
+        [post.images],
+    );
+    const gridImages = useMemo(() => displayImages.slice(0, 4), [displayImages]);
+    const remainingImages = Math.max(0, displayImages.length - 4);
+    const currentImage = displayImages[currentImageIndex] ?? displayImages[0];
+
+    const handlePreviousImage = (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setCurrentImageIndex((prev) => (prev <= 0 ? displayImages.length - 1 : prev - 1));
+    };
+
+    const handleNextImage = (event: React.MouseEvent) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setCurrentImageIndex((prev) => (prev >= displayImages.length - 1 ? 0 : prev + 1));
+    };
+
+    const handleSelectImage = (event: React.MouseEvent, index: number) => {
+        event.preventDefault();
+        event.stopPropagation();
+        setCurrentImageIndex(index);
+    };
 
     const handleLike = (e: React.MouseEvent) => {
         e.preventDefault();
@@ -239,21 +266,21 @@ const PostCard = ({
                 </div>
             </div>
 
-            {displayImages.length > 0 ? (
+            {imageMode === "grid" && gridImages.length > 0 ? (
                 <div>
                     <div
                         className={`grid gap-px bg-[#F1F5F9] ${
-                            displayImages.length === 1
+                            gridImages.length === 1
                                 ? "grid-cols-1"
-                                : displayImages.length === 2
+                                : gridImages.length === 2
                                   ? "grid-cols-2"
                                   : "grid-cols-2"
                         }`}
                     >
-                        {displayImages.map((image, idx) => (
+                        {gridImages.map((image, idx) => (
                             <div
                                 key={image.id}
-                                className={`group relative overflow-hidden bg-slate-200 ${displayImages.length === 1 ? "aspect-5/4" : "aspect-6/5"}`}
+                                className={`group relative overflow-hidden bg-slate-200 ${gridImages.length === 1 ? "aspect-5/4" : "aspect-6/5"}`}
                             >
                                 <img src={image.imageUrl} alt="post" className="h-full w-full object-cover transition-transform" />
                                 {remainingImages > 0 && idx === 3 ? (
@@ -264,6 +291,55 @@ const PostCard = ({
                             </div>
                         ))}
                     </div>
+                </div>
+            ) : null}
+
+            {imageMode === "carousel" && currentImage ? (
+                <div className="relative aspect-5/4 overflow-hidden bg-slate-100">
+                    <img
+                        src={currentImage.imageUrl}
+                        alt={`Ảnh bài viết ${currentImageIndex + 1}`}
+                        className="h-full w-full object-cover"
+                    />
+
+                    {displayImages.length > 1 ? (
+                        <>
+                            <div className="absolute right-3 top-3 rounded-full bg-black/55 px-2.5 py-1 text-xs font-semibold text-white">
+                                {currentImageIndex + 1}/{displayImages.length}
+                            </div>
+
+                            <button
+                                type="button"
+                                aria-label="Ảnh trước"
+                                onClick={handlePreviousImage}
+                                className="absolute left-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow transition hover:bg-white"
+                            >
+                                <ChevronLeft className="h-5 w-5" />
+                            </button>
+                            <button
+                                type="button"
+                                aria-label="Ảnh tiếp theo"
+                                onClick={handleNextImage}
+                                className="absolute right-3 top-1/2 flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full bg-white/90 text-slate-700 shadow transition hover:bg-white"
+                            >
+                                <ChevronRight className="h-5 w-5" />
+                            </button>
+
+                            <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5">
+                                {displayImages.map((image, index) => (
+                                    <button
+                                        key={image.id}
+                                        type="button"
+                                        aria-label={`Xem ảnh ${index + 1}`}
+                                        onClick={(event) => handleSelectImage(event, index)}
+                                        className={`h-1.5 rounded-full transition-all ${
+                                            index === currentImageIndex ? "w-5 bg-white" : "w-1.5 bg-white/60"
+                                        }`}
+                                    />
+                                ))}
+                            </div>
+                        </>
+                    ) : null}
                 </div>
             ) : null}
 
