@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ArrowLeft, Loader2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useMemo } from "react";
 import { useForm } from "react-hook-form";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
@@ -8,7 +8,7 @@ import { z } from "zod";
 
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
-import DatePickerV2 from "@/components/ui/date-picker-v2";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { Input } from "@/components/ui/input";
 import {
     Select,
@@ -34,75 +34,23 @@ const couponStatusOptions: { value: CouponStatus; label: string }[] = [
     { value: "expired", label: "Hết hạn" },
 ];
 
-const couponFormSchema = z
-    .object({
-        code: z.string().trim().min(1, "Mã giảm giá là bắt buộc"),
-        name: z.string().optional(),
-        description: z.string().optional(),
-        type: z.enum(["fixed", "percent", "shipping"]),
-        value: z.number().min(0, "Giá trị không hợp lệ"),
-        minOrderAmount: z.number().min(0, "Tối thiểu là 0"),
-        maxDiscountAmount: z.number().min(0, "Tối thiểu là 0"),
-        maxUses: z.number().min(0, "Tối thiểu là 0"),
-        perUserLimit: z.number().min(0, "Tối thiểu là 0"),
-        applyScope: z.enum(["all", "product"]),
-        applicableProduct: z.string().optional(),
-        startDate: z.date({ error: "Ngày bắt đầu là bắt buộc" }),
-        endDate: z.date({ error: "Ngày kết thúc là bắt buộc" }),
-        status: z.enum(["active", "expired", "inactive"]),
-        isPublic: z.boolean(),
-    })
-    .superRefine((values, ctx) => {
-        const now = new Date();
-
-        if (values.startDate <= now) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["startDate"],
-                message: "Ngày bắt đầu phải lớn hơn thời điểm hiện tại",
-            });
-        }
-
-        if (values.endDate <= now) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["endDate"],
-                message: "Ngày kết thúc phải lớn hơn thời điểm hiện tại",
-            });
-        }
-
-        if (values.startDate >= values.endDate) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["endDate"],
-                message: "Ngày bắt đầu phải trước ngày kết thúc",
-            });
-        }
-
-        if (values.type !== "shipping" && values.value <= 0) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["value"],
-                message: "Giá trị giảm phải lớn hơn 0",
-            });
-        }
-
-        if (values.type === "percent" && values.maxDiscountAmount <= 0) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["maxDiscountAmount"],
-                message: "Giảm tối đa phải lớn hơn 0 khi loại giảm theo %",
-            });
-        }
-
-        if (values.applyScope === "product" && !values.applicableProduct) {
-            ctx.addIssue({
-                code: z.ZodIssueCode.custom,
-                path: ["applicableProduct"],
-                message: "Vui lòng chọn sản phẩm áp dụng",
-            });
-        }
-    });
+const couponFormSchema = z.object({
+    code: z.string().trim().min(1, "Mã giảm giá là bắt buộc"),
+    name: z.string().optional(),
+    description: z.string().optional(),
+    type: z.enum(["fixed", "percent", "shipping"]),
+    value: z.number().min(0, "Giá trị không hợp lệ"),
+    minOrderAmount: z.number().min(0, "Tối thiểu là 0"),
+    maxDiscountAmount: z.number().min(0, "Tối thiểu là 0"),
+    maxUses: z.number().min(0, "Tối thiểu là 0"),
+    perUserLimit: z.number().min(0, "Tối thiểu là 0"),
+    applyScope: z.enum(["all", "product"]),
+    applicableProduct: z.string().optional(),
+    startDate: z.date({ error: "Ngày bắt đầu là bắt buộc" }),
+    endDate: z.date({ error: "Ngày kết thúc là bắt buộc" }),
+    status: z.enum(["active", "expired", "inactive"]),
+    isPublic: z.boolean(),
+});
 
 type CouponFormValues = z.infer<typeof couponFormSchema>;
 
@@ -129,21 +77,6 @@ const defaultValues: CouponFormValues = {
     isPublic: true,
 };
 
-const hourOptions = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
-const minuteOptions = Array.from({ length: 12 }, (_, index) => String(index * 5).padStart(2, "0"));
-
-const withTime = (date: Date, hour: string, minute: string) => {
-    const nextDate = new Date(date);
-    nextDate.setHours(Number(hour), Number(minute), 0, 0);
-    return nextDate;
-};
-
-const getHourValue = (date?: Date) => String((date ?? new Date()).getHours()).padStart(2, "0");
-const getMinuteValue = (date?: Date) => {
-    const minutes = (date ?? new Date()).getMinutes();
-    const roundedMinutes = Math.floor(minutes / 5) * 5;
-    return String(roundedMinutes).padStart(2, "0");
-};
 
 export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) {
     const navigate = useNavigate();
@@ -163,8 +96,82 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
     const products = productsData?.data ?? [];
     const isPending = isCreating || isUpdating;
 
+    const usedCount = isEdit && couponDetail?.data ? couponDetail.data.usedCount : 0;
+    const hasStarted = isEdit && couponDetail?.data ? new Date(couponDetail.data.startDate) <= new Date() : false;
+
+    const schema = useMemo(() => {
+        return couponFormSchema.superRefine((values, ctx) => {
+            const now = new Date();
+
+            // Only validate startDate in create mode
+            if (!isEdit && values.startDate <= now) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["startDate"],
+                    message: "Ngày bắt đầu phải lớn hơn thời điểm hiện tại",
+                });
+            }
+
+            // If editing and endDate is modified, it must be in the future.
+            const originalEndDateStr = couponDetail?.data?.endDate;
+            const originalEndDate = originalEndDateStr ? new Date(originalEndDateStr) : null;
+            const isEndDateChanged = originalEndDate ? values.endDate.getTime() !== originalEndDate.getTime() : true;
+
+            if (isEndDateChanged && values.endDate <= now) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["endDate"],
+                    message: "Ngày kết thúc phải lớn hơn thời điểm hiện tại",
+                });
+            }
+
+            if (values.startDate >= values.endDate) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["endDate"],
+                    message: "Ngày bắt đầu phải trước ngày kết thúc",
+                });
+            }
+
+            if (values.type !== "shipping" && values.value <= 0) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["value"],
+                    message: "Giá trị giảm phải lớn hơn 0",
+                });
+            }
+
+            if (values.type === "percent" && values.maxDiscountAmount <= 0) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["maxDiscountAmount"],
+                    message: "Giảm tối đa phải lớn hơn 0 khi loại giảm theo %",
+                });
+            }
+
+            if (values.applyScope === "product" && !values.applicableProduct) {
+                ctx.addIssue({
+                    code: z.ZodIssueCode.custom,
+                    path: ["applicableProduct"],
+                    message: "Vui lòng chọn sản phẩm áp dụng",
+                });
+            }
+
+            if (isEdit && couponDetail?.data) {
+                const currentUsedCount = couponDetail.data.usedCount;
+                if (values.maxUses < currentUsedCount) {
+                    ctx.addIssue({
+                        code: z.ZodIssueCode.custom,
+                        path: ["maxUses"],
+                        message: `Số lượt dùng tối đa không được nhỏ hơn số lượt đã dùng thực tế (${currentUsedCount})`,
+                    });
+                }
+            }
+        });
+    }, [isEdit, couponDetail]);
+
     const form = useForm<CouponFormValues>({
-        resolver: zodResolver(couponFormSchema),
+        resolver: zodResolver(schema),
         defaultValues,
     });
 
@@ -296,7 +303,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Mã</label>
-                                <Input disabled={isPending} {...form.register("code")} />
+                                <Input disabled={isPending || isEdit} {...form.register("code")} />
                                 <p className="text-sm text-destructive">{form.formState.errors.code?.message}</p>
                             </div>
 
@@ -319,6 +326,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                 <Select
                                     value={selectedType}
                                     onValueChange={(value) => form.setValue("type", value as CouponType, { shouldValidate: true })}
+                                    disabled={isPending || isEdit}
                                 >
                                     <SelectTrigger className="w-full">
                                         <SelectValue placeholder="Chọn loại" />
@@ -361,9 +369,14 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                     </label>
                                     <Input
                                         type="number"
-                                        disabled={isPending}
+                                        disabled={isPending || (isEdit && usedCount > 0)}
                                         {...form.register("value", { valueAsNumber: true })}
                                     />
+                                    <p className="text-[11px] text-muted-foreground leading-tight">
+                                        {selectedType === "percent" 
+                                            ? "Tỉ lệ phần trăm giảm giá (từ 1 - 100)." 
+                                            : "Số tiền giảm trực tiếp vào hóa đơn (ví dụ: 50000)."}
+                                    </p>
                                     <p className="text-sm text-destructive">{form.formState.errors.value?.message}</p>
                                 </div>
 
@@ -371,9 +384,12 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                     <label className="text-sm font-medium">Đơn tối thiểu</label>
                                     <Input
                                         type="number"
-                                        disabled={isPending}
+                                        disabled={isPending || (isEdit && usedCount > 0)}
                                         {...form.register("minOrderAmount", { valueAsNumber: true })}
                                     />
+                                    <p className="text-[11px] text-muted-foreground leading-tight">
+                                        Giá trị đơn hàng tối thiểu cần đạt để có thể dùng mã này (nhập 0 nếu không yêu cầu).
+                                    </p>
                                     <p className="text-sm text-destructive">{form.formState.errors.minOrderAmount?.message}</p>
                                 </div>
 
@@ -382,9 +398,12 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                         <label className="text-sm font-medium">Giảm tối đa</label>
                                         <Input
                                             type="number"
-                                            disabled={isPending}
+                                            disabled={isPending || (isEdit && usedCount > 0)}
                                             {...form.register("maxDiscountAmount", { valueAsNumber: true })}
                                         />
+                                        <p className="text-[11px] text-muted-foreground leading-tight">
+                                            Số tiền giảm tối đa của mã này để bảo vệ ngân sách của shop.
+                                        </p>
                                         <p className="text-sm text-destructive">{form.formState.errors.maxDiscountAmount?.message}</p>
                                     </div>
                                 )}
@@ -400,138 +419,47 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                         <div className="grid gap-4 sm:grid-cols-2">
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Ngày bắt đầu</label>
-                                <DatePickerV2
-                                    date={startDate}
+                                <DateTimePicker
+                                    value={startDate}
                                     onChange={(value) => {
-                                        if (!value) {
-                                            return;
+                                        if (value) {
+                                            form.setValue("startDate", value, { shouldValidate: true });
                                         }
-                                        const nextDate = new Date(value);
-                                        const hour = getHourValue(startDate);
-                                        const minute = getMinuteValue(startDate);
-                                        nextDate.setHours(Number(hour), Number(minute), 0, 0);
-                                        form.setValue("startDate", nextDate, { shouldValidate: true });
                                     }}
-                                    disabled={isPending}
+                                    disabled={isPending || hasStarted}
                                     placeholder="Chọn ngày bắt đầu"
                                 />
-                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                    <Select
-                                        value={getHourValue(startDate)}
-                                        onValueChange={(hour) => {
-                                            form.setValue(
-                                                "startDate",
-                                                withTime(startDate, hour, getMinuteValue(startDate)),
-                                                { shouldValidate: true }
-                                            );
-                                        }}
-                                        disabled={isPending}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Giờ" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {hourOptions.map((hour) => (
-                                                <SelectItem key={hour} value={hour}>{hour} giờ</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-
-                                    <Select
-                                        value={getMinuteValue(startDate)}
-                                        onValueChange={(minute) => {
-                                            form.setValue(
-                                                "startDate",
-                                                withTime(startDate, getHourValue(startDate), minute),
-                                                { shouldValidate: true }
-                                            );
-                                        }}
-                                        disabled={isPending}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Phút" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {minuteOptions.map((minute) => (
-                                                <SelectItem key={minute} value={minute}>{minute} phút</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                                 <p className="text-sm text-destructive">{form.formState.errors.startDate?.message}</p>
                             </div>
 
                             <div className="space-y-2">
                                 <label className="text-sm font-medium">Ngày kết thúc</label>
-                                <DatePickerV2
-                                    date={endDate}
+                                <DateTimePicker
+                                    value={endDate}
                                     onChange={(value) => {
-                                        if (!value) {
-                                            return;
+                                        if (value) {
+                                            form.setValue("endDate", value, { shouldValidate: true });
                                         }
-                                        const nextDate = new Date(value);
-                                        const hour = getHourValue(endDate);
-                                        const minute = getMinuteValue(endDate);
-                                        nextDate.setHours(Number(hour), Number(minute), 0, 0);
-                                        form.setValue("endDate", nextDate, { shouldValidate: true });
                                     }}
                                     disabled={isPending}
                                     placeholder="Chọn ngày kết thúc"
                                 />
-                                <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
-                                    <Select
-                                        value={getHourValue(endDate)}
-                                        onValueChange={(hour) => {
-                                            form.setValue(
-                                                "endDate",
-                                                withTime(endDate, hour, getMinuteValue(endDate)),
-                                                { shouldValidate: true }
-                                            );
-                                        }}
-                                        disabled={isPending}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Giờ" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {hourOptions.map((hour) => (
-                                                <SelectItem key={hour} value={hour}>{hour} giờ</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-
-                                    <Select
-                                        value={getMinuteValue(endDate)}
-                                        onValueChange={(minute) => {
-                                            form.setValue(
-                                                "endDate",
-                                                withTime(endDate, getHourValue(endDate), minute),
-                                                { shouldValidate: true }
-                                            );
-                                        }}
-                                        disabled={isPending}
-                                    >
-                                        <SelectTrigger className="w-full">
-                                            <SelectValue placeholder="Phút" />
-                                        </SelectTrigger>
-                                        <SelectContent>
-                                            {minuteOptions.map((minute) => (
-                                                <SelectItem key={minute} value={minute}>{minute} phút</SelectItem>
-                                            ))}
-                                        </SelectContent>
-                                    </Select>
-                                </div>
                                 <p className="text-sm text-destructive">{form.formState.errors.endDate?.message}</p>
                             </div>
                         </div>
 
-                        <div className="flex items-center gap-2 rounded-md border p-3">
-                            <Checkbox
-                                checked={form.watch("isPublic")}
-                                disabled={isPending}
-                                onCheckedChange={(checked) => form.setValue("isPublic", checked === true)}
-                            />
-                            <span className="text-sm">Hiển thị public</span>
+                        <div className="space-y-2 rounded-md border p-3">
+                            <div className="flex items-center gap-2">
+                                <Checkbox
+                                    checked={form.watch("isPublic")}
+                                    disabled={isPending}
+                                    onCheckedChange={(checked) => form.setValue("isPublic", checked === true)}
+                                />
+                                <span className="text-sm">Hiển thị public</span>
+                            </div>
+                            <p className="text-[11px] text-muted-foreground leading-tight pl-6">
+                                Cho phép khách hàng nhìn thấy và thu thập mã này. Nếu tắt, mã sẽ ẩn (chỉ dùng khi gửi mã riêng).
+                            </p>
                         </div>
                     </div>
 
@@ -545,6 +473,9 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                 disabled={isPending}
                                 {...form.register("maxUses", { valueAsNumber: true })}
                             />
+                            <p className="text-[11px] text-muted-foreground leading-tight">
+                                Tổng số lượt mã giảm giá này có thể được sử dụng trên toàn hệ thống.
+                            </p>
                             <p className="text-sm text-destructive">{form.formState.errors.maxUses?.message}</p>
                         </div>
 
@@ -555,6 +486,9 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                 disabled={isPending}
                                 {...form.register("perUserLimit", { valueAsNumber: true })}
                             />
+                            <p className="text-[11px] text-muted-foreground leading-tight">
+                                Số lần tối đa mà một tài khoản khách hàng có thể áp dụng mã giảm giá này.
+                            </p>
                             <p className="text-sm text-destructive">{form.formState.errors.perUserLimit?.message}</p>
                         </div>
 
@@ -570,6 +504,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                         form.setValue("applicableProduct", "", { shouldValidate: true });
                                     }
                                 }}
+                                disabled={isPending || (isEdit && usedCount > 0)}
                             >
                                 <SelectTrigger className="w-full">
                                     <SelectValue placeholder="Chọn phạm vi" />
@@ -587,7 +522,7 @@ export default function CouponFormPage({ mode, couponId }: CouponFormPageProps) 
                                 <Select
                                     value={form.watch("applicableProduct") || ""}
                                     onValueChange={(value) => form.setValue("applicableProduct", value, { shouldValidate: true })}
-                                    disabled={isLoadingProducts || isPending}
+                                    disabled={isLoadingProducts || isPending || (isEdit && usedCount > 0)}
                                 >
                                     <SelectTrigger className="w-full">
                                         <SelectValue
