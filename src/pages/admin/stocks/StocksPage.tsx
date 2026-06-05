@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { AlertCircle, AlertTriangle, Package, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 import CrudTable from "@/components/crud_table/crud-table";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
     useUpdateInventory,
 } from "@/hooks/useInventories";
 import { useProducts } from "@/hooks/useProducts";
+import { getSystemSettings } from "@/services/settings";
 import type { Inventory, InventoryType } from "@/types/inventory";
 
 import { inventoryColumns } from "./inventory-columns";
@@ -43,7 +45,18 @@ export default function StocksPage() {
     const [selectedInventory, setSelectedInventory] = useState<Inventory>();
 
     const { mutate: deleteItem } = useDeleteInventory();
-    const { data: lowStockData } = useLowStockInventories(10);
+
+    const { data: settingsData } = useQuery({
+        queryKey: ["system-settings"],
+        queryFn: getSystemSettings,
+    });
+
+    const stockThreshold = useMemo(() => {
+        const setting = settingsData?.data?.find((s) => s.key === "STOCK_LOW_THRESHOLD");
+        return setting ? parseInt(setting.value, 10) : 10;
+    }, [settingsData]);
+
+    const { data: lowStockData } = useLowStockInventories(stockThreshold);
     const { data: allInventoriesData } = useInventories({ page: 1, limit: 1 });
     const totalSKUs = allInventoriesData?.pagination?.total ?? 0;
 
@@ -85,7 +98,7 @@ export default function StocksPage() {
                         <AlertTriangle className="size-5" />
                     </div>
                     <div>
-                        <p className="text-sm font-medium text-slate-500 font-medium">Sắp hết hàng (&le;10)</p>
+                        <p className="text-sm font-medium text-slate-500">Sắp hết hàng (&le;{stockThreshold})</p>
                         <h3 className="text-2xl font-bold text-slate-900 mt-0.5">{lowStockData?.length ?? 0}</h3>
                     </div>
                 </div>
