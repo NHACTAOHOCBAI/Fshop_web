@@ -75,7 +75,12 @@ const SettingsPage = () => {
 
   return (
     <div className="space-y-4 w-full">
-      <h1 className="text-2xl font-semibold">Cấu hình hệ thống</h1>
+      <div>
+        <h1 className="text-2xl font-semibold">Cấu hình hệ thống</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Thiết lập các tham số vận hành, thời gian cảnh báo xử lý đơn hàng và cấu hình chung toàn hệ thống.
+        </p>
+      </div>
 
       <section className="max-w-2xl rounded-2xl border border-slate-200/80 bg-white p-6">
         <form onSubmit={handleSave} className="space-y-6">

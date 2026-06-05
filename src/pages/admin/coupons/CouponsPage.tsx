@@ -24,7 +24,12 @@ const CouponsPage = () => {
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Mã giảm giá</h1>
+            <div>
+                <h1 className="text-2xl font-semibold">Mã giảm giá</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Quản lý danh sách các mã coupon khuyến mãi, trạng thái kích hoạt và điều kiện áp dụng cho đơn hàng.
+                </p>
+            </div>
 
             <CrudTable<Coupon>
                 columns={couponColumns(handleDeleteItem)}

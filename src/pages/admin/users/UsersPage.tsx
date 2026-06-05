@@ -44,7 +44,12 @@ const UsersPage = () => {
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Người dùng</h1>
+            <div>
+                <h1 className="text-2xl font-semibold">Người dùng</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Quản lý danh sách người dùng, vai trò tài khoản và trạng thái hoạt động của thành viên hệ thống.
+                </p>
+            </div>
 
             <CrudTable<User>
                 columns={userColumns(handleUpdateBtn, handleDeleteItem)}

@@ -59,7 +59,12 @@ export default function StocksPage() {
 
     return (
         <div className="space-y-6 w-full">
-            <h1 className="text-2xl font-semibold">Tồn kho</h1>
+            <div>
+                <h1 className="text-2xl font-semibold">Tồn kho</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Theo dõi số lượng hàng hóa trong kho, cảnh báo các mặt hàng sắp hết và quản lý các giao dịch nhập xuất kho.
+                </p>
+            </div>
 
             {/* KPI Metrics Cards */}
             <div className="grid gap-4 sm:grid-cols-3">

@@ -35,7 +35,12 @@ const SlotTypesPage = () => {
 
     return (
         <div className="space-y-4 w-full">
-            <h1 className="text-2xl font-semibold">Quản lý Slot Type (Vị trí phối đồ)</h1>
+            <div>
+                <h1 className="text-2xl font-semibold">Quản lý Slot Type (Vị trí phối đồ)</h1>
+                <p className="text-sm text-muted-foreground mt-1">
+                    Cấu hình và định nghĩa các vùng/vị trí phối đồ trên cơ thể người mẫu cho tính năng thử đồ ảo (Try-On).
+                </p>
+            </div>
 
             <CrudTable<SlotType>
                 columns={slotTypeColumns(handleUpdateBtn, handleDeleteItem)}

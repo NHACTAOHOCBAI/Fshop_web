@@ -59,7 +59,12 @@ const ProductsPage = () => {
     return (
         <>
             <div className="space-y-4 w-full">
-                <h1 className="text-2xl font-semibold">Sản phẩm</h1>
+                <div>
+                    <h1 className="text-2xl font-semibold">Sản phẩm</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Quản lý danh mục các sản phẩm của shop, trạng thái hiển thị và xem chi tiết các biến thể bán hàng.
+                    </p>
+                </div>
 
                 <CrudTable<Product>
                     columns={productColumns(handleViewItem, handleEditItem, handleDeleteItem)}
