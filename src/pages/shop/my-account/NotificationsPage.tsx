@@ -1,4 +1,4 @@
-import { Bell, CheckCheck, ChevronRight, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
+import { AlertTriangle, Bell, CheckCheck, ChevronRight, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
 import { type ElementType, useState } from "react";
 import { Link } from "react-router";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ const TYPE_CONFIG: Record<NotificationTypeExtended, { icon: ElementType; classNa
     POST: { icon: Megaphone, className: "bg-slate-100 text-slate-600" },
     LIVESTREAM: { icon: Megaphone, className: "bg-rose-50 text-rose-600" },
     ADMIN_BROADCAST: { icon: Megaphone, className: "bg-violet-50 text-violet-600" },
+    INVENTORY: { icon: AlertTriangle, className: "bg-red-50 text-red-600" },
 };
 
 const formatDateTime = (value: string) => {
@@ -82,6 +83,9 @@ const getNotificationLink = (notification: Notification): string | null => {
         case "LIVESTREAM": {
             const liveId = ref ?? extractIdFromText(notification.title) ?? extractIdFromText(notification.message);
             return liveId ? `/livestreams/${liveId}` : `/livestreams`;
+        }
+        case "INVENTORY": {
+            return ref ? `/admin/products/${ref}/edit` : `/admin/products`;
         }
         default:
             return null;

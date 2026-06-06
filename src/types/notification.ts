@@ -1,6 +1,6 @@
 import type { QueryParams } from "@/types/query";
 
-export type NotificationType = "DISCOUNT" | "ORDER" | "REVIEW" | "POST";
+export type NotificationType = "DISCOUNT" | "ORDER" | "REVIEW" | "POST" | "INVENTORY";
 
 export type NotificationTypeExtended =
     | "DISCOUNT"
@@ -8,7 +8,8 @@ export type NotificationTypeExtended =
     | "REVIEW"
     | "POST"
     | "LIVESTREAM"
-    | "ADMIN_BROADCAST";
+    | "ADMIN_BROADCAST"
+    | "INVENTORY";
 
 export type Notification = {
     id: number;
