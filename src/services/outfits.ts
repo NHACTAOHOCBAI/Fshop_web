@@ -28,7 +28,24 @@ export const deleteOutfit = async (id: number) => {
     return data;
 };
 
+export type AddOutfitToCartResponse = {
+    cart: Cart;
+    addedItems: Array<{
+        productId: number;
+        productName: string;
+        variantId: number;
+        sku?: string;
+        quantity: number;
+    }>;
+    skippedItems: Array<{
+        productId: number;
+        productName: string;
+        variantId: number;
+        sku?: string;
+    }>;
+};
+
 export const addOutfitToCart = async (id: number) => {
-    const { data } = await axiosInstance.post<ApiResponse<Cart>>(`/outfits/${id}/add-to-cart`);
+    const { data } = await axiosInstance.post<ApiResponse<AddOutfitToCartResponse>>(`/outfits/${id}/add-to-cart`);
     return data;
 };

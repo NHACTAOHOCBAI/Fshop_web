@@ -60,6 +60,7 @@ const MixMatchPage = () => {
     const [searchTerm, setSearchTerm] = useState("");
     const [draggedSlot, setDraggedSlot] = useState<OutfitSlot | null>(null);
     const [draggedProduct, setDraggedProduct] = useState<Product | null>(null);
+    const [savedOutfit, setSavedOutfit] = useState<Outfit | null>(null);
 
     const productsQuery = useProducts({ page: 1, limit: 80, search: searchTerm || undefined });
     const slotTypesQuery = useSlotTypes();
@@ -84,6 +85,21 @@ const MixMatchPage = () => {
     const products = productsQuery.data?.data ?? [];
     const draftList = Object.values(draftItems).filter(Boolean) as DraftItem[];
     const totalPrice = draftList.reduce((sum, item) => sum + Number(item.variant.price || item.product.price || 0), 0);
+
+    const isDirty = useMemo(() => {
+        if (!savedOutfit) {
+            return draftList.length > 0;
+        }
+        if (outfitName.trim() !== savedOutfit.name) return true;
+        if (draftList.length !== savedOutfit.items.length) return true;
+        for (const item of savedOutfit.items) {
+            const draft = draftItems[item.slot as OutfitSlot];
+            if (!draft) return true;
+            if (draft.variantId !== item.variant.id) return true;
+            if (draft.quantity !== item.quantity) return true;
+        }
+        return false;
+    }, [draftItems, outfitName, savedOutfit, draftList]);
 
     const isProductValidForSlot = useCallback(
         (product: Product, slotCode: string): boolean => {
@@ -172,12 +188,14 @@ const MixMatchPage = () => {
         setDraftItems({});
         setEditingOutfitId(null);
         setOutfitName("Outfit đi chơi cuối tuần");
+        setSavedOutfit(null);
     };
 
     const loadOutfit = (outfit: Outfit) => {
         setEditingOutfitId(outfit.id);
         setOutfitName(outfit.name);
         setDraftItems(toDraftItems(outfit));
+        setSavedOutfit(outfit);
     };
 
     const buildPayload = () => ({
@@ -206,7 +224,12 @@ const MixMatchPage = () => {
         if (editingOutfitId) {
             updateOutfit.mutate(
                 { id: editingOutfitId, payload },
-                { onSuccess: () => toast.success("Đã cập nhật outfit.") },
+                {
+                    onSuccess: (response) => {
+                        setSavedOutfit(response.data);
+                        toast.success("Đã cập nhật outfit.");
+                    }
+                },
             );
             return;
         }
@@ -214,6 +237,7 @@ const MixMatchPage = () => {
         createOutfit.mutate(payload, {
             onSuccess: (response) => {
                 setEditingOutfitId(response.data.id);
+                setSavedOutfit(response.data);
                 toast.success("Đã lưu outfit.");
             },
         });
@@ -224,8 +248,45 @@ const MixMatchPage = () => {
             toast.info("Hãy lưu outfit trước khi thêm cả set vào giỏ.");
             return;
         }
+        if (isDirty) {
+            toast.warning(
+                <div className="space-y-1 py-0.5">
+                    <p className="font-semibold text-amber-600">Bạn có thay đổi chưa lưu!</p>
+                    <p className="text-xs text-slate-500 leading-normal">
+                        Vui lòng nhấn "Lưu outfit" để cập nhật các thay đổi trước khi thêm set đồ vào giỏ hàng.
+                    </p>
+                </div>
+            );
+            return;
+        }
         addOutfitToCart.mutate(editingOutfitId, {
-            onSuccess: () => toast.success("Đã thêm outfit vào giỏ hàng."),
+            onSuccess: (response) => {
+                const { addedItems, skippedItems } = response.data;
+
+                if (addedItems.length === 0) {
+                    toast.warning("Tất cả sản phẩm trong set đã có sẵn trong giỏ hàng.");
+                    return;
+                }
+
+                if (skippedItems.length > 0) {
+                    const addedList = addedItems.map(item => item.productName).join(", ");
+                    const skippedList = skippedItems.map(item => item.productName).join(", ");
+
+                    toast.success(
+                        <div className="space-y-1.5 py-0.5">
+                            <p className="font-semibold text-emerald-600">Đã thêm set đồ thành công!</p>
+                            <p className="text-xs text-slate-600 font-medium">Đã thêm mới: <span className="text-slate-500 font-normal">{addedList}</span></p>
+                            <p className="text-xs text-amber-600 font-medium">Bỏ qua (đã có trong giỏ): <span className="text-slate-500 font-normal">{skippedList}</span></p>
+                        </div>,
+                        { duration: 6000 }
+                    );
+                } else {
+                    toast.success("Đã thêm toàn bộ set đồ vào giỏ hàng.");
+                }
+            },
+            onError: (err) => {
+                toast.error(err instanceof Error ? err.message : "Thêm set đồ thất bại.");
+            }
         });
     };
 
