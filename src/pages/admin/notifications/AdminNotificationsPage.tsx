@@ -1,5 +1,6 @@
 import { Bell, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
-import type { ElementType } from "react";
+import { useState, type ElementType } from "react";
+import ClientPagination from "@/components/pagination/ClientPagination";
 
 import { useAdminNotificationRealtime, useAdminNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
@@ -38,9 +39,12 @@ const getNotificationMessage = (notification: Notification) => {
 };
 
 const AdminNotificationsPage = () => {
+    const [page, setPage] = useState(1);
+    const limit = 10;
+
     const notificationsQuery = useAdminNotifications({
-        page: 1,
-        limit: 20,
+        page,
+        limit,
         sortBy: "createdAt",
         sortOrder: "DESC",
     });
@@ -51,8 +55,11 @@ const AdminNotificationsPage = () => {
     const unreadCount = notifications.filter((item) => !item.isRead).length;
     const latestNotification = notifications[0];
 
+    const paginationMeta = notificationsQuery.data?.meta?.pagination;
+    const totalPages = paginationMeta ? Math.max(1, Math.ceil(paginationMeta.total / limit)) : 1;
+
     return (
-        <div className="mx-auto w-full max-w-6xl space-y-6">
+        <div className="space-y-6 w-full">
             <div>
                 <h1 className="text-2xl font-bold text-slate-900">Thông báo admin</h1>
                 <p className="mt-1 text-sm text-slate-500">Danh sách thông báo dành cho admin, cập nhật theo thời gian thực.</p>
@@ -146,6 +153,15 @@ const AdminNotificationsPage = () => {
                                         Đang đồng bộ...
                                     </div>
                                 )}
+
+                                <div className="pt-4 border-t border-slate-100 flex justify-center">
+                                    <ClientPagination
+                                        page={page}
+                                        totalPages={totalPages}
+                                        onPageChange={setPage}
+                                        disabled={notificationsQuery.isFetching}
+                                    />
+                                </div>
                             </div>
                         )}
                     </div>

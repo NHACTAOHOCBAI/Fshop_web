@@ -79,6 +79,7 @@ export const useMarkNotificationAsRead = () => {
         mutationFn: markNotificationAsRead,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: MY_NOTIFICATIONS_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: ADMIN_NOTIFICATIONS_QUERY_KEY });
         },
     });
 };
@@ -90,6 +91,7 @@ export const useMarkAllNotificationsAsRead = () => {
         mutationFn: markAllNotificationsAsRead,
         onSuccess: () => {
             queryClient.invalidateQueries({ queryKey: MY_NOTIFICATIONS_QUERY_KEY });
+            queryClient.invalidateQueries({ queryKey: ADMIN_NOTIFICATIONS_QUERY_KEY });
         },
     });
 };
