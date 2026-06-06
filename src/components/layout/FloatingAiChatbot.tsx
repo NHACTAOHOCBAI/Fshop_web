@@ -285,7 +285,24 @@ const FloatingAiChatbot = () => {
       }
 
       if (imageFile) {
-        await imageSearchMutation.mutateAsync({ sessionId, file: imageFile });
+        const imageUri = URL.createObjectURL(imageFile);
+        const optimisticMessage: AiChatMessage = {
+          id: -Date.now(),
+          role: "user",
+          content: "[Tìm kiếm sản phẩm bằng hình ảnh]",
+          products: null,
+          metadata: {
+            mediaType: "image",
+            imageUri,
+            fileName: imageFile.name,
+          },
+          latencyMs: null,
+          createdAt: new Date().toISOString(),
+        };
+
+        setPendingMessage(optimisticMessage);
+        await imageSearchMutation.mutateAsync({ sessionId, file: imageFile, clientImageUri: imageUri });
+        setPendingMessage(null);
         setImageFile(null);
         if (imageInputRef.current) imageInputRef.current.value = "";
       } else if (voiceFile) {
@@ -533,7 +550,14 @@ const FloatingAiChatbot = () => {
               </div>
             ) : null}
 
-            {messages.map((message) => (
+            {messages.map((message) => {
+              const imageUri = message.metadata?.imageUri;
+              const isImageSearchPlaceholder =
+                message.role === "user" &&
+                message.content.trim() === "[Tìm kiếm sản phẩm bằng hình ảnh]";
+              const hasTextContent = Boolean(message.content.trim()) && !isImageSearchPlaceholder;
+
+              return (
               <div
                 key={message.id}
                 className={cn(
@@ -547,17 +571,32 @@ const FloatingAiChatbot = () => {
                     message.role === "user" ? "items-end" : "items-start",
                   )}
                 >
-                  <div
-                    className={cn(
-                      "rounded-2xl px-3 py-2 text-sm leading-relaxed w-fit",
-                      message.role === "user"
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-slate-200 bg-slate-50 text-slate-700",
-                    )}
-                  >
-                    <p className="whitespace-pre-wrap leading-relaxed">
-                      {message.content}
-                    </p>
+                  {message.role === "user" && imageUri ? (
+                    <div className="w-fit overflow-hidden rounded-2xl bg-primary p-1">
+                      <img
+                        src={imageUri}
+                        alt="Ảnh đã gửi"
+                        className="h-44 w-44 rounded-xl object-cover"
+                      />
+                      <div className="flex items-center gap-1.5 px-2 py-1 text-[11px] text-primary-foreground/80">
+                        <span>{formatTime(message.createdAt)}</span>
+                        <CheckCheck className="size-3.5" />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {hasTextContent ? (
+                    <div
+                      className={cn(
+                        "rounded-2xl px-3 py-2 text-sm leading-relaxed w-fit",
+                        message.role === "user"
+                          ? "bg-primary text-primary-foreground"
+                          : "border border-slate-200 bg-slate-50 text-slate-700",
+                      )}
+                    >
+                      <p className="whitespace-pre-wrap leading-relaxed">
+                        {message.content}
+                      </p>
                     <div
                       className={cn(
                         "mt-1 flex items-center gap-1.5 text-[11px]",
@@ -571,6 +610,8 @@ const FloatingAiChatbot = () => {
                         <CheckCheck className="size-3.5" />
                       ) : null}
                     </div>
+                    </div>
+                  ) : null}
 
                     {message.products && message.products.length > 0 ? (
                       <div className="mt-2 space-y-2">
@@ -630,10 +671,10 @@ const FloatingAiChatbot = () => {
                         ))}
                       </div>
                     ) : null}
-                  </div>
                 </div>
               </div>
-            ))}
+              );
+            })}
 
             {isMediaSearching ? (
               <div className="flex justify-start">
