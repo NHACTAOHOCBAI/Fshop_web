@@ -17,6 +17,7 @@ export type Notification = {
     type: NotificationTypeExtended;
     isRead: boolean;
     createdAt: string;
+    referenceId?: number | null;
     user?: {
         id: number;
         fullName?: string | null;
