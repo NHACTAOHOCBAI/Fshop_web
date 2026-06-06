@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useLoginWithGoogle } from "@/hooks/useAuth";
 import { authStorage } from "@/lib/auth";
 import { toast } from "sonner";
@@ -103,17 +103,8 @@ export function GoogleSignInButton({ onSuccess, onError, disabled }: GoogleSignI
     }
   }, [isGoogleLoaded]);
 
-  const handleClick = useCallback(() => {
-    if (!window.google?.accounts) {
-      toast.error("Google Sign-In is not loaded. Please refresh the page.");
-      return;
-    }
-    // Trigger the consent flow
-    window.google.accounts.id.prompt();
-  }, []);
-
   return (
-    <div className="w-full" onClick={disabled || isPending ? undefined : handleClick}>
+    <div className="w-full">
       <div ref={containerRef} style={{ width: "100%", pointerEvents: disabled || isPending ? "none" : "auto", opacity: disabled || isPending ? 0.6 : 1 }} />
     </div>
   );
