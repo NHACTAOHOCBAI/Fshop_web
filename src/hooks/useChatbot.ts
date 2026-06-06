@@ -186,15 +186,26 @@ const appendMessagesToCache = (
     });
 };
 
-type MediaSearchArgs = { sessionId: number; file: File };
+type MediaSearchArgs = { sessionId: number; file: File; clientImageUri?: string };
 
 export const useImageSearchInChatSession = () => {
     const queryClient = useQueryClient();
     return useMutation({
-        mutationFn: ({ sessionId, file }: MediaSearchArgs) => imageSearchInChatSession(sessionId, file),
-        onSuccess: (response) => {
+        mutationFn: ({ sessionId, file, clientImageUri }: MediaSearchArgs) => imageSearchInChatSession(sessionId, file, clientImageUri),
+        onSuccess: (response, variables) => {
             const { sessionId, userMessage, assistantMessage } = response.data;
-            appendMessagesToCache(queryClient, sessionId, userMessage, assistantMessage);
+            const userMessageWithImage = variables.clientImageUri
+                ? {
+                    ...userMessage,
+                    metadata: {
+                        ...(userMessage.metadata ?? {}),
+                        mediaType: "image" as const,
+                        imageUri: userMessage.metadata?.imageUri ?? variables.clientImageUri,
+                        fileName: userMessage.metadata?.fileName ?? variables.file.name,
+                    },
+                }
+                : userMessage;
+            appendMessagesToCache(queryClient, sessionId, userMessageWithImage, assistantMessage);
         },
     });
 };

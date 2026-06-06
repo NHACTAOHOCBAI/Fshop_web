@@ -15,6 +15,11 @@ export type AiChatMessage = {
     role: AiChatRole;
     content: string;
     products: AiChatProductSuggestion[] | null;
+    metadata?: {
+        imageUri?: string;
+        mediaType?: "image" | "audio";
+        fileName?: string;
+    } | null;
     latencyMs: number | null;
     createdAt: string;
 };
