@@ -1,5 +1,6 @@
-import { Bell, CheckCheck, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
+import { AlertTriangle, Bell, CheckCheck, ChevronRight, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
 import { type ElementType, useState } from "react";
+import { Link } from "react-router";
 import { toast } from "sonner";
 
 import {
@@ -10,6 +11,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { Notification, NotificationTypeExtended } from "@/types/notification";
 import ClientPagination from "@/components/pagination/ClientPagination";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TYPE_CONFIG: Record<NotificationTypeExtended, { icon: ElementType; className: string }> = {
     ORDER: { icon: Package, className: "bg-blue-50 text-blue-600" },
@@ -18,6 +20,7 @@ const TYPE_CONFIG: Record<NotificationTypeExtended, { icon: ElementType; classNa
     POST: { icon: Megaphone, className: "bg-slate-100 text-slate-600" },
     LIVESTREAM: { icon: Megaphone, className: "bg-rose-50 text-rose-600" },
     ADMIN_BROADCAST: { icon: Megaphone, className: "bg-violet-50 text-violet-600" },
+    INVENTORY: { icon: AlertTriangle, className: "bg-red-50 text-red-600" },
 };
 
 const formatDateTime = (value: string) => {
@@ -43,13 +46,61 @@ const getNotificationMessage = (notification: Notification) => {
     return notification.message?.trim() || "Bạn có một thông báo mới từ hệ thống.";
 };
 
+/**
+ * Tries to extract a numeric ID from notification title/message.
+ * Looks for patterns like "#47" which appear in order notification titles.
+ * e.g. "Đơn hàng #47 cập nhật" → 47
+ */
+const extractIdFromText = (text?: string | null): number | null => {
+    if (!text) return null;
+    const match = text.match(/#(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+};
+
+/**
+ * Maps notification type + referenceId to a navigable route.
+ * Priority: referenceId → parsed from title → fallback list page.
+ * DISCOUNT / ADMIN_BROADCAST → no navigation.
+ */
+const getNotificationLink = (notification: Notification): string | null => {
+    const ref = notification.referenceId;
+
+    switch (notification.type) {
+        case "ORDER":
+        case "REVIEW": {
+            const orderId = ref ?? extractIdFromText(notification.title) ?? extractIdFromText(notification.message);
+            return orderId ? `/my-account/orders/${orderId}` : `/my-account/orders`;
+        }
+        case "POST": {
+            if (!ref) return `/community`;
+            // Follow notifications: referenceId is followerId → user blog page
+            if (notification.title?.includes("theo dõi")) {
+                return `/community/user/${ref}`;
+            }
+            // Like / comment / reply / admin hide → specific post
+            return `/community/${ref}`;
+        }
+        case "LIVESTREAM": {
+            const liveId = ref ?? extractIdFromText(notification.title) ?? extractIdFromText(notification.message);
+            return liveId ? `/livestreams/${liveId}` : `/livestreams`;
+        }
+        case "INVENTORY": {
+            return ref ? `/admin/products/${ref}/edit` : `/admin/products`;
+        }
+        default:
+            return null;
+    }
+};
+
 const NotificationsPage = () => {
     const [page, setPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState<"all" | "read" | "unread">("all");
     const limit = 20;
 
     const { data, isLoading, isFetching, isError, error } = useMyNotifications({
         page,
         limit,
+        isRead: statusFilter === "all" ? undefined : statusFilter === "read",
         sortBy: "createdAt",
         sortOrder: "DESC",
     });
@@ -103,6 +154,29 @@ const NotificationsPage = () => {
                 )}
             </div>
 
+            <div className="border-slate-100">
+                <Tabs
+                    value={statusFilter}
+                    onValueChange={(val) => {
+                        setStatusFilter(val as typeof statusFilter);
+                        setPage(1);
+                    }}
+                    className="h-9"
+                >
+                    <TabsList className="h-9 bg-slate-100 p-0.5 rounded-xl">
+                        <TabsTrigger value="all" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                            Tất cả
+                        </TabsTrigger>
+                        <TabsTrigger value="unread" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                            Chưa đọc
+                        </TabsTrigger>
+                        <TabsTrigger value="read" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                            Đã đọc
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
+            </div>
+
             {isLoading ? (
                 <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-16 text-sm text-slate-500">
                     <Loader2 className="size-4 animate-spin" />
@@ -122,15 +196,10 @@ const NotificationsPage = () => {
                     {notifications.map((notification) => {
                         const typeConfig = TYPE_CONFIG[notification.type] || TYPE_CONFIG.POST;
                         const Icon = typeConfig.icon;
+                        const link = getNotificationLink(notification);
 
-                        return (
-                            <div
-                                key={notification.id}
-                                className={cn(
-                                    "flex gap-4 rounded-2xl border px-4 py-3.5 transition-colors",
-                                    notification.isRead ? "border-slate-200 bg-white" : "border-primary/20 bg-primary/5"
-                                )}
-                            >
+                        const itemContent = (
+                            <>
                                 <div
                                     className={cn(
                                         "flex size-9 shrink-0 items-center justify-center rounded-full",
@@ -163,13 +232,50 @@ const NotificationsPage = () => {
                                         <button
                                             type="button"
                                             disabled={isMarkingOne}
-                                            onClick={() => handleMarkOneAsRead(notification.id)}
+                                            onClick={(e) => {
+                                                e.preventDefault();
+                                                e.stopPropagation();
+                                                handleMarkOneAsRead(notification.id);
+                                            }}
                                             className="mt-2 text-xs font-medium text-primary transition-colors hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-60"
                                         >
                                             Đánh dấu đã đọc
                                         </button>
                                     )}
                                 </div>
+
+                                {link && (
+                                    <ChevronRight className="size-4 shrink-0 self-center text-slate-300 group-hover:text-slate-500 transition-colors" />
+                                )}
+                            </>
+                        );
+
+                        const wrapperClass = cn(
+                            "group flex gap-4 rounded-2xl border px-4 py-3.5 transition-colors",
+                            notification.isRead ? "border-slate-200 bg-white" : "border-primary/20 bg-primary/5",
+                            link && "hover:border-slate-300 hover:bg-slate-50 cursor-pointer"
+                        );
+
+                        if (link) {
+                            return (
+                                <Link
+                                    key={notification.id}
+                                    to={link}
+                                    className={wrapperClass}
+                                    onClick={() => {
+                                        if (!notification.isRead) {
+                                            handleMarkOneAsRead(notification.id);
+                                        }
+                                    }}
+                                >
+                                    {itemContent}
+                                </Link>
+                            );
+                        }
+
+                        return (
+                            <div key={notification.id} className={wrapperClass}>
+                                {itemContent}
                             </div>
                         );
                     })}
