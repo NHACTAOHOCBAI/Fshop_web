@@ -15,37 +15,47 @@ import type {
 } from "@/types/moderation";
 
 const CONTENT_TYPE_LABELS: Record<ContentType, string> = {
-  post: "Post",
-  review: "Review",
-  post_comment: "Post Comment",
-  livestream_comment: "Livestream",
+  post: "Bài viết",
+  review: "Đánh giá",
+  post_comment: "Bình luận bài viết",
+  livestream_comment: "Bình luận Live",
+};
+
+const LABEL_DISPLAY: Record<string, string> = {
+  toxic: "Độc hại",
+  spam: "Spam",
+  hate_speech: "Kích động",
+  nsfw: "Nhạy cảm",
+  off_topic: "Lạc đề",
 };
 
 const LABEL_COLORS: Record<string, string> = {
-  toxic: "bg-red-100 text-red-800",
-  spam: "bg-yellow-100 text-yellow-800",
-  hate_speech: "bg-purple-100 text-purple-800",
-  nsfw: "bg-pink-100 text-pink-800",
-  off_topic: "bg-gray-100 text-gray-800",
+  toxic: "bg-red-50 text-red-700 border-red-100",
+  spam: "bg-amber-50 text-amber-700 border-amber-100",
+  hate_speech: "bg-purple-50 text-purple-700 border-purple-100",
+  nsfw: "bg-pink-50 text-pink-700 border-pink-100",
+  off_topic: "bg-slate-100 text-slate-700 border-slate-200",
 };
 
 const STATUS_LABELS: Record<ModerationQueueStatus, string> = {
-  pending: "Pending Review",
-  reviewed: "Reviewed",
-  approved: "Approved",
-  rejected: "Rejected",
+  pending: "Chờ xem xét",
+  reviewed: "Đã xem xét",
+  approved: "Đã duyệt",
+  rejected: "Đã từ chối",
 };
 
 const ScoreBar = ({ score }: { score: number }) => (
   <div className="flex items-center gap-2">
-    <div className="h-2 w-24 overflow-hidden rounded-full bg-gray-200">
+    <div className="h-1.5 w-20 overflow-hidden rounded-full bg-slate-100">
       <div
-        className="h-full rounded-full bg-red-500 transition-all"
+        className={`h-full rounded-full transition-all duration-300 ${
+          score > 0.7 ? "bg-rose-500" : score > 0.4 ? "bg-amber-500" : "bg-emerald-500"
+        }`}
         style={{ width: `${Math.round(score * 100)}%` }}
       />
     </div>
-    <span className="text-xs tabular-nums text-muted-foreground">
-      {(score * 100).toFixed(0)}%
+    <span className="text-[11px] font-semibold tabular-nums text-slate-500">
+      {Math.round(score * 100)}%
     </span>
   </div>
 );
@@ -62,92 +72,101 @@ const LogRow = ({ log }: { log: ModerationLog }) => {
   const handleApprove = () => {
     override(
       { logId: log.id, decision: "approved" },
-      { onSuccess: () => toast.success("Content approved") }
+      { onSuccess: () => toast.success("Đã phê duyệt nội dung thành công") }
     );
   };
 
   const handleReject = () => {
     override(
       { logId: log.id, decision: "rejected" },
-      { onSuccess: () => toast.success("Content rejected") }
+      { onSuccess: () => toast.success("Đã từ chối nội dung thành công") }
     );
   };
 
   return (
     <>
       <tr
-        className="cursor-pointer border-b hover:bg-muted/50"
+        className="cursor-pointer border-b border-slate-100 hover:bg-slate-50/50 transition-colors"
         onClick={() => setExpanded((v) => !v)}
       >
-        <td className="px-4 py-3">
+        <td className="px-4 py-3.5 text-center">
           {expanded ? (
-            <ChevronDown className="h-4 w-4" />
+            <ChevronDown className="h-4 w-4 text-slate-400 mx-auto" />
           ) : (
-            <ChevronRight className="h-4 w-4" />
+            <ChevronRight className="h-4 w-4 text-slate-400 mx-auto" />
           )}
         </td>
-        <td className="px-4 py-3">
-          <span className="rounded bg-muted px-2 py-0.5 text-xs font-medium">
+        <td className="px-4 py-3.5">
+          <Badge variant="secondary" className="text-[10px] font-medium py-0.5 px-2 bg-slate-100 text-slate-700">
             {CONTENT_TYPE_LABELS[log.contentType]}
-          </span>
+          </Badge>
         </td>
-        <td className="max-w-xs px-4 py-3">
-          <p className="line-clamp-2 text-sm">{log.contentText}</p>
+        <td className="max-w-xs px-4 py-3.5">
+          <p className="line-clamp-2 text-xs font-medium text-slate-700">{log.contentText}</p>
         </td>
-        <td className="px-4 py-3">
+        <td className="px-4 py-3.5">
           <ScoreBar score={log.finalScore} />
         </td>
-        <td className="px-4 py-3">
+        <td className="px-4 py-3.5">
           <div className="flex flex-wrap gap-1">
-            {topLabels.map(([label]) => (
-              <span
-                key={label}
-                className={`rounded px-1.5 py-0.5 text-xs font-medium ${LABEL_COLORS[label] ?? "bg-gray-100 text-gray-700"}`}
-              >
-                {label}
-              </span>
-            ))}
+            {topLabels.length === 0 ? (
+              <span className="text-[10px] text-slate-400 italic">Không phát hiện</span>
+            ) : (
+              topLabels.map(([label]) => (
+                <span
+                  key={label}
+                  className={`rounded-full border px-2 py-0.5 text-[10px] font-semibold ${LABEL_COLORS[label] ?? "bg-slate-50 text-slate-700 border-slate-200"}`}
+                >
+                  {LABEL_DISPLAY[label] ?? label}
+                </span>
+              ))
+            )}
           </div>
         </td>
-        <td className="px-4 py-3">
+        <td className="px-4 py-3.5">
           {log.priority === "HIGH" ? (
-            <Badge variant="destructive">HIGH</Badge>
+            <Badge variant="destructive" className="text-[9px] bg-red-50 text-red-700 border-red-200 font-semibold">CAO</Badge>
           ) : (
-            <Badge variant="outline">NORMAL</Badge>
+            <Badge variant="outline" className="text-[9px] bg-slate-50 text-slate-600 border-slate-200 font-semibold">THƯỜNG</Badge>
           )}
         </td>
-        <td className="px-4 py-3 text-xs text-muted-foreground">
-          {new Date(log.reviewedAt ?? log.createdAt).toLocaleDateString("vi-VN")}
+        <td className="px-4 py-3.5 text-[11px] text-muted-foreground">
+          {new Date(log.reviewedAt ?? log.createdAt).toLocaleDateString("vi-VN", {
+            day: "2-digit",
+            month: "2-digit",
+            year: "numeric",
+          })}
         </td>
-        <td className="px-4 py-3">
-          <div className="flex gap-2" onClick={(e) => e.stopPropagation()}>
+        <td className="px-4 py-3.5">
+          <div className="flex gap-1.5 justify-end" onClick={(e) => e.stopPropagation()}>
             {log.isOverridden ? (
               <Badge
-                variant={
-                  log.overrideDecision === "rejected" ? "destructive" : "outline"
-                }
+                variant={log.overrideDecision === "rejected" ? "destructive" : "default"}
+                className={`text-[9px] font-bold px-2 py-0.5 uppercase tracking-wide ${
+                  log.overrideDecision === "rejected" ? "bg-red-50 text-red-700 border-red-200" : "bg-emerald-50 text-emerald-700 border-emerald-200"
+                }`}
               >
-                {log.overrideDecision === "rejected" ? "Rejected" : "Approved"}
+                {log.overrideDecision === "rejected" ? "Đã từ chối" : "Đã duyệt"}
               </Badge>
             ) : (
               <>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-green-500 text-green-600 hover:bg-green-50"
+                  className="h-7 text-[11px] px-2.5 border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
                   onClick={handleApprove}
                   disabled={isPending}
                 >
-                  Approve
+                  Duyệt
                 </Button>
                 <Button
                   size="sm"
                   variant="outline"
-                  className="border-red-500 text-red-600 hover:bg-red-50"
+                  className="h-7 text-[11px] px-2.5 border-rose-500 text-rose-600 hover:bg-rose-50 hover:text-rose-700"
                   onClick={handleReject}
                   disabled={isPending}
                 >
-                  Reject
+                  Từ chối
                 </Button>
               </>
             )}
@@ -155,34 +174,38 @@ const LogRow = ({ log }: { log: ModerationLog }) => {
         </td>
       </tr>
       {expanded && (
-        <tr className="border-b bg-muted/30">
-          <td colSpan={8} className="px-8 py-4">
-            <div className="space-y-3">
+        <tr className="border-b bg-slate-50/30">
+          <td colSpan={8} className="px-8 py-5">
+            <div className="space-y-4">
               <div>
-                <p className="mb-1 text-xs font-semibold uppercase text-muted-foreground">
-                  Full Content
+                <p className="mb-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                  Nội dung đầy đủ
                 </p>
-                <p className="rounded border bg-white p-3 text-sm">{log.contentText}</p>
+                <p className="rounded-xl border border-slate-200/80 bg-white p-4 text-xs leading-relaxed text-slate-700 font-medium">
+                  {log.contentText}
+                </p>
               </div>
-              <div className="grid grid-cols-2 gap-4 text-xs">
-                <div>
-                  <p className="font-semibold text-muted-foreground">Rule Score</p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="bg-white border border-slate-100 p-3.5 rounded-xl flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500">Điểm quy tắc (Rule Score)</span>
                   <ScoreBar score={log.ruleScore} />
                 </div>
-                <div>
-                  <p className="font-semibold text-muted-foreground">ML Score</p>
+                <div className="bg-white border border-slate-100 p-3.5 rounded-xl flex items-center justify-between">
+                  <span className="text-xs font-semibold text-slate-500">Điểm học máy (ML Score)</span>
                   <ScoreBar score={log.mlScore} />
                 </div>
               </div>
               {Object.keys(log.mlLabels ?? {}).length > 0 && (
                 <div>
-                  <p className="mb-2 text-xs font-semibold text-muted-foreground">
-                    All ML Scores
+                  <p className="mb-2.5 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                    Chi tiết điểm phát hiện của bộ lọc
                   </p>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-3">
                     {Object.entries(log.mlLabels).map(([label, score]) => (
-                      <div key={label} className="flex items-center gap-2 text-xs">
-                        <span className="font-medium">{label}</span>
+                      <div key={label} className="bg-white border border-slate-100 p-3 rounded-xl flex items-center justify-between">
+                        <span className="text-xs font-semibold text-slate-600">
+                          {LABEL_DISPLAY[label] ?? label}
+                        </span>
                         <ScoreBar score={score} />
                       </div>
                     ))}
@@ -226,8 +249,8 @@ const ModerationQueue = () => {
   const totalPages = data?.data?.totalPages ?? 1;
   const emptyText =
     status === "pending"
-      ? "No flagged content pending review."
-      : `No ${STATUS_LABELS[status].toLowerCase()} moderation records.`;
+      ? "Không có nội dung bị gắn cờ nào đang chờ duyệt."
+      : `Không tìm thấy bản ghi kiểm duyệt nào có trạng thái "${STATUS_LABELS[status].toLowerCase()}".`;
 
   const handleStatusChange = (value: ModerationQueueStatus) => {
     setStatus(value);
@@ -236,37 +259,32 @@ const ModerationQueue = () => {
   };
 
   return (
-    <div className="space-y-4 p-6">
-      <div className="flex items-center justify-between">
+    <div className="space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div className="flex items-center gap-3">
-          <Button variant="ghost" size="sm" asChild>
-            <Link to="/admin/moderation" className="gap-1.5">
-              <ArrowLeft className="size-4" />
-              Back to Dashboard
+          <Button variant="outline" size="sm" asChild className="h-8 text-sm font-medium">
+            <Link to="/admin/moderation" className="gap-1.5 flex items-center">
+              <ArrowLeft className="size-3.5" />
+              Bảng điều khiển
             </Link>
           </Button>
-          <div>
-            <h1 className="text-2xl font-bold">Moderation Queue</h1>
-            <p className="text-sm text-muted-foreground">
-              {STATUS_LABELS[status]}
-            </p>
-          </div>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2">
           <Select
             value={status}
             onValueChange={(v) => handleStatusChange(v as ModerationQueueStatus)}
           >
-            <SelectTrigger className="w-40">
-              <SelectValue placeholder="Status" />
+            <SelectTrigger className="w-36 h-8 text-sm">
+              <SelectValue placeholder="Trạng thái" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="reviewed">Reviewed</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
+              <SelectItem value="pending">Chờ xem xét</SelectItem>
+              <SelectItem value="reviewed">Đã xem xét</SelectItem>
+              <SelectItem value="approved">Đã duyệt</SelectItem>
+              <SelectItem value="rejected">Đã từ chối</SelectItem>
             </SelectContent>
           </Select>
+
           <Select
             value={contentType}
             onValueChange={(v) => {
@@ -274,17 +292,18 @@ const ModerationQueue = () => {
               setPage(1);
             }}
           >
-            <SelectTrigger className="w-44">
-              <SelectValue placeholder="Content type" />
+            <SelectTrigger className="w-40 h-8 text-sm">
+              <SelectValue placeholder="Loại nội dung" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All types</SelectItem>
-              <SelectItem value="post">Post</SelectItem>
-              <SelectItem value="review">Review</SelectItem>
-              <SelectItem value="post_comment">Post Comment</SelectItem>
-              <SelectItem value="livestream_comment">Livestream</SelectItem>
+              <SelectItem value="all">Tất cả thể loại</SelectItem>
+              <SelectItem value="post">Bài viết</SelectItem>
+              <SelectItem value="review">Đánh giá</SelectItem>
+              <SelectItem value="post_comment">Bình luận bài viết</SelectItem>
+              <SelectItem value="livestream_comment">Bình luận Live</SelectItem>
             </SelectContent>
           </Select>
+
           <Select
             value={priority}
             onValueChange={(v) => {
@@ -292,74 +311,79 @@ const ModerationQueue = () => {
               setPage(1);
             }}
           >
-            <SelectTrigger className="w-36">
-              <SelectValue placeholder="Priority" />
+            <SelectTrigger className="w-32 h-8 text-sm">
+              <SelectValue placeholder="Mức ưu tiên" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All priority</SelectItem>
-              <SelectItem value="HIGH">High</SelectItem>
-              <SelectItem value="NORMAL">Normal</SelectItem>
+              <SelectItem value="all">Độ ưu tiên</SelectItem>
+              <SelectItem value="HIGH">Cao</SelectItem>
+              <SelectItem value="NORMAL">Thường</SelectItem>
             </SelectContent>
           </Select>
-          <Button variant="outline" size="sm" onClick={() => void refetch()}>
-            <RefreshCw className="mr-2 h-4 w-4" />
-            Refresh
+
+          <Button variant="outline" size="sm" onClick={() => void refetch()} className="h-8 text-sm gap-1.5">
+            <RefreshCw className="h-3 w-3" />
+            Tải lại
           </Button>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex h-64 items-center justify-center text-muted-foreground">
-          Loading...
-        </div>
-      ) : items.length === 0 ? (
-        <div className="flex h-64 items-center justify-center text-muted-foreground">
-          {emptyText}
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-lg border">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b bg-muted/50 text-xs uppercase text-muted-foreground">
-              <tr>
-                <th className="w-8 px-4 py-3" />
-                <th className="px-4 py-3">Type</th>
-                <th className="px-4 py-3">Content</th>
-                <th className="px-4 py-3">Score</th>
-                <th className="px-4 py-3">Labels</th>
-                <th className="px-4 py-3">Priority</th>
-                <th className="px-4 py-3">Date</th>
-                <th className="px-4 py-3">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {items.map((log) => (
-                <LogRow key={log.id} log={log} />
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      <div className="rounded-2xl border border-slate-200/80 bg-white overflow-hidden">
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center text-sm text-muted-foreground">
+            Đang tải hàng chờ...
+          </div>
+        ) : items.length === 0 ? (
+          <div className="flex h-64 items-center justify-center text-sm text-muted-foreground text-center p-8">
+            {emptyText}
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm border-collapse">
+              <thead>
+                <tr className="border-b bg-slate-50/50 text-xs uppercase font-bold tracking-wider text-slate-500">
+                  <th className="w-10 px-4 py-3" />
+                  <th className="w-28 px-4 py-3">Loại</th>
+                  <th className="px-4 py-3">Nội dung</th>
+                  <th className="w-32 px-4 py-3">Điểm số</th>
+                  <th className="w-48 px-4 py-3">Phát hiện của bộ lọc</th>
+                  <th className="w-24 px-4 py-3">Độ ưu tiên</th>
+                  <th className="w-28 px-4 py-3">Ngày tạo/Duyệt</th>
+                  <th className="w-32 px-4 py-3 text-right pr-6">Hành động</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {items.map((log) => (
+                  <LogRow key={log.id} log={log} />
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
 
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-3 pt-2">
           <Button
             variant="outline"
             size="sm"
+            className="h-8 text-xs font-medium"
             disabled={page === 1}
             onClick={() => setPage((p) => p - 1)}
           >
-            Previous
+            Trước
           </Button>
-          <span className="text-sm text-muted-foreground">
-            Page {page} / {totalPages}
+          <span className="text-xs text-muted-foreground font-semibold">
+            Trang {page} / {totalPages}
           </span>
           <Button
             variant="outline"
             size="sm"
+            className="h-8 text-xs font-medium"
             disabled={page === totalPages}
             onClick={() => setPage((p) => p + 1)}
           >
-            Next
+            Sau
           </Button>
         </div>
       )}
