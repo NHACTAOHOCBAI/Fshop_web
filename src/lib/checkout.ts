@@ -9,6 +9,7 @@ export type CheckoutItem = {
     unitPrice: number;
     quantity: number;
     lineTotal: number;
+    livestreamId?: number;
 };
 
 export type CheckoutSession = {

@@ -1,13 +1,14 @@
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router";
 import { BarChart2, Check, Loader2, Play, Plus, Radio, Search, Square, Tv, X } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { LivestreamPublisher } from "@/components/livestream/LivestreamPublisher";
-import { LivestreamSummaryModal } from "@/components/livestream/LivestreamSummaryModal";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { DateTimePicker } from "@/components/ui/date-time-picker";
 import { useProducts } from "@/hooks/useProducts";
 import {
     useCreateLivestream,
@@ -32,6 +33,13 @@ const statusStyles: Record<LivestreamStatus, string> = {
     scheduled: "bg-amber-50 text-amber-700 border border-amber-200",
     live: "bg-red-50 text-red-700 border border-red-200",
     ended: "bg-slate-50 text-slate-700 border border-slate-200",
+};
+
+const statusLabels: Record<LivestreamStatus | "all", string> = {
+    all: "Tất cả",
+    scheduled: "Chưa diễn ra",
+    live: "Đang phát",
+    ended: "Đã kết thúc",
 };
 
 const toLocalInputDateTime = (value?: string) => {
@@ -70,12 +78,12 @@ const LivestreamForm = ({
 }) => {
     const [title, setTitle] = useState(initial?.title ?? "");
     const [description, setDescription] = useState(initial?.description ?? "");
-    const [scheduledStartAt, setScheduledStartAt] = useState(
-        toLocalInputDateTime(initial?.scheduledStartAt),
+    const [scheduledStartAt, setScheduledStartAt] = useState<Date | undefined>(
+        initial?.scheduledStartAt ? new Date(initial.scheduledStartAt) : undefined
     );
     const [coverImage, setCoverImage] = useState<File | undefined>();
 
-    const canSubmit = title.trim().length > 0 && (mode === "update" || scheduledStartAt.trim().length > 0);
+    const canSubmit = title.trim().length > 0 && (mode === "update" || !!scheduledStartAt);
 
     const handleSubmit = () => {
         if (!canSubmit) {
@@ -87,7 +95,7 @@ const LivestreamForm = ({
             onSubmit({
                 title: title.trim(),
                 description: description.trim() || undefined,
-                scheduledStartAt: toIsoDateTime(scheduledStartAt),
+                scheduledStartAt: scheduledStartAt!.toISOString(),
                 coverImage,
             });
             return;
@@ -96,7 +104,7 @@ const LivestreamForm = ({
         onSubmit({
             title: title.trim(),
             description: description.trim() || undefined,
-            scheduledStartAt: scheduledStartAt.trim() ? toIsoDateTime(scheduledStartAt) : undefined,
+            scheduledStartAt: scheduledStartAt ? scheduledStartAt.toISOString() : undefined,
             coverImage,
         });
     };
@@ -118,12 +126,12 @@ const LivestreamForm = ({
                 />
             </div>
 
-            <div className="space-y-1.5">
-                <p className="text-sm font-medium text-slate-800">Thời gian dự kiến</p>
-                <Input
-                    type="datetime-local"
+            <div className="space-y-1.5 flex flex-col">
+                <p className="text-sm font-medium text-slate-800 mb-0.5">Thời gian dự kiến</p>
+                <DateTimePicker
                     value={scheduledStartAt}
-                    onChange={(e) => setScheduledStartAt(e.target.value)}
+                    onChange={(value) => setScheduledStartAt(value || undefined)}
+                    placeholder="Chọn thời gian bắt đầu"
                 />
             </div>
 
@@ -242,16 +250,12 @@ const ProductPinPicker = ({
 };
 
 const LivestreamsPage = () => {
+    const navigate = useNavigate();
     const [page, setPage] = useState(1);
     const [status, setStatus] = useState<LivestreamStatus | "all">("all");
     const [search, setSearch] = useState("");
     const [openCreate, setOpenCreate] = useState(false);
     const [editing, setEditing] = useState<Livestream | null>(null);
-    const [selectedId, setSelectedId] = useState<number | null>(null);
-    const [summaryId, setSummaryId] = useState<number | null>(null);
-    const [pinProductSearch, setPinProductSearch] = useState("");
-    const [selectedPinProduct, setSelectedPinProduct] = useState<Product | null>(null);
-    const [pinPosition, setPinPosition] = useState("0");
 
     const livestreamsQuery = useLivestreams({
         page,
@@ -262,32 +266,14 @@ const LivestreamsPage = () => {
         sortOrder: "DESC",
     });
 
-    const selectedLivestreamQuery = useLivestreamById(selectedId, Boolean(selectedId));
-    const productsQuery = useProducts({
-        page: 1,
-        limit: 10,
-        search: pinProductSearch.trim() || undefined,
-        sortBy: "createdAt",
-        sortOrder: "DESC",
-    });
     const createMutation = useCreateLivestream();
     const updateMutation = useUpdateLivestream();
     const startMutation = useStartLivestream();
     const endMutation = useEndLivestream();
-    const pinMutation = usePinLivestreamProduct();
-    const unpinMutation = useUnpinLivestreamProduct();
-    const tokenMutation = useIssueLivestreamAgoraToken();
 
     const livestreams = livestreamsQuery.data?.data ?? [];
     const total = livestreamsQuery.data?.meta?.pagination?.total ?? 0;
     const totalPages = Math.max(1, Math.ceil(total / 8));
-
-    const selectedDetail = selectedLivestreamQuery.data?.data;
-    const productOptions = productsQuery.data?.data ?? [];
-    const pinnedProductIds = useMemo(
-        () => new Set((selectedDetail?.pinnedProducts ?? []).map((product) => product.productId)),
-        [selectedDetail?.pinnedProducts],
-    );
 
     const statusCounters = useMemo(() => {
         return livestreams.reduce(
@@ -337,161 +323,158 @@ const LivestreamsPage = () => {
         });
     };
 
-    const handlePinProduct = () => {
-        if (!selectedId) return;
-        const productId = selectedPinProduct?.id;
-        const position = Number(pinPosition);
-
-        if (!productId || !Number.isInteger(position) || position < 0) {
-            toast.error("Please select a product and a valid display position");
-            return;
-        }
-
-        if (pinnedProductIds.has(productId)) {
-            toast.error("This product is already pinned");
-            return;
-        }
-
-        pinMutation.mutate(
-            {
-                id: selectedId,
-                payload: { productId, position },
-            },
-            {
-                onSuccess: () => {
-                    toast.success("Đã ghim sản phẩm");
-                    setSelectedPinProduct(null);
-                    setPinProductSearch("");
-                },
-                onError: (error) => toast.error(error.message),
-            },
-        );
-    };
-
-    const handleIssueToken = (id: number) => {
-        tokenMutation.mutate(id, {
-            onSuccess: ({ data }) => {
-                toast.success(`Token ready: ${data.channel} (${data.role})`);
-            },
-            onError: (error) => toast.error(error.message),
-        });
-    };
-
     return (
-        <div className="space-y-6">
-            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-r from-slate-950 via-slate-900 to-indigo-900 p-6 text-white">
-                <div className="absolute -right-14 -top-12 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-                <div className="relative flex flex-col gap-5 lg:flex-row lg:items-center lg:justify-between">
-                    <div>
-                        <p className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold uppercase tracking-wide">
-                            <Radio className="size-3.5" />
-                            Livestream Control Center
-                        </p>
-                        <h1 className="mt-3 text-2xl font-bold">Quản trị livestream thời trang</h1>
-                        <p className="mt-1 text-sm text-slate-200">Tạo lịch live, bật live tức thì, ghim sản phẩm và theo dõi phiên đang chạy.</p>
+        <div className="space-y-6 w-full">
+            {/* Flat Header section - matching other admin pages */}
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div>
+                    <h1 className="text-2xl font-semibold">Livestreams</h1>
+                    <p className="text-sm text-muted-foreground mt-1">
+                        Quản lý các phiên livestream, lên lịch phát sóng, ghim sản phẩm nổi bật và theo dõi tương tác trực tiếp của người xem.
+                    </p>
+                </div>
+                <Button variant="outline" size="sm" className="h-8 md:self-end" onClick={() => setOpenCreate(true)}>
+                    <Plus className="size-4 mr-1" />
+                    Tạo livestream mới
+                </Button>
+            </div>
+
+            {/* KPI Cards Grid - flat, modern, hover transition */}
+            <div className="grid gap-4 sm:grid-cols-3">
+                {/* Scheduled */}
+                <article className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5">
+                    <div className="mb-5 flex items-start justify-between">
+                        <span className="text-sm font-medium text-slate-500">Chưa diễn ra (Scheduled)</span>
+                        <div className="rounded-xl bg-slate-900 p-2 text-white transition-colors group-hover:bg-amber-500">
+                            <Radio className="size-4" />
+                        </div>
                     </div>
+                    <p className="text-2xl font-bold text-slate-900">{statusCounters.scheduled}</p>
+                </article>
 
-                    <Button className="bg-white text-slate-900 hover:bg-slate-100" onClick={() => setOpenCreate(true)}>
-                        <Plus className="size-4" />
-                        Tạo livestream mới
-                    </Button>
-                </div>
+                {/* Live */}
+                <article className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5">
+                    <div className="mb-5 flex items-start justify-between">
+                        <span className="text-sm font-medium text-slate-500">Đang phát (Live)</span>
+                        <div className="rounded-xl bg-slate-900 p-2 text-white transition-colors group-hover:bg-red-500">
+                            <Play className="size-4 animate-pulse" />
+                        </div>
+                    </div>
+                    <p className="text-2xl font-bold text-slate-900">{statusCounters.live}</p>
+                </article>
+
+                {/* Ended */}
+                <article className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5">
+                    <div className="mb-5 flex items-start justify-between">
+                        <span className="text-sm font-medium text-slate-500">Đã kết thúc (Ended)</span>
+                        <div className="rounded-xl bg-slate-900 p-2 text-white transition-colors group-hover:bg-sky-500">
+                            <BarChart2 className="size-4" />
+                        </div>
+                    </div>
+                    <p className="text-2xl font-bold text-slate-900">{statusCounters.ended}</p>
+                </article>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-xl border border-amber-200 bg-amber-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-amber-700">Scheduled</p>
-                    <p className="mt-2 text-2xl font-bold text-amber-900">{statusCounters.scheduled}</p>
-                </div>
-                <div className="rounded-xl border border-red-200 bg-red-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-red-700">Live</p>
-                    <p className="mt-2 text-2xl font-bold text-red-900">{statusCounters.live}</p>
-                </div>
-                <div className="rounded-xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-700">Ended</p>
-                    <p className="mt-2 text-2xl font-bold text-slate-900">{statusCounters.ended}</p>
-                </div>
-            </div>
-
-            <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
-                <section className="space-y-4">
-                    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200 bg-white p-4 md:flex-row md:items-center md:justify-between">
-                        <Input
-                            value={search}
-                            onChange={(e) => setSearch(e.target.value)}
-                            placeholder="Tìm theo tiêu đề livestream..."
-                            className="max-w-md"
-                        />
-                        <div className="flex gap-2">
+            {/* Split Grid Layout */}
+            <div className="grid gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                {/* Main Content Area */}
+                <div className="lg:col-span-2 xl:col-span-3 space-y-4">
+                    {/* Toolbar section */}
+                    <div className="flex flex-col gap-3 rounded-2xl border border-slate-200/80 bg-white p-4 md:flex-row md:items-center md:justify-between">
+                        <div className="relative flex-1 max-w-md">
+                            <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
+                            <Input
+                                value={search}
+                                onChange={(e) => setSearch(e.target.value)}
+                                placeholder="Tìm theo tiêu đề livestream..."
+                                className="pl-8 h-9"
+                            />
+                        </div>
+                        <div className="flex flex-wrap gap-2">
                             {(["all", "scheduled", "live", "ended"] as const).map((item) => (
                                 <Button
                                     key={item}
                                     variant={status === item ? "default" : "outline"}
                                     size="sm"
+                                    className="h-8 text-xs font-semibold px-3"
                                     onClick={() => {
                                         setStatus(item);
                                         setPage(1);
                                     }}
                                 >
-                                    {item === "all" ? "Tất cả" : item.toUpperCase()}
+                                    {statusLabels[item]}
                                 </Button>
                             ))}
                         </div>
                     </div>
 
+                    {/* Livestream List */}
                     {livestreamsQuery.isLoading ? (
                         <div className="flex h-48 items-center justify-center rounded-2xl border border-slate-200 bg-white">
                             <Loader2 className="size-6 animate-spin text-slate-500" />
                         </div>
                     ) : livestreams.length === 0 ? (
-                        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500">
+                        <div className="rounded-2xl border border-slate-200 bg-white p-10 text-center text-slate-500 text-sm">
                             Không có livestream nào phù hợp.
                         </div>
                     ) : (
                         <div className="space-y-4">
                             {livestreams.map((item) => (
-                                <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                                <article key={item.id} className="rounded-2xl border border-slate-200 bg-white p-5 transition-all duration-200 hover:border-slate-300">
                                     <div className="flex flex-col gap-4 md:flex-row md:justify-between">
-                                        <div className="space-y-2">
+                                        <div className="space-y-2 min-w-0 flex-1">
                                             <div className="flex items-center gap-2">
-                                                <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${statusStyles[item.status]}`}>
-                                                    {item.status.toUpperCase()}
+                                                <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider ${statusStyles[item.status]}`}>
+                                                    {statusLabels[item.status].toUpperCase()}
                                                 </span>
-                                                <span className="text-xs text-slate-500">#{item.id}</span>
+                                                <span className="text-xs text-slate-400 font-mono">#{item.id}</span>
                                             </div>
-                                            <h3 className="text-lg font-semibold text-slate-900">{item.title}</h3>
-                                            <p className="text-sm text-slate-500">{item.description || "Không có mô tả"}</p>
-                                            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600">
-                                                <span>Lên lịch: {new Date(item.scheduledStartAt).toLocaleString("vi-VN")}</span>
-                                                <span>Viewers: {item.viewerCount}</span>
-                                                <span>Channel: {item.agoraChannel}</span>
+                                            <h3 className="text-base font-semibold text-slate-900 truncate">{item.title}</h3>
+                                            <p className="text-xs text-slate-500 line-clamp-2">{item.description || "Không có mô tả"}</p>
+                                            <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-slate-500 pt-1">
+                                                <span className="flex items-center gap-1">
+                                                    <span className="font-semibold text-slate-700">Lên lịch:</span> {new Date(item.scheduledStartAt).toLocaleString("vi-VN")}
+                                                </span>
+                                                {item.startedAt && (
+                                                    <span className="flex items-center gap-1">
+                                                        <span className="font-semibold text-slate-700">Bắt đầu:</span> {new Date(item.startedAt).toLocaleString("vi-VN")}
+                                                    </span>
+                                                )}
+                                                {item.endedAt && (
+                                                    <span className="flex items-center gap-1">
+                                                        <span className="font-semibold text-slate-700">Kết thúc:</span> {new Date(item.endedAt).toLocaleString("vi-VN")}
+                                                    </span>
+                                                )}
+                                                <span className="flex items-center gap-1">
+                                                    <span className="font-semibold text-slate-700">Người xem:</span> {item.viewerCount}
+                                                </span>
+                                                <span className="flex items-center gap-1 font-mono text-[11px]">
+                                                    <span className="font-semibold text-slate-700 font-sans">Kênh:</span> {item.agoraChannel}
+                                                </span>
                                             </div>
                                         </div>
 
-                                        <div className="flex flex-wrap gap-2">
-                                            <Button variant="outline" size="sm" onClick={() => setSelectedId(item.id)}>
-                                                <Tv className="size-4" />
+                                        <div className="flex flex-wrap items-center gap-1.5 shrink-0 md:self-center">
+                                            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => navigate(`/admin/livestreams/${item.id}`)}>
+                                                <Tv className="size-3.5 mr-1" />
                                                 Quản lý
                                             </Button>
-                                            <Button variant="outline" size="sm" onClick={() => setEditing(item)}>
+                                            <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => setEditing(item)}>
                                                 Chỉnh sửa
                                             </Button>
-                                            <Button variant="outline" size="sm" onClick={() => handleIssueToken(item.id)}>
-                                                Token
-                                            </Button>
                                             {item.status === "ended" ? (
-                                                <Button variant="outline" size="sm" onClick={() => setSummaryId(item.id)}>
-                                                    <BarChart2 className="size-4" />
+                                                <Button variant="outline" size="sm" className="h-8 text-xs" onClick={() => navigate(`/admin/livestreams/${item.id}/summary`)}>
+                                                    <BarChart2 className="size-3.5 mr-1" />
                                                     Tổng kết
                                                 </Button>
                                             ) : item.status !== "live" ? (
-                                                <Button size="sm" onClick={() => handleGoLive(item.id)}>
-                                                    <Play className="size-4" />
+                                                <Button size="sm" className="h-8 text-xs" onClick={() => handleGoLive(item.id)}>
+                                                    <Play className="size-3.5 mr-1 fill-current" />
                                                     Go Live
                                                 </Button>
                                             ) : (
-                                                <Button size="sm" variant="destructive" onClick={() => handleEnd(item.id)}>
-                                                    <Square className="size-4" />
+                                                <Button size="sm" variant="destructive" className="h-8 text-xs" onClick={() => handleEnd(item.id)}>
+                                                    <Square className="size-3.5 mr-1" />
                                                     End
                                                 </Button>
                                             )}
@@ -502,117 +485,31 @@ const LivestreamsPage = () => {
                         </div>
                     )}
 
-                    <div className="flex items-center justify-center gap-3">
-                        <Button variant="outline" size="sm" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
+                    {/* Pagination */}
+                    <div className="flex items-center justify-center gap-3 pt-2">
+                        <Button variant="outline" size="sm" className="h-8" disabled={page <= 1} onClick={() => setPage((p) => Math.max(1, p - 1))}>
                             Trước
                         </Button>
-                        <span className="text-sm text-slate-600">Trang {page} / {totalPages}</span>
-                        <Button variant="outline" size="sm" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
+                        <span className="text-xs text-slate-500 font-medium">Trang {page} / {totalPages}</span>
+                        <Button variant="outline" size="sm" className="h-8" disabled={page >= totalPages} onClick={() => setPage((p) => p + 1)}>
                             Sau
                         </Button>
                     </div>
-                </section>
+                </div>
 
-                <aside className="space-y-4">
-                    <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                        <p className="text-sm font-semibold text-slate-900">Bảng điều khiển phiên live</p>
-                        {!selectedId ? (
-                            <p className="mt-2 text-sm text-slate-500">Chọn một livestream để quản lý sản phẩm ghim.</p>
-                        ) : selectedLivestreamQuery.isLoading ? (
-                            <div className="mt-3 flex items-center gap-2 text-sm text-slate-500">
-                                <Loader2 className="size-4 animate-spin" />
-                                Đang tải chi tiết...
-                            </div>
-                        ) : !selectedDetail ? (
-                            <p className="mt-2 text-sm text-slate-500">Không tải được dữ liệu livestream.</p>
-                        ) : (
-                            <div className="mt-3 space-y-3">
-                                <div className="rounded-xl bg-slate-50 p-3">
-                                    <p className="text-sm font-medium text-slate-800">{selectedDetail.title}</p>
-                                    <p className="text-xs text-slate-500">Status: {selectedDetail.status.toUpperCase()}</p>
-                                </div>
-
-                                {selectedDetail.status === "live" && (
-                                    <div className="space-y-1.5">
-                                        <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Camera & Phát sóng</p>
-                                        <LivestreamPublisher
-                                            livestreamId={selectedDetail.id}
-                                            agoraChannel={selectedDetail.agoraChannel}
-                                        />
-                                    </div>
-                                )}
-
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Pin sản phẩm mới</p>
-                                    <ProductPinPicker
-                                        products={productOptions}
-                                        selectedProduct={selectedPinProduct}
-                                        selectedProductId={selectedPinProduct?.id ?? null}
-                                        search={pinProductSearch}
-                                        isLoading={productsQuery.isLoading}
-                                        disabledProductIds={pinnedProductIds}
-                                        onSearchChange={setPinProductSearch}
-                                        onSelect={(product) => {
-                                            setSelectedPinProduct(product);
-                                            setPinProductSearch(product.name);
-                                        }}
-                                        onClear={() => {
-                                            setSelectedPinProduct(null);
-                                            setPinProductSearch("");
-                                        }}
-                                    />
-                                    <div className="grid grid-cols-1 gap-2 sm:grid-cols-[1fr_auto]">
-                                        <Input
-                                            value={pinPosition}
-                                            onChange={(e) => setPinPosition(e.target.value)}
-                                            placeholder="Display position"
-                                        />
-                                        <Button size="sm" onClick={handlePinProduct} disabled={pinMutation.isPending || !selectedPinProduct}>
-                                            {pinMutation.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
-                                            Pin product
-                                        </Button>
-                                    </div>
-                                </div>
-
-                                <div className="space-y-2">
-                                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-600">Sản phẩm đang ghim</p>
-                                    {selectedDetail.pinnedProducts.length === 0 ? (
-                                        <p className="text-sm text-slate-500">Chưa có sản phẩm nào.</p>
-                                    ) : (
-                                        selectedDetail.pinnedProducts
-                                            .slice()
-                                            .sort((a, b) => a.position - b.position)
-                                            .map((product) => {
-                                                const pinnedProductImage = product.product?.images?.find((image) => image.imageUrl)?.imageUrl ?? product.product?.imageUrl;
-                                                return (
-                                                <div key={product.id} className="flex items-center justify-between gap-3 rounded-lg border border-slate-200 p-2.5">
-                                                    <div className="flex min-w-0 items-center gap-3">
-                                                        {pinnedProductImage ? (
-                                                            <img src={pinnedProductImage} alt={product.product?.name ?? `Product #${product.productId}`} className="size-12 rounded object-cover" />
-                                                        ) : (
-                                                            <div className="flex size-12 items-center justify-center rounded bg-slate-100 text-xs text-slate-400">No image</div>
-                                                        )}
-                                                        <div className="min-w-0">
-                                                            <p className="truncate text-sm font-medium text-slate-800">{product.product?.name ?? `Product #${product.productId}`}</p>
-                                                            <p className="text-xs text-slate-500">Position: {product.position}</p>
-                                                        </div>
-                                                    </div>
-                                                    <Button
-                                                        variant="outline"
-                                                        size="sm"
-                                                        onClick={() => unpinMutation.mutate({ id: selectedDetail.id, productId: product.productId })}
-                                                    >
-                                                        Bỏ ghim
-                                                    </Button>
-                                                </div>
-                                                );
-                                            })
-                                    )}
-                                </div>
-                            </div>
-                        )}
+                {/* Sidebar Guidelines Widget Area */}
+                <div className="space-y-4">
+                    <div className="rounded-xl border border-slate-200/80 bg-white p-5">
+                        <h3 className="font-semibold text-sm text-slate-900 flex items-center gap-2 mb-3">
+                            <Tv className="size-4 text-primary" /> Hướng dẫn vận hành
+                        </h3>
+                        <ul className="text-xs space-y-3 text-slate-600 list-disc list-inside">
+                            <li><strong>Lên lịch:</strong> Tạo phiên livestream và gán thời gian dự kiến phát sóng.</li>
+                            <li><strong>Phát sóng:</strong> Nhấn nút <strong>Quản lý</strong> trên phiên live để truy cập vào bảng phát sóng riêng, kết nối camera và trò chuyện thời gian thực với khách hàng.</li>
+                            <li><strong>Bật Live:</strong> Khởi động buổi phát từ bảng điều khiển để người dùng có thể bắt đầu xem trên giao diện mua sắm.</li>
+                        </ul>
                     </div>
-                </aside>
+                </div>
             </div>
 
             <Dialog open={openCreate} onOpenChange={setOpenCreate}>
@@ -639,14 +536,7 @@ const LivestreamsPage = () => {
                     ) : null}
                 </DialogContent>
             </Dialog>
-
-            <LivestreamSummaryModal
-                livestreamId={summaryId}
-                open={Boolean(summaryId)}
-                onClose={() => setSummaryId(null)}
-            />
         </div>
     );
 };
-
 export default LivestreamsPage;

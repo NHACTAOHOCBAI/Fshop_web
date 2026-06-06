@@ -1,6 +1,6 @@
 import { ChevronLeft, Glasses, Heart, Loader2, MessageCircle, Shirt, ShoppingCart, Star } from "lucide-react";
 import { useMemo, useState } from "react";
-import { Link, useNavigate, useParams } from "react-router";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,6 +23,9 @@ const departmentList: DepartmentType[] = ["men", "women", "kids"];
 const ProductDetailPage = () => {
     const navigate = useNavigate();
     const params = useParams<{ department?: string; productId?: string }>();
+    const [searchParams] = useSearchParams();
+    const livestreamIdStr = searchParams.get("livestreamId");
+    const livestreamId = livestreamIdStr && Number.isInteger(Number(livestreamIdStr)) ? Number(livestreamIdStr) : undefined;
     const [selectedImage, setSelectedImage] = useState(0);
     const [selectedColorId, setSelectedColorId] = useState<number | null>(null);
     const [selectedSizeId, setSelectedSizeId] = useState<number | null>(null);
@@ -149,6 +152,7 @@ const ProductDetailPage = () => {
             {
                 variantId: selectedCartVariant.id,
                 quantity,
+                livestreamId,
             },
             {
                 onSuccess: () => {

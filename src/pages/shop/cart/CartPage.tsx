@@ -55,15 +55,15 @@ const CartPage = () => {
     };
 
     const handleIncrease = (item: CartItem) => {
-        addToCart({ variantId: item.variant.id, quantity: 1 });
+        addToCart({ variantId: item.variant.id, quantity: 1, livestreamId: item.livestreamId || undefined });
     };
 
     const handleDecrease = (item: CartItem) => {
-        removeFromCart({ variantId: item.variant.id, quantity: 1 });
+        removeFromCart({ variantId: item.variant.id, quantity: 1, livestreamId: item.livestreamId || undefined });
     };
 
     const handleRemoveItem = (item: CartItem) => {
-        removeFromCart({ variantId: item.variant.id, quantity: item.quantity });
+        removeFromCart({ variantId: item.variant.id, quantity: item.quantity, livestreamId: item.livestreamId || undefined });
         setCheckedIds((prev) => {
             const next = new Set(prev);
             next.delete(item.id);
@@ -74,7 +74,7 @@ const CartPage = () => {
     const handleDeleteChecked = () => {
         const toRemove = items.filter((item) => checkedIds.has(item.id));
         toRemove.forEach((item) => {
-            removeFromCart({ variantId: item.variant.id, quantity: item.quantity });
+            removeFromCart({ variantId: item.variant.id, quantity: item.quantity, livestreamId: item.livestreamId || undefined });
         });
         setCheckedIds(new Set());
     };
@@ -112,6 +112,7 @@ const CartPage = () => {
                 unitPrice: item.variant.product.price,
                 quantity: item.quantity,
                 lineTotal,
+                livestreamId: item.livestreamId || undefined,
             };
         });
 

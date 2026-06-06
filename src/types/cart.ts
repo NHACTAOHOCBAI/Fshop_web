@@ -16,6 +16,7 @@ export type CartItem = {
     id: number;
     quantity: number;
     variant: CartVariant;
+    livestreamId?: number | null;
 };
 
 export type Cart = {

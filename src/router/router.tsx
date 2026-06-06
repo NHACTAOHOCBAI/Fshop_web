@@ -17,6 +17,8 @@ import CreateCouponPage from "@/pages/admin/coupons/CreateCouponPage";
 import DashboardPage from "@/pages/admin/dashboard/DashboardPage";
 import EditCouponPage from "@/pages/admin/coupons/EditCouponPage";
 import LivestreamsPage from "@/pages/admin/livestreams/LivestreamsPage";
+import LivestreamSessionPage from "@/pages/admin/livestreams/LivestreamSessionPage";
+import LivestreamSummaryPage from "@/pages/admin/livestreams/LivestreamSummaryPage";
 import AdminNotificationsPage from "@/pages/admin/notifications/AdminNotificationsPage";
 import OrdersPage from "@/pages/admin/orders/OrdersPage";
 import OrderDetailAdminPage from "@/pages/admin/orders/OrderDetailAdminPage";
@@ -332,6 +334,14 @@ const router = createBrowserRouter([
       {
         path: "livestreams",
         element: <LivestreamsPage />,
+      },
+      {
+        path: "livestreams/:id",
+        element: <LivestreamSessionPage />,
+      },
+      {
+        path: "livestreams/:id/summary",
+        element: <LivestreamSummaryPage />,
       },
       {
         path: "notifications",

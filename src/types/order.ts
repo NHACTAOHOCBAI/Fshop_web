@@ -35,6 +35,7 @@ export type OrderItem = {
 export type CreateOrderItemPayload = {
   variantId: number;
   quantity: number;
+  livestreamId?: number;
 };
 
 export type CreateOrderPayload = {

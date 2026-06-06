@@ -339,6 +339,7 @@ const CheckoutPage = () => {
         items: session.items.map((item) => ({
           variantId: item.variantId,
           quantity: item.quantity,
+          livestreamId: item.livestreamId,
         })),
       });
 

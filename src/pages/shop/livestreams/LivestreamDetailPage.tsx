@@ -217,7 +217,7 @@ const LivestreamDetailPage = () => {
                                                     </div>
                                                 </div>
                                                 <Button asChild className="mt-3 w-full" size="sm" variant="outline">
-                                                    <Link to={`/men/products/${item.productId}`}>Xem sản phẩm</Link>
+                                                    <Link to={`/men/products/${item.productId}?livestreamId=${livestreamId}`}>Xem sản phẩm</Link>
                                                 </Button>
                                             </div>
                                         ))}
