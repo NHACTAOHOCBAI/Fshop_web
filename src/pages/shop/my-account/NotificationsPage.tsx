@@ -10,6 +10,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { Notification, NotificationTypeExtended } from "@/types/notification";
 import ClientPagination from "@/components/pagination/ClientPagination";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TYPE_CONFIG: Record<NotificationTypeExtended, { icon: ElementType; className: string }> = {
     ORDER: { icon: Package, className: "bg-blue-50 text-blue-600" },
@@ -45,11 +46,13 @@ const getNotificationMessage = (notification: Notification) => {
 
 const NotificationsPage = () => {
     const [page, setPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState<"all" | "read" | "unread">("all");
     const limit = 20;
 
     const { data, isLoading, isFetching, isError, error } = useMyNotifications({
         page,
         limit,
+        isRead: statusFilter === "all" ? undefined : statusFilter === "read",
         sortBy: "createdAt",
         sortOrder: "DESC",
     });
@@ -101,6 +104,29 @@ const NotificationsPage = () => {
                         Đánh dấu tất cả đã đọc
                     </button>
                 )}
+            </div>
+
+            <div className="border-slate-100">
+                <Tabs
+                    value={statusFilter}
+                    onValueChange={(val) => {
+                        setStatusFilter(val as typeof statusFilter);
+                        setPage(1);
+                    }}
+                    className="h-9"
+                >
+                    <TabsList className="h-9 bg-slate-100 p-0.5 rounded-xl">
+                        <TabsTrigger value="all" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                            Tất cả
+                        </TabsTrigger>
+                        <TabsTrigger value="unread" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                            Chưa đọc
+                        </TabsTrigger>
+                        <TabsTrigger value="read" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                            Đã đọc
+                        </TabsTrigger>
+                    </TabsList>
+                </Tabs>
             </div>
 
             {isLoading ? (

@@ -1,10 +1,17 @@
-import { Bell, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
+import { Bell, CheckCheck, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
 import { useState, type ElementType } from "react";
+import { toast } from "sonner";
 import ClientPagination from "@/components/pagination/ClientPagination";
 
-import { useAdminNotificationRealtime, useAdminNotifications } from "@/hooks/useNotifications";
+import {
+    useAdminNotificationRealtime,
+    useAdminNotifications,
+    useMarkNotificationAsRead,
+    useMarkAllNotificationsAsRead,
+} from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import type { Notification, NotificationTypeExtended } from "@/types/notification";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 const TYPE_CONFIG: Record<NotificationTypeExtended, { icon: ElementType; className: string }> = {
     ORDER: { icon: Package, className: "bg-blue-50 text-blue-600" },
@@ -40,20 +47,44 @@ const getNotificationMessage = (notification: Notification) => {
 
 const AdminNotificationsPage = () => {
     const [page, setPage] = useState(1);
+    const [statusFilter, setStatusFilter] = useState<"all" | "read" | "unread">("all");
     const limit = 10;
 
     const notificationsQuery = useAdminNotifications({
         page,
         limit,
+        isRead: statusFilter === "all" ? undefined : statusFilter === "read",
         sortBy: "createdAt",
         sortOrder: "DESC",
     });
+
+    const { mutate: markOneAsRead, isPending: isMarkingOne } = useMarkNotificationAsRead();
+    const { mutate: markAllAsRead, isPending: isMarkingAll } = useMarkAllNotificationsAsRead();
 
     useAdminNotificationRealtime(true);
 
     const notifications = notificationsQuery.data?.data ?? [];
     const unreadCount = notifications.filter((item) => !item.isRead).length;
     const latestNotification = notifications[0];
+
+    const handleMarkOneAsRead = (id: number) => {
+        markOneAsRead(id, {
+            onError: (markError: Error) => {
+                toast.error(markError.message || "Không thể đánh dấu đã đọc.");
+            },
+        });
+    };
+
+    const handleMarkAllAsRead = () => {
+        markAllAsRead(undefined, {
+            onSuccess: () => {
+                toast.success("Đã đánh dấu tất cả thông báo là đã đọc.");
+            },
+            onError: (markAllError: Error) => {
+                toast.error(markAllError.message || "Không thể cập nhật tất cả thông báo.");
+            },
+        });
+    };
 
     const paginationMeta = notificationsQuery.data?.meta?.pagination;
     const totalPages = paginationMeta ? Math.max(1, Math.ceil(paginationMeta.total / limit)) : 1;
@@ -74,13 +105,49 @@ const AdminNotificationsPage = () => {
                                 {unreadCount > 0 ? `${unreadCount} thông báo chưa đọc` : "Tất cả đã được đọc"}
                             </p>
                         </div>
-                        <div className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 sm:w-auto">
-                            <Bell className="size-3.5" />
-                            Tổng {notifications.length} thông báo
+                        <div className="flex flex-wrap items-center gap-2">
+                            {unreadCount > 0 && (
+                                <button
+                                    type="button"
+                                    onClick={handleMarkAllAsRead}
+                                    disabled={isMarkingAll}
+                                    className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 transition-colors hover:bg-slate-50 hover:text-slate-900 disabled:cursor-not-allowed disabled:opacity-60 sm:w-auto cursor-pointer"
+                                >
+                                    {isMarkingAll ? <Loader2 className="size-3.5 animate-spin" /> : <CheckCheck className="size-3.5" />}
+                                    Đánh dấu tất cả đã đọc
+                                </button>
+                            )}
+                            <div className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-medium text-slate-600 sm:w-auto">
+                                <Bell className="size-3.5" />
+                                Tổng {notifications.length} thông báo
+                            </div>
                         </div>
                     </div>
 
-                    <div className="mt-6 space-y-2">
+                    <div className="mt-4  border-slate-100 ">
+                        <Tabs
+                            value={statusFilter}
+                            onValueChange={(val) => {
+                                setStatusFilter(val as typeof statusFilter);
+                                setPage(1);
+                            }}
+                            className="h-9"
+                        >
+                            <TabsList className="h-9 bg-slate-100 p-0.5 rounded-xl">
+                                <TabsTrigger value="all" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                                    Tất cả
+                                </TabsTrigger>
+                                <TabsTrigger value="unread" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                                    Chưa đọc
+                                </TabsTrigger>
+                                <TabsTrigger value="read" className="h-8 px-4 rounded-lg data-[state=active]:bg-white text-xs cursor-pointer">
+                                    Đã đọc
+                                </TabsTrigger>
+                            </TabsList>
+                        </Tabs>
+                    </div>
+
+                    <div className="mt-4 space-y-2">
                         {notificationsQuery.isLoading ? (
                             <div className="flex items-center justify-center gap-2 rounded-2xl border border-slate-200 bg-white py-16 text-sm text-slate-500">
                                 <Loader2 className="size-4 animate-spin" />
@@ -137,6 +204,17 @@ const AdminNotificationsPage = () => {
                                                 </div>
                                                 <p className="mt-1 text-xs text-slate-500 line-clamp-2">{getNotificationMessage(notification)}</p>
 
+                                                {!notification.isRead && (
+                                                    <button
+                                                        type="button"
+                                                        disabled={isMarkingOne}
+                                                        onClick={() => handleMarkOneAsRead(notification.id)}
+                                                        className="mt-2 text-xs font-medium text-primary transition-colors hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
+                                                    >
+                                                        Đánh dấu đã đọc
+                                                    </button>
+                                                )}
+
                                                 <div className="mt-2 flex flex-wrap items-center gap-2 text-[11px] text-slate-400">
                                                     <span className="rounded-full bg-slate-100 px-2 py-1 font-semibold text-slate-600">#{notification.id}</span>
                                                     <span className="rounded-full bg-blue-50 px-2 py-1 font-semibold text-blue-600">{notification.type}</span>
@@ -187,7 +265,7 @@ const AdminNotificationsPage = () => {
                             <span>Tổng thông báo</span>
                             <span className="font-semibold text-slate-900">{notifications.length}</span>
                         </div>
-                       
+
                     </div>
 
                     <div className="mt-4 rounded-2xl border border-slate-200 bg-white p-4">
