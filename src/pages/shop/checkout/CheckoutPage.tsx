@@ -779,16 +779,16 @@ const CheckoutPage = () => {
                   />
                   <div>
                     <p className="text-sm font-semibold text-slate-900">
-                      Ví MoMo
+                      Thẻ quốc tế qua MoMo
                     </p>
                     <p className="text-xs text-slate-500">
-                      Thanh toán qua ứng dụng MoMo. Bạn sẽ được chuyển hướng sau
-                      khi đặt hàng.
+                      Chuyển tới trang MoMo để nhập thẻ Visa/Master/JCB test
+                      sau khi đặt hàng.
                     </p>
                   </div>
                 </div>
                 <div className="rounded-lg bg-[#ae2070] px-2 py-1 text-xs font-bold text-white">
-                  MoMo
+                  Card
                 </div>
               </label>
 
