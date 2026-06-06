@@ -2,6 +2,7 @@ import { useMemo, useState } from "react";
 
 import { AlertCircle, AlertTriangle, Package, Plus } from "lucide-react";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
 
 import CrudTable from "@/components/crud_table/crud-table";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,7 @@ import {
     useUpdateInventory,
 } from "@/hooks/useInventories";
 import { useProducts } from "@/hooks/useProducts";
+import { getSystemSettings } from "@/services/settings";
 import type { Inventory, InventoryType } from "@/types/inventory";
 
 import { inventoryColumns } from "./inventory-columns";
@@ -43,7 +45,18 @@ export default function StocksPage() {
     const [selectedInventory, setSelectedInventory] = useState<Inventory>();
 
     const { mutate: deleteItem } = useDeleteInventory();
-    const { data: lowStockData } = useLowStockInventories(10);
+
+    const { data: settingsData } = useQuery({
+        queryKey: ["system-settings"],
+        queryFn: getSystemSettings,
+    });
+
+    const stockThreshold = useMemo(() => {
+        const setting = settingsData?.data?.find((s) => s.key === "STOCK_LOW_THRESHOLD");
+        return setting ? parseInt(setting.value, 10) : 10;
+    }, [settingsData]);
+
+    const { data: lowStockData } = useLowStockInventories(stockThreshold);
     const { data: allInventoriesData } = useInventories({ page: 1, limit: 1 });
     const totalSKUs = allInventoriesData?.pagination?.total ?? 0;
 
@@ -60,7 +73,7 @@ export default function StocksPage() {
     return (
         <div className="space-y-6 w-full">
             <div>
-                <h1 className="text-2xl font-semibold">Tồn kho</h1>
+                <h1 className="text-2xl font-semibold">Kho hàng</h1>
                 <p className="text-sm text-muted-foreground mt-1">
                     Theo dõi số lượng hàng hóa trong kho, cảnh báo các mặt hàng sắp hết và quản lý các giao dịch nhập xuất kho.
                 </p>
@@ -69,39 +82,39 @@ export default function StocksPage() {
             {/* KPI Metrics Cards */}
             <div className="grid gap-4 sm:grid-cols-3">
                 {/* Total SKUs */}
-                <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-blue-50 text-blue-600">
-                        <Package className="size-5" />
+                <article className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5">
+                    <div className="mb-5 flex items-start justify-between">
+                        <span className="text-sm font-medium text-slate-500">Tổng mặt hàng (SKU)</span>
+                        <div className="rounded-xl bg-slate-900 p-2 text-white transition-colors group-hover:bg-sky-500">
+                            <Package className="size-4" />
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-sm font-medium text-slate-500">Tổng mặt hàng (SKU)</p>
-                        <h3 className="text-2xl font-bold text-slate-900 mt-0.5">{totalSKUs}</h3>
-                    </div>
-                </div>
+                    <p className="text-2xl font-bold text-slate-900">{totalSKUs}</p>
+                </article>
 
                 {/* Low Stock Warning */}
-                <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-amber-50 text-amber-600">
-                        <AlertTriangle className="size-5" />
+                <article className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5">
+                    <div className="mb-5 flex items-start justify-between">
+                        <span className="text-sm font-medium text-slate-500">Sắp hết hàng (&le;{stockThreshold})</span>
+                        <div className="rounded-xl bg-slate-900 p-2 text-white transition-colors group-hover:bg-sky-500">
+                            <AlertTriangle className="size-4" />
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-sm font-medium text-slate-500 font-medium">Sắp hết hàng (&le;10)</p>
-                        <h3 className="text-2xl font-bold text-slate-900 mt-0.5">{lowStockData?.length ?? 0}</h3>
-                    </div>
-                </div>
+                    <p className="text-2xl font-bold text-slate-900">{lowStockData?.length ?? 0}</p>
+                </article>
 
                 {/* Out of Stock Warning */}
-                <div className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5 flex items-center gap-4">
-                    <div className="p-3 rounded-xl bg-rose-50 text-rose-600">
-                        <AlertCircle className="size-5" />
+                <article className="group rounded-2xl border border-slate-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-0.5">
+                    <div className="mb-5 flex items-start justify-between">
+                        <span className="text-sm font-medium text-slate-500">Đã hết hàng (0)</span>
+                        <div className="rounded-xl bg-slate-900 p-2 text-white transition-colors group-hover:bg-sky-500">
+                            <AlertCircle className="size-4" />
+                        </div>
                     </div>
-                    <div>
-                        <p className="text-sm font-medium text-slate-500">Đã hết hàng (0)</p>
-                        <h3 className="text-2xl font-bold text-slate-900 mt-0.5">
-                            {lowStockData?.filter((item) => item.quantity === 0).length ?? 0}
-                        </h3>
-                    </div>
-                </div>
+                    <p className="text-2xl font-bold text-slate-900">
+                        {lowStockData?.filter((item) => item.quantity === 0).length ?? 0}
+                    </p>
+                </article>
             </div>
 
             <div className="grid gap-6 lg:grid-cols-3 xl:grid-cols-4">
@@ -158,9 +171,8 @@ export default function StocksPage() {
                                                 <p className="text-[10px] text-muted-foreground font-mono">
                                                     SKU: {sku}
                                                 </p>
-                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                                                    isOutOfStock ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
-                                                }`}>
+                                                <span className={`inline-flex items-center px-1.5 py-0.5 rounded-full text-[10px] font-medium ${isOutOfStock ? "bg-red-50 text-red-700" : "bg-amber-50 text-amber-700"
+                                                    }`}>
                                                     Tồn: {item.quantity}
                                                 </span>
                                             </div>

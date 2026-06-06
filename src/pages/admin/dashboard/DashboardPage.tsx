@@ -311,9 +311,8 @@ const DashboardPage = () => {
                 {metric.value}
               </p>
               <p
-                className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${
-                  metric.positive ? "text-emerald-600" : "text-slate-600"
-                }`}
+                className={`mt-2 inline-flex items-center gap-1 text-xs font-medium ${metric.positive ? "text-emerald-600" : "text-slate-600"
+                  }`}
               >
                 {metric.positive && <ArrowUpRight className="size-3.5" />}
                 {metric.change}

@@ -10,6 +10,7 @@ import BrandsPage from "@/pages/admin/brands/BrandsPage";
 import CategoriesPage from "@/pages/admin/categories/CategoriesPage";
 import SlotTypesPage from "@/pages/admin/slot-types/SlotTypesPage";
 import AdminCommunityPage from "@/pages/admin/community/CommunityPage";
+import AdminUserBlogPage from "@/pages/admin/community/AdminUserBlogPage";
 import SupportInboxPage from "@/pages/admin/support/SupportInboxPage";
 import CouponsPage from "@/pages/admin/coupons/CouponsPage";
 import CreateCouponPage from "@/pages/admin/coupons/CreateCouponPage";
@@ -319,6 +320,10 @@ const router = createBrowserRouter([
       {
         path: "community",
         element: <AdminCommunityPage />,
+      },
+      {
+        path: "community/user/:userId",
+        element: <AdminUserBlogPage />,
       },
       {
         path: "support",

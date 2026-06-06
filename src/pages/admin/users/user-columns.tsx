@@ -1,9 +1,11 @@
 import type { ColumnDef } from "@tanstack/react-table";
 import { MoreHorizontal } from "lucide-react";
+import { Link } from "react-router";
 
 import { DataTableColumnHeader } from "@/components/table/data-table-column-header";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuContent,
@@ -52,6 +54,17 @@ export const userColumns = (
             cell: ({ row }) => row.original.role.toUpperCase(),
         },
         {
+            accessorKey: "isBlogActive",
+            header: ({ column }) => <DataTableColumnHeader column={column} title="Blogger" />,
+            cell: ({ row }) => (
+                row.original.isBlogActive ? (
+                    <Badge className="bg-black text-white hover:bg-black/90 font-medium">Blogger</Badge>
+                ) : (
+                    <Badge variant="secondary" className="text-slate-400 bg-slate-100/80 font-normal">Thường</Badge>
+                )
+            ),
+        },
+        {
             accessorKey: "isVerified",
             header: ({ column }) => <DataTableColumnHeader column={column} title="Đã xác thực" />,
             cell: ({ row }) => (row.original.isVerified ? "Có" : "Không"),
@@ -70,28 +83,48 @@ export const userColumns = (
             id: "actions",
             cell: ({ row }) => {
                 const item = row.original;
-
                 return (
-                    <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
-                                <span className="sr-only">Mở menu</span>
-                                <MoreHorizontal className="size-4" />
-                            </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end" className="w-52 max-w-[calc(100vw-1rem)]">
-                            <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>
-                                Cập nhật người dùng
-                            </DropdownMenuItem>
-                            <DropdownMenuItem
-                                className="focus:text-red-500"
-                                onClick={() => handleDeleteItem(item.id)}
+                    <div className="flex items-center gap-1.5">
+                        {item.isBlogActive && (
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-7 px-2 text-xs border-zinc-200 text-zinc-700 hover:bg-zinc-50 hover:text-black rounded-lg"
+                                asChild
                             >
-                                Xóa người dùng
-                            </DropdownMenuItem>
-                        </DropdownMenuContent>
-                    </DropdownMenu>
+                                <Link to={`/admin/community/user/${item.id}`}>
+                                    Xem Blog
+                                </Link>
+                            </Button>
+                        )}
+                        <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                                <Button variant="ghost" className="h-8 w-8 p-0">
+                                    <span className="sr-only">Mở menu</span>
+                                    <MoreHorizontal className="size-4" />
+                                </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52 max-w-[calc(100vw-1rem)]">
+                                <DropdownMenuLabel>Thao tác</DropdownMenuLabel>
+                                <DropdownMenuItem onClick={() => handleUpdateBtn(item)}>
+                                    Cập nhật người dùng
+                                </DropdownMenuItem>
+                                {item.isBlogActive && (
+                                    <DropdownMenuItem asChild>
+                                        <Link to={`/admin/community/user/${item.id}`} className="cursor-pointer">
+                                            Xem trang blog
+                                        </Link>
+                                    </DropdownMenuItem>
+                                )}
+                                <DropdownMenuItem
+                                    className="focus:text-red-500"
+                                    onClick={() => handleDeleteItem(item.id)}
+                                >
+                                    Xóa người dùng
+                                </DropdownMenuItem>
+                            </DropdownMenuContent>
+                        </DropdownMenu>
+                    </div>
                 );
             },
         },
