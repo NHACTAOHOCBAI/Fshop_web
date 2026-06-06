@@ -266,11 +266,11 @@ const AdminUserBlogPage = () => {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => navigate("/admin/community")}
+          onClick={() => navigate(-1)}
           className="rounded-xl text-slate-600 hover:text-slate-900"
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
-          Cộng đồng (Admin)
+          Quay lại
         </Button>
       </div>
 
