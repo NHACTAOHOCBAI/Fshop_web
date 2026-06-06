@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import FShopLogo from "@/components/layout/FShopLogo";
 import FloatingAiChatbot from "@/components/layout/FloatingAiChatbot";
+import { FloatingLivestreamPlayer } from "@/components/livestream/FloatingLivestreamPlayer";
 import {
   Sheet,
   SheetContent,
@@ -375,6 +376,7 @@ const ClientLayout = () => {
       </main>
 
       <FloatingAiChatbot />
+      <FloatingLivestreamPlayer />
 
       <footer className="mt-12 bg-primary/35">
         <div className="mx-auto grid w-full max-w-6xl gap-6 px-4 py-6 text-sm text-slate-700 md:grid-cols-3 md:px-8">

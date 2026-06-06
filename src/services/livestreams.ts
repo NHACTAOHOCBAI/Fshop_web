@@ -13,6 +13,7 @@ import type {
     LivestreamProduct,
     LivestreamSummary,
     PinLivestreamProductPayload,
+    PinLivestreamProductsBatchPayload,
     UpdateLivestreamPayload,
 } from "@/types/livestream";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
@@ -94,6 +95,14 @@ export const endLivestream = async (id: number) => {
 export const pinLivestreamProduct = async (id: number, payload: PinLivestreamProductPayload) => {
     const { data } = await axiosInstance.post<ApiResponse<LivestreamProduct>>(
         `${API_BASE}/${id}/products`,
+        payload,
+    );
+    return data;
+};
+
+export const pinLivestreamProductsBatch = async (id: number, payload: PinLivestreamProductsBatchPayload) => {
+    const { data } = await axiosInstance.post<ApiResponse<LivestreamProduct[]>>(
+        `${API_BASE}/${id}/products/batch`,
         payload,
     );
     return data;

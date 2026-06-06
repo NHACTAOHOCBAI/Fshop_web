@@ -17,6 +17,7 @@ import {
     livestreamCommentsQueryKey,
     livestreamSummaryQueryKey,
     pinLivestreamProduct,
+    pinLivestreamProductsBatch,
     startLivestream,
     unpinLivestreamProduct,
     updateLivestream,
@@ -205,6 +206,18 @@ export const usePinLivestreamProduct = () => {
     return useMutation({
         mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof pinLivestreamProduct>[1] }) =>
             pinLivestreamProduct(id, payload),
+        onSuccess: (_response, { id }) => {
+            queryClient.invalidateQueries({ queryKey: livestreamByIdQueryKey(id) });
+        },
+    });
+};
+
+export const usePinLivestreamProductsBatch = () => {
+    const queryClient = useQueryClient();
+
+    return useMutation({
+        mutationFn: ({ id, payload }: { id: number; payload: Parameters<typeof pinLivestreamProductsBatch>[1] }) =>
+            pinLivestreamProductsBatch(id, payload),
         onSuccess: (_response, { id }) => {
             queryClient.invalidateQueries({ queryKey: livestreamByIdQueryKey(id) });
         },
@@ -451,8 +464,14 @@ export const useLivestreamRealtime = ({
             );
         };
 
+        const handlePinnedProductsUpdated = (payload: { livestreamId: number }) => {
+            if (payload.livestreamId !== livestreamId) return;
+            queryClient.invalidateQueries({ queryKey: livestreamByIdQueryKey(livestreamId) });
+        };
+
         socket.on("viewerCountUpdated", handleViewerCountUpdated);
         socket.on("newLivestreamComment", handleNewComment);
+        socket.on("pinnedProductsUpdated", handlePinnedProductsUpdated);
 
         return () => {
             const detailCache = queryClient.getQueryData<ApiResponse<LivestreamDetail>>(
@@ -465,6 +484,7 @@ export const useLivestreamRealtime = ({
             socket.off("connect", joinRoom);
             socket.off("viewerCountUpdated", handleViewerCountUpdated);
             socket.off("newLivestreamComment", handleNewComment);
+            socket.off("pinnedProductsUpdated", handlePinnedProductsUpdated);
             socket.disconnect();
         };
     }, [enabled, livestreamId, queryClient]);

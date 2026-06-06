@@ -1,4 +1,5 @@
 import type { User } from "@/types/user";
+import type { Product } from "@/types/product";
 
 export type LivestreamStatus = "scheduled" | "live" | "ended";
 
@@ -29,16 +30,7 @@ export type LivestreamProduct = {
     position: number;
     unitsSold: number;
     createdAt: string;
-    product?: {
-        id: number;
-        name: string;
-        price: number;
-        imageUrl?: string;
-        images?: {
-            id: number;
-            imageUrl: string;
-        }[];
-    };
+    product?: Product;
 };
 
 export type LivestreamDetail = Livestream & {
@@ -82,6 +74,10 @@ export type UpdateLivestreamPayload = {
 export type PinLivestreamProductPayload = {
     productId: number;
     position: number;
+};
+
+export type PinLivestreamProductsBatchPayload = {
+    productIds: number[];
 };
 
 export type CreateLivestreamCommentPayload = {

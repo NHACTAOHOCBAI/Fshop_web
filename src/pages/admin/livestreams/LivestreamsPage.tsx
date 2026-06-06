@@ -5,20 +5,14 @@ import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { LivestreamPublisher } from "@/components/livestream/LivestreamPublisher";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
-import { useProducts } from "@/hooks/useProducts";
 import {
     useCreateLivestream,
     useEndLivestream,
-    useIssueLivestreamAgoraToken,
-    useLivestreamById,
     useLivestreams,
-    usePinLivestreamProduct,
     useStartLivestream,
-    useUnpinLivestreamProduct,
     useUpdateLivestream,
 } from "@/hooks/useLivestreams";
 import type {
@@ -42,18 +36,7 @@ const statusLabels: Record<LivestreamStatus | "all", string> = {
     ended: "Đã kết thúc",
 };
 
-const toLocalInputDateTime = (value?: string) => {
-    if (!value) return "";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-    const timezoneOffset = date.getTimezoneOffset() * 60000;
-    return new Date(date.getTime() - timezoneOffset).toISOString().slice(0, 16);
-};
 
-const toIsoDateTime = (value: string) => {
-    const date = new Date(value);
-    return date.toISOString();
-};
 
 const formatCurrency = (value: number | string) =>
     Number(value || 0).toLocaleString("vi-VN", {
@@ -154,100 +137,7 @@ const LivestreamForm = ({
     );
 };
 
-const ProductPinPicker = ({
-    products,
-    selectedProduct,
-    selectedProductId,
-    search,
-    isLoading,
-    disabledProductIds,
-    onSearchChange,
-    onSelect,
-    onClear,
-}: {
-    products: Product[];
-    selectedProduct?: Product | null;
-    selectedProductId: number | null;
-    search: string;
-    isLoading: boolean;
-    disabledProductIds: Set<number>;
-    onSearchChange: (value: string) => void;
-    onSelect: (product: Product) => void;
-    onClear: () => void;
-}) => {
-    return (
-        <div className="space-y-2">
-            <div className="relative">
-                <Search className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                <Input
-                    value={search}
-                    onChange={(event) => onSearchChange(event.target.value)}
-                    placeholder="Search products by name..."
-                    className="pl-8"
-                />
-            </div>
 
-            {selectedProduct ? (
-                <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2.5">
-                    {getProductImage(selectedProduct) ? (
-                        <img src={getProductImage(selectedProduct)} alt={selectedProduct.name} className="size-12 rounded object-cover" />
-                    ) : (
-                        <div className="flex size-12 items-center justify-center rounded bg-white text-xs text-slate-400">No image</div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                        <p className="truncate text-sm font-medium text-slate-900">{selectedProduct.name}</p>
-                        <p className="text-xs text-slate-500">#{selectedProduct.id} - {formatCurrency(selectedProduct.price)}</p>
-                    </div>
-                    <Button type="button" size="icon-sm" variant="ghost" onClick={onClear}>
-                        <X className="size-4" />
-                    </Button>
-                </div>
-            ) : null}
-
-            <div className="max-h-72 space-y-2 overflow-y-auto rounded-lg border border-slate-200 bg-white p-2">
-                {isLoading ? (
-                    <div className="flex items-center justify-center gap-2 py-6 text-sm text-slate-500">
-                        <Loader2 className="size-4 animate-spin" />
-                        Searching products...
-                    </div>
-                ) : products.length === 0 ? (
-                    <p className="py-6 text-center text-sm text-slate-500">No matching products.</p>
-                ) : (
-                    products.map((product) => {
-                        const imageUrl = getProductImage(product);
-                        const isSelected = selectedProductId === product.id;
-                        const isPinned = disabledProductIds.has(product.id);
-
-                        return (
-                            <button
-                                key={product.id}
-                                type="button"
-                                disabled={isPinned}
-                                onClick={() => onSelect(product)}
-                                className="flex w-full items-center gap-3 rounded-md p-2 text-left transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                {imageUrl ? (
-                                    <img src={imageUrl} alt={product.name} className="size-12 rounded object-cover" />
-                                ) : (
-                                    <div className="flex size-12 items-center justify-center rounded bg-slate-100 text-xs text-slate-400">No image</div>
-                                )}
-                                <div className="min-w-0 flex-1">
-                                    <p className="truncate text-sm font-medium text-slate-900">{product.name}</p>
-                                    <p className="text-xs text-slate-500">#{product.id} - {formatCurrency(product.price)}</p>
-                                </div>
-                                {isPinned ? (
-                                    <span className="rounded-full bg-slate-100 px-2 py-1 text-xs text-slate-500">Pinned</span>
-                                ) : isSelected ? (
-                                    <Check className="size-4 text-emerald-600" />
-                                ) : null}
-                            </button>
-                        );
-                    })
-                )}
-            </div>
-        </div>
-    );
-};
 
 const LivestreamsPage = () => {
     const navigate = useNavigate();

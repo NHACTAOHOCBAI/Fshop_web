@@ -23,7 +23,7 @@ import { useProducts } from "@/hooks/useProducts";
 import {
     useEndLivestream,
     useLivestreamById,
-    usePinLivestreamProduct,
+    usePinLivestreamProductsBatch,
     useStartLivestream,
     useUnpinLivestreamProduct,
     useLivestreamComments,
@@ -57,24 +57,22 @@ const getProductImage = (product?: Product | null) =>
 
 const ProductPinPicker = ({
     products,
-    selectedProduct,
-    selectedProductId,
+    selectedProducts,
     search,
     isLoading,
     disabledProductIds,
     onSearchChange,
-    onSelect,
-    onClear,
+    onToggleSelect,
+    onRemove,
 }: {
     products: Product[];
-    selectedProduct?: Product | null;
-    selectedProductId: number | null;
+    selectedProducts: Product[];
     search: string;
     isLoading: boolean;
     disabledProductIds: Set<number>;
     onSearchChange: (value: string) => void;
-    onSelect: (product: Product) => void;
-    onClear: () => void;
+    onToggleSelect: (product: Product) => void;
+    onRemove: (productId: number) => void;
 }) => {
     return (
         <div className="space-y-2">
@@ -88,20 +86,16 @@ const ProductPinPicker = ({
                 />
             </div>
 
-            {selectedProduct ? (
-                <div className="flex items-center gap-3 rounded-lg border border-emerald-200 bg-emerald-50 p-2 text-xs">
-                    {getProductImage(selectedProduct) ? (
-                        <img src={getProductImage(selectedProduct)} alt={selectedProduct.name} className="size-10 rounded object-cover" />
-                    ) : (
-                        <div className="flex size-10 items-center justify-center rounded bg-white text-[10px] text-slate-400">Không ảnh</div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                        <p className="truncate font-medium text-slate-900">{selectedProduct.name}</p>
-                        <p className="text-slate-500">#{selectedProduct.id} - {formatCurrency(selectedProduct.price)}</p>
-                    </div>
-                    <Button type="button" size="icon-sm" variant="ghost" className="h-6 w-6" onClick={onClear}>
-                        <X className="size-3.5" />
-                    </Button>
+            {selectedProducts.length > 0 ? (
+                <div className="flex flex-wrap gap-1.5 p-2 rounded-lg border border-slate-100 bg-slate-50 max-h-24 overflow-y-auto">
+                    {selectedProducts.map((product) => (
+                        <div key={product.id} className="flex items-center gap-1.5 rounded-full bg-emerald-50 border border-emerald-200/60 px-2.5 py-1 text-[11px] text-emerald-800 font-medium max-w-full">
+                            <span className="truncate max-w-[150px]">{product.name}</span>
+                            <button type="button" onClick={() => onRemove(product.id)} className="text-emerald-600 hover:text-emerald-800 rounded-full hover:bg-emerald-100 p-0.5 transition-colors">
+                                <X className="size-3" />
+                            </button>
+                        </div>
+                    ))}
                 </div>
             ) : null}
 
@@ -116,7 +110,7 @@ const ProductPinPicker = ({
                 ) : (
                     products.map((product) => {
                         const imageUrl = getProductImage(product);
-                        const isSelected = selectedProductId === product.id;
+                        const isSelected = selectedProducts.some((p) => p.id === product.id);
                         const isPinned = disabledProductIds.has(product.id);
 
                         return (
@@ -124,7 +118,7 @@ const ProductPinPicker = ({
                                 key={product.id}
                                 type="button"
                                 disabled={isPinned}
-                                onClick={() => onSelect(product)}
+                                onClick={() => onToggleSelect(product)}
                                 className="flex w-full items-center gap-2 rounded-md p-1.5 text-left text-xs transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
                             >
                                 {imageUrl ? (
@@ -138,9 +132,11 @@ const ProductPinPicker = ({
                                 </div>
                                 {isPinned ? (
                                     <span className="rounded bg-slate-100 px-1.5 py-0.5 text-[9px] text-slate-500 font-medium">Đã ghim</span>
-                                ) : isSelected ? (
-                                    <Check className="size-3.5 text-emerald-600" />
-                                ) : null}
+                                ) : (
+                                    <div className={`flex size-4 shrink-0 items-center justify-center rounded border transition-colors ${isSelected ? "border-emerald-600 bg-emerald-600 text-white" : "border-slate-300 bg-white"}`}>
+                                        {isSelected && <Check className="size-3 stroke-[3]" />}
+                                    </div>
+                                )}
                             </button>
                         );
                     })
@@ -160,7 +156,7 @@ export default function LivestreamSessionPage() {
     const [adminMessage, setAdminMessage] = useState("");
     const [viewerCount, setViewerCount] = useState<number | null>(null);
     const [pinProductSearch, setPinProductSearch] = useState("");
-    const [selectedPinProduct, setSelectedPinProduct] = useState<Product | null>(null);
+    const [selectedPinProducts, setSelectedPinProducts] = useState<Product[]>([]);
 
     const chatScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -189,7 +185,7 @@ export default function LivestreamSessionPage() {
 
     const startMutation = useStartLivestream();
     const endMutation = useEndLivestream();
-    const pinMutation = usePinLivestreamProduct();
+    const pinBatchMutation = usePinLivestreamProductsBatch();
     const unpinMutation = useUnpinLivestreamProduct();
     const createCommentMutation = useCreateLivestreamComment();
 
@@ -246,34 +242,43 @@ export default function LivestreamSessionPage() {
     };
 
     const handlePinProduct = () => {
-        const productId = selectedPinProduct?.id;
-        const position = livestream?.pinnedProducts.length ?? 0;
+        const productIds = selectedPinProducts.map((p) => p.id);
 
-        if (!productId) {
-            toast.error("Vui lòng chọn sản phẩm hợp lệ");
+        if (productIds.length === 0) {
+            toast.error("Vui lòng chọn ít nhất một sản phẩm");
             return;
         }
 
-        if (pinnedProductIds.has(productId)) {
-            toast.error("Sản phẩm này đã được ghim");
-            return;
-        }
-
-        pinMutation.mutate(
+        pinBatchMutation.mutate(
             {
                 id: livestreamId,
-                payload: { productId, position },
+                payload: { productIds },
             },
             {
                 onSuccess: () => {
-                    toast.success("Đã ghim sản phẩm thành công");
-                    setSelectedPinProduct(null);
+                    toast.success("Đã ghim các sản phẩm thành công");
+                    setSelectedPinProducts([]);
                     setPinProductSearch("");
                     void livestreamQuery.refetch();
                 },
                 onError: (error) => toast.error(error.message),
             }
         );
+    };
+
+    const handleToggleSelectProduct = (product: Product) => {
+        setSelectedPinProducts((prev) => {
+            const exists = prev.some((p) => p.id === product.id);
+            if (exists) {
+                return prev.filter((p) => p.id !== product.id);
+            } else {
+                return [...prev, product];
+            }
+        });
+    };
+
+    const handleRemoveSelectedProduct = (productId: number) => {
+        setSelectedPinProducts((prev) => prev.filter((p) => p.id !== productId));
     };
 
     const handleUnpinProduct = (productId: number) => {
@@ -384,25 +389,18 @@ export default function LivestreamSessionPage() {
                             <h4 className="font-semibold text-xs text-slate-400 uppercase tracking-wider">Ghim sản phẩm mới</h4>
                             <ProductPinPicker
                                 products={productOptions}
-                                selectedProduct={selectedPinProduct}
-                                selectedProductId={selectedPinProduct?.id ?? null}
+                                selectedProducts={selectedPinProducts}
                                 search={pinProductSearch}
                                 isLoading={productsQuery.isLoading}
                                 disabledProductIds={pinnedProductIds}
                                 onSearchChange={setPinProductSearch}
-                                onSelect={(product) => {
-                                    setSelectedPinProduct(product);
-                                    setPinProductSearch(product.name);
-                                }}
-                                onClear={() => {
-                                    setSelectedPinProduct(null);
-                                    setPinProductSearch("");
-                                }}
+                                onToggleSelect={handleToggleSelectProduct}
+                                onRemove={handleRemoveSelectedProduct}
                             />
                             <div className="flex justify-end pt-2">
-                                <Button size="sm" className="h-8 text-xs px-4 w-full" onClick={handlePinProduct} disabled={pinMutation.isPending || !selectedPinProduct}>
-                                    {pinMutation.isPending ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
-                                    Ghim sản phẩm
+                                <Button size="sm" className="h-8 text-xs px-4 w-full" onClick={handlePinProduct} disabled={pinBatchMutation.isPending || selectedPinProducts.length === 0}>
+                                    {pinBatchMutation.isPending ? <Loader2 className="size-3 animate-spin mr-1" /> : null}
+                                    Ghim sản phẩm ({selectedPinProducts.length})
                                 </Button>
                             </div>
                         </div>
@@ -422,7 +420,7 @@ export default function LivestreamSessionPage() {
                                         .slice()
                                         .sort((a, b) => a.position - b.position)
                                         .map((product) => {
-                                            const pinnedProductImage = product.product?.images?.find((image) => image.imageUrl)?.imageUrl ?? product.product?.imageUrl;
+                                            const pinnedProductImage = getProductImage(product.product);
                                             return (
                                                 <div key={product.id} className="flex items-center justify-between gap-3 rounded-xl border border-slate-100 p-2.5 hover:bg-slate-50 transition-colors">
                                                     <div className="flex min-w-0 items-center gap-2">
