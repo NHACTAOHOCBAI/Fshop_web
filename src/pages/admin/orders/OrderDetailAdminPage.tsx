@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { ArrowLeft, Loader2, Truck, Settings } from "lucide-react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useNavigate } from "react-router";
 import { toast } from "sonner";
 
 import ShipmentTrackingTimeline from "@/components/orders/ShipmentTrackingTimeline";
@@ -23,6 +23,7 @@ const SHIPPING_METHOD_LABELS = {
 const OrderDetailAdminPage = () => {
     const params = useParams<{ orderId?: string }>();
     const orderId = Number(params.orderId);
+    const navigate = useNavigate();
     const { data, isLoading, isError, error, refetch: refetchOrder } = useOrderById(orderId, Number.isFinite(orderId));
     const { mutate: updateStatus, isPending: isUpdatingStatus } = useUpdateOrderStatus();
     
@@ -92,11 +93,9 @@ const OrderDetailAdminPage = () => {
     return (
         <div className="w-full space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <Button variant="ghost" size="sm" asChild>
-                    <Link to="/admin/orders" className="gap-1.5">
-                        <ArrowLeft className="size-4" />
-                        Quay lại danh sách đơn
-                    </Link>
+                <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-1.5 cursor-pointer">
+                    <ArrowLeft className="size-4" />
+                    Quay lại
                 </Button>
                 <span className="rounded-md border border-slate-200 px-2 py-1 text-xs text-slate-500">Đơn #{order.id}</span>
             </div>

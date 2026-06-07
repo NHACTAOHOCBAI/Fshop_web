@@ -1,6 +1,7 @@
-import { Bell, CheckCheck, Loader2, Megaphone, Package, Star, Tag } from "lucide-react";
+import { Bell, CheckCheck, Loader2, Megaphone, Package, Star, Tag, ChevronRight } from "lucide-react";
 import { useState, type ElementType } from "react";
 import { toast } from "sonner";
+import { Link } from "react-router";
 import ClientPagination from "@/components/pagination/ClientPagination";
 
 import {
@@ -43,6 +44,45 @@ const getNotificationTitle = (notification: Notification) => {
 
 const getNotificationMessage = (notification: Notification) => {
     return notification.message?.trim() || "Bạn có một thông báo mới từ hệ thống.";
+};
+
+const extractIdFromText = (text?: string | null): number | null => {
+    if (!text) return null;
+    const match = text.match(/#(\d+)/);
+    return match ? parseInt(match[1], 10) : null;
+};
+
+const getNotificationLink = (notification: Notification): string | null => {
+    const ref = notification.referenceId;
+
+    switch (notification.type) {
+        case "ORDER": {
+            const orderId = ref ?? extractIdFromText(notification.title) ?? extractIdFromText(notification.message);
+            return orderId ? `/admin/orders/${orderId}` : `/admin/orders`;
+        }
+        case "INVENTORY": {
+            return ref ? `/admin/products/${ref}/edit` : `/admin/products`;
+        }
+        case "REVIEW": {
+            return ref ? `/admin/products/${ref}` : `/admin/products`;
+        }
+        case "LIVESTREAM": {
+            const liveId = ref ?? extractIdFromText(notification.title) ?? extractIdFromText(notification.message);
+            return liveId ? `/admin/livestreams/${liveId}` : `/admin/livestreams`;
+        }
+        case "POST": {
+            if (!ref) return `/admin/community`;
+            if (notification.title?.includes("theo dõi")) {
+                return `/admin/community/user/${ref}`;
+            }
+            return `/admin/community`;
+        }
+        case "DISCOUNT": {
+            return `/admin/coupons`;
+        }
+        default:
+            return null;
+    }
 };
 
 const AdminNotificationsPage = () => {
@@ -167,15 +207,10 @@ const AdminNotificationsPage = () => {
                                 {notifications.map((notification) => {
                                     const typeConfig = TYPE_CONFIG[notification.type] || TYPE_CONFIG.POST;
                                     const Icon = typeConfig.icon;
+                                    const link = getNotificationLink(notification);
 
-                                    return (
-                                        <div
-                                            key={notification.id}
-                                            className={cn(
-                                                "flex gap-4 rounded-2xl border px-4 py-3.5 transition-colors bg-white",
-                                                notification.isRead ? "border-slate-200" : "border-primary/20 bg-primary/5"
-                                            )}
-                                        >
+                                    const itemContent = (
+                                        <>
                                             <div
                                                 className={cn(
                                                     "flex size-9 shrink-0 items-center justify-center rounded-full",
@@ -208,7 +243,11 @@ const AdminNotificationsPage = () => {
                                                     <button
                                                         type="button"
                                                         disabled={isMarkingOne}
-                                                        onClick={() => handleMarkOneAsRead(notification.id)}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            handleMarkOneAsRead(notification.id);
+                                                        }}
                                                         className="mt-2 text-xs font-medium text-primary transition-colors hover:text-primary/80 disabled:cursor-not-allowed disabled:opacity-60 cursor-pointer"
                                                     >
                                                         Đánh dấu đã đọc
@@ -221,6 +260,39 @@ const AdminNotificationsPage = () => {
                                                     <span>{notification.user?.fullName || notification.user?.email || "Hệ thống"}</span>
                                                 </div>
                                             </div>
+
+                                            {link && (
+                                                <ChevronRight className="size-4 shrink-0 self-center text-slate-300 group-hover:text-slate-500 transition-colors" />
+                                            )}
+                                        </>
+                                    );
+
+                                    const wrapperClass = cn(
+                                        "group flex gap-4 rounded-2xl border px-4 py-3.5 transition-colors bg-white",
+                                        notification.isRead ? "border-slate-200" : "border-primary/20 bg-primary/5",
+                                        link && "hover:border-slate-300 hover:bg-slate-50 cursor-pointer"
+                                    );
+
+                                    if (link) {
+                                        return (
+                                            <Link
+                                                key={notification.id}
+                                                to={link}
+                                                className={wrapperClass}
+                                                onClick={() => {
+                                                    if (!notification.isRead) {
+                                                        handleMarkOneAsRead(notification.id);
+                                                    }
+                                                }}
+                                            >
+                                                {itemContent}
+                                            </Link>
+                                        );
+                                    }
+
+                                    return (
+                                        <div key={notification.id} className={wrapperClass}>
+                                            {itemContent}
                                         </div>
                                     );
                                 })}
