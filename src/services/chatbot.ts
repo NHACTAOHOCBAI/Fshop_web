@@ -45,12 +45,9 @@ export const deleteAiChatSession = async (sessionId: number) => {
     return data;
 };
 
-export const imageSearchInChatSession = async (sessionId: number, file: File, clientImageUri?: string) => {
+export const imageSearchInChatSession = async (sessionId: number, file: File) => {
     const formData = new FormData();
     formData.append("file", file);
-    if (clientImageUri) {
-        formData.append("clientImageUri", clientImageUri);
-    }
     const { data } = await axiosInstance.post<ApiResponse<SendAiChatMessageResponse>>(
         `/ai-chatbot/sessions/${sessionId}/image-search`,
         formData,
