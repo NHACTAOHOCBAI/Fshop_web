@@ -9,6 +9,7 @@ import PostCard from "@/components/posts/PostCard";
 import { getUserById, toggleFollowUser } from "@/services/users";
 import { authStorage } from "@/lib/auth";
 import type { User } from "@/types/user";
+import EditBlogModal from "@/components/community/EditBlogModal";
 
 const UserBlogPage = () => {
   const navigate = useNavigate();
@@ -26,6 +27,7 @@ const UserBlogPage = () => {
   const passedUser = location.state?.user;
 
   const [user, setUser] = useState<User | null>(passedUser || null);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const currentUserId = authStorage.getUser<User>()?.id;
 
   useEffect(() => {
@@ -163,8 +165,19 @@ const UserBlogPage = () => {
               </div>
             </div>
 
-            {/* Follow Action Button */}
-            {currentUserId !== targetUserId && (
+            {/* Action Buttons */}
+            {currentUserId === targetUserId ? (
+              <div className="shrink-0 w-full sm:w-auto mt-4 sm:mt-0 sm:self-center">
+                <Button
+                  onClick={() => setIsEditModalOpen(true)}
+                  variant="outline"
+                  className="w-full sm:w-auto rounded-2xl px-6 py-5 font-semibold text-sm border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-all shadow-xs gap-1.5 flex items-center justify-center"
+                >
+                  <UserIcon className="h-4 w-4" />
+                  <span>Chỉnh sửa trang cá nhân</span>
+                </Button>
+              </div>
+            ) : (
               <div className="shrink-0 w-full sm:w-auto mt-4 sm:mt-0 sm:self-center">
                 <Button
                   onClick={handleToggleFollow}
@@ -215,6 +228,14 @@ const UserBlogPage = () => {
           </div>
         )}
       </div>
+
+      <EditBlogModal
+        isOpen={isEditModalOpen}
+        onOpenChange={setIsEditModalOpen}
+        onSuccess={(updatedUser) => setUser(updatedUser)}
+        currentBio={user.bio ?? ""}
+        currentCoverImage={user.coverImage}
+      />
     </div>
   );
 };

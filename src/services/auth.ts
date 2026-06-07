@@ -129,3 +129,22 @@ export const activateBlogProfile = async (payload: { bio: string; coverImage: Fi
 
     return data.data;
 };
+
+export const updateBlogProfile = async (payload: { bio?: string; coverImage?: File }) => {
+    const formData = new FormData();
+    if (payload.bio !== undefined) {
+        formData.append("bio", payload.bio);
+    }
+    if (payload.coverImage) {
+        formData.append("coverImage", payload.coverImage);
+    }
+
+    const { data } = await axiosInstance.patch<ApiResponse<User>>("/auth/me", formData, {
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+    });
+
+    return data.data;
+};
+
