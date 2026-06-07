@@ -33,7 +33,7 @@ import {
 import { useProducts } from "@/hooks/useProducts";
 import { authStorage } from "@/lib/auth";
 import { cn } from "@/lib/utils";
-import type { AiChatMessage } from "@/types/chatbot";
+import type { AiChatMessage, AiChatProductSuggestion } from "@/types/chatbot";
 import type { Product } from "@/types/product";
 
 const QUICK_PROMPTS = [
@@ -49,6 +49,84 @@ const formatPrice = (value: number) => {
   }).format(value);
 };
 
+const formatList = (items?: string[]) => {
+  const values = (items ?? []).filter((item) => item?.trim());
+  return values.length > 0 ? values.slice(0, 4).join(", ") : "Chưa có dữ liệu";
+};
+
+const formatRating = (product: AiChatProductSuggestion) => {
+  const rating = Number(product.averageRating ?? 0);
+  const reviews = Number(product.reviewCount ?? 0);
+  const sold = product.soldQuantity;
+  const parts = [];
+  if (rating > 0) {
+    parts.push(`${rating.toFixed(1)}/5${reviews > 0 ? ` (${reviews} đánh giá)` : ""}`);
+  }
+  if (typeof sold === "number" && sold > 0) {
+    parts.push(`Đã bán ${sold}`);
+  }
+  return parts.length > 0 ? parts.join(" · ") : "Chưa có dữ liệu";
+};
+
+const ProductComparePanel = ({ products }: { products: AiChatProductSuggestion[] }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const compareProducts = products.slice(0, 3);
+
+  if (compareProducts.length < 2) return null;
+
+  const rows = [
+    { label: "Giá", value: (product: AiChatProductSuggestion) => formatPrice(Number(product.price || 0)) },
+    { label: "Brand", value: (product: AiChatProductSuggestion) => product.brand || "Chưa có dữ liệu" },
+    { label: "Loại", value: (product: AiChatProductSuggestion) => product.category || "Chưa có dữ liệu" },
+    { label: "Màu", value: (product: AiChatProductSuggestion) => formatList(product.colors) },
+    { label: "Size", value: (product: AiChatProductSuggestion) => formatList(product.sizes) },
+    { label: "Đánh giá", value: formatRating },
+  ];
+
+  return (
+    <div className="mt-2 rounded-xl border border-slate-200 bg-white">
+      <button
+        type="button"
+        onClick={() => setIsOpen((value) => !value)}
+        className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50"
+      >
+        <span>So sánh nhanh</span>
+        <span className="text-[11px] font-medium text-primary">
+          {isOpen ? "Ẩn" : `${compareProducts.length} sản phẩm`}
+        </span>
+      </button>
+      {isOpen ? (
+        <div className="overflow-x-auto border-t border-slate-100">
+          <table className="min-w-full text-left text-[11px]">
+            <thead>
+              <tr className="bg-slate-50 text-slate-500">
+                <th className="w-20 px-3 py-2 font-medium">Tiêu chí</th>
+                {compareProducts.map((product) => (
+                  <th key={`compare-head-${product.id}`} className="min-w-28 px-3 py-2 font-medium">
+                    <span className="line-clamp-2">{product.name}</span>
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((row) => (
+                <tr key={row.label} className="border-t border-slate-100 align-top">
+                  <td className="px-3 py-2 font-medium text-slate-500">{row.label}</td>
+                  {compareProducts.map((product) => (
+                    <td key={`compare-${row.label}-${product.id}`} className="px-3 py-2 text-slate-700">
+                      {row.value(product)}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 const formatTime = (iso: string) => {
   const date = new Date(iso);
   if (Number.isNaN(date.getTime())) {
@@ -56,6 +134,15 @@ const formatTime = (iso: string) => {
   }
 
   return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+};
+
+const readFileAsDataUrl = (file: File) => {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(typeof reader.result === "string" ? reader.result : "");
+    reader.onerror = () => reject(reader.error);
+    reader.readAsDataURL(file);
+  });
 };
 
 type ChatComposerProduct = {
@@ -285,7 +372,7 @@ const FloatingAiChatbot = () => {
       }
 
       if (imageFile) {
-        const imageUri = URL.createObjectURL(imageFile);
+        const imageUri = await readFileAsDataUrl(imageFile);
         const optimisticMessage: AiChatMessage = {
           id: -Date.now(),
           role: "user",
@@ -301,7 +388,7 @@ const FloatingAiChatbot = () => {
         };
 
         setPendingMessage(optimisticMessage);
-        await imageSearchMutation.mutateAsync({ sessionId, file: imageFile, clientImageUri: imageUri });
+        await imageSearchMutation.mutateAsync({ sessionId, file: imageFile, previewImageUri: imageUri });
         setPendingMessage(null);
         setImageFile(null);
         if (imageInputRef.current) imageInputRef.current.value = "";
@@ -552,6 +639,7 @@ const FloatingAiChatbot = () => {
 
             {messages.map((message) => {
               const imageUri = message.metadata?.imageUri;
+              const displayImageUri = imageUri && !imageUri.startsWith("blob:") ? imageUri : null;
               const isImageSearchPlaceholder =
                 message.role === "user" &&
                 message.content.trim() === "[Tìm kiếm sản phẩm bằng hình ảnh]";
@@ -571,14 +659,24 @@ const FloatingAiChatbot = () => {
                     message.role === "user" ? "items-end" : "items-start",
                   )}
                 >
-                  {message.role === "user" && imageUri ? (
+                  {message.role === "user" && displayImageUri ? (
                     <div className="w-fit overflow-hidden rounded-2xl bg-primary p-1">
                       <img
-                        src={imageUri}
+                        src={displayImageUri}
                         alt="Ảnh đã gửi"
                         className="h-44 w-44 rounded-xl object-cover"
                       />
                       <div className="flex items-center gap-1.5 px-2 py-1 text-[11px] text-primary-foreground/80">
+                        <span>{formatTime(message.createdAt)}</span>
+                        <CheckCheck className="size-3.5" />
+                      </div>
+                    </div>
+                  ) : null}
+
+                  {message.role === "user" && isImageSearchPlaceholder && !displayImageUri ? (
+                    <div className="w-fit rounded-2xl bg-primary px-3 py-2 text-sm text-primary-foreground">
+                      <span>Ảnh đã gửi</span>
+                      <div className="mt-1 flex items-center gap-1.5 text-[11px] text-primary-foreground/80">
                         <span>{formatTime(message.createdAt)}</span>
                         <CheckCheck className="size-3.5" />
                       </div>
@@ -669,6 +767,9 @@ const FloatingAiChatbot = () => {
                             </div>
                           </a>
                         ))}
+                        {message.role === "assistant" ? (
+                          <ProductComparePanel products={message.products} />
+                        ) : null}
                       </div>
                     ) : null}
                 </div>
