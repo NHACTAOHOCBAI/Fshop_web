@@ -12,7 +12,7 @@ import {
   Truck,
   XCircle,
 } from "lucide-react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router";
 import { toast } from "sonner";
 
@@ -77,8 +77,12 @@ const STATUS_CONFIG: Record<OrderStatus, { label: string; className: string }> =
 const ORDER_TABS: { label: string; status?: OrderStatus }[] = [
   { label: "Tất cả" },
   { label: "Chờ xác nhận", status: "pending" },
+  { label: "Đã xác nhận", status: "confirmed" },
+  { label: "Chờ lấy hàng", status: "awaiting_pickup" },
+  { label: "Đang vận chuyển", status: "in_transit" },
   { label: "Đang giao", status: "out_for_delivery" },
   { label: "Đã giao", status: "delivered" },
+  { label: "Giao thất bại", status: "delivery_failed" },
   { label: "Đã huỷ", status: "canceled" },
 ];
 
@@ -119,6 +123,17 @@ const getStatusHeadline = (status: OrderStatus) => {
 
 const MyOrdersPage = () => {
   const navigate = useNavigate();
+  const tabContainerRef = useRef<HTMLDivElement>(null);
+
+  const scrollTabs = (direction: "left" | "right") => {
+    if (tabContainerRef.current) {
+      const scrollAmount = 200;
+      tabContainerRef.current.scrollBy({
+        left: direction === "left" ? -scrollAmount : scrollAmount,
+        behavior: "smooth",
+      });
+    }
+  };
   const [activeTab, setActiveTab] = useState<string>("all");
   const [searchValue, setSearchValue] = useState("");
   const [debouncedSearchValue, setDebouncedSearchValue] = useState("");
@@ -296,30 +311,51 @@ const MyOrdersPage = () => {
       </div>
 
       <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white">
-        <div className="flex overflow-x-auto border-b border-slate-200 text-sm">
-          {ORDER_TABS.map((tab) => {
-            const tabId = tab.status ?? "all";
-            const isActive = activeTab === tabId;
+        <div className="relative flex items-center border-b border-slate-200">
+          <button
+            type="button"
+            onClick={() => scrollTabs("left")}
+            className="absolute left-0 z-10 flex h-full items-center justify-center bg-gradient-to-r from-white via-white/80 to-transparent px-3 text-slate-400 hover:text-slate-700"
+          >
+            <ChevronLeft className="size-4" />
+          </button>
 
-            return (
-              <button
-                key={tab.label}
-                type="button"
-                onClick={() => setActiveTab(tabId)}
-                className={cn(
-                  "relative shrink-0 px-2 py-2 text-xs font-medium transition-colors sm:px-5 sm:py-3 sm:text-sm",
-                  isActive
-                    ? "text-primary"
-                    : "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
-                )}
-              >
-                {tab.label}
-                {isActive ? (
-                  <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />
-                ) : null}
-              </button>
-            );
-          })}
+          <div
+            ref={tabContainerRef}
+            className="flex overflow-x-auto text-sm no-scrollbar px-8 w-full"
+          >
+            {ORDER_TABS.map((tab) => {
+              const tabId = tab.status ?? "all";
+              const isActive = activeTab === tabId;
+
+              return (
+                <button
+                  key={tab.label}
+                  type="button"
+                  onClick={() => setActiveTab(tabId)}
+                  className={cn(
+                    "relative shrink-0 px-2 py-2 text-xs font-medium transition-colors sm:px-5 sm:py-3 sm:text-sm",
+                    isActive
+                      ? "text-primary"
+                      : "text-slate-500 hover:bg-slate-50 hover:text-slate-800",
+                  )}
+                >
+                  {tab.label}
+                  {isActive ? (
+                    <span className="absolute inset-x-0 bottom-0 h-0.5 bg-primary" />
+                  ) : null}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => scrollTabs("right")}
+            className="absolute right-0 z-10 flex h-full items-center justify-center bg-gradient-to-l from-white via-white/80 to-transparent px-3 text-slate-400 hover:text-slate-700"
+          >
+            <ChevronRight className="size-4" />
+          </button>
         </div>
 
         <div className="bg-slate-50/80 p-3 sm:p-4">
