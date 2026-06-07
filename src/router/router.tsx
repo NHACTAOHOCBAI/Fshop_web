@@ -32,6 +32,7 @@ import SettingsPage from "@/pages/admin/settings/SettingsPage";
 import ProductDetailPage from "@/pages/shop/product-detail/ProductDetailPage";
 import ProductTryonPage from "@/pages/shop/product-detail/ProductTryonPage";
 import ProductVTO2DPage from "@/pages/shop/product-detail/ProductVTO2DPage";
+import ProductOutfitTryonPage from "@/pages/shop/product-detail/ProductOutfitTryonPage";
 import CartPage from "@/pages/shop/cart/CartPage";
 import CheckoutPage from "@/pages/shop/checkout/CheckoutPage";
 import AccountLayout from "@/components/layout/AccountLayout";
@@ -84,6 +85,10 @@ const router = createBrowserRouter([
       {
         path: ":department/products/:productId/virtual-tryon-2d",
         element: <ProductVTO2DPage />,
+      },
+      {
+        path: ":department/products/:productId/virtual-tryon-outfit",
+        element: <ProductOutfitTryonPage />,
       },
       {
         path: "cart",

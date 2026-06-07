@@ -12,6 +12,7 @@ import {
     updateProductFull,
     updateProductTryonAsset,
     virtualTryon2D,
+    virtualTryonOutfit,
 } from "@/services/products";
 import type { QueryParams } from "@/types/query";
 
@@ -156,5 +157,19 @@ export const useVirtualTryon2D = () => {
             personImage: File;
             garmentDesc?: string;
         }) => virtualTryon2D(productId, personImage, garmentDesc),
+    });
+};
+
+export const useVirtualTryonOutfit = () => {
+    return useMutation({
+        mutationFn: ({
+            personImage,
+            productIds,
+            stylePrompt,
+        }: {
+            personImage: File;
+            productIds: number[];
+            stylePrompt?: string;
+        }) => virtualTryonOutfit(personImage, productIds, stylePrompt),
     });
 };

@@ -245,3 +245,25 @@ export const virtualTryon2D = async (
 
     return unwrapApiData(data);
 };
+
+export const virtualTryonOutfit = async (
+    personImage: File,
+    productIds: number[],
+    stylePrompt?: string,
+): Promise<{ resultImageUrl: string; provider: "gemini"; productIds: number[] }> => {
+    const formData = new FormData();
+    formData.append("personImage", personImage);
+    formData.append("productIds", JSON.stringify(productIds));
+    if (stylePrompt?.trim()) formData.append("stylePrompt", stylePrompt.trim());
+
+    const { data } = await axiosInstance.post<ApiResponse<{ resultImageUrl: string; provider: "gemini"; productIds: number[] }>>(
+        "/products/virtual-tryon/outfit",
+        formData,
+        {
+            headers: { "Content-Type": "multipart/form-data" },
+            timeout: 180_000,
+        },
+    );
+
+    return unwrapApiData(data);
+};
