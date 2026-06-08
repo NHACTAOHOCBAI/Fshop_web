@@ -449,7 +449,7 @@ const ProductDetailPage = () => {
                 </div>
 
                 {activeTab === "description" ? (
-                    <p className="mt-5 text-sm leading-6 text-slate-600">
+                    <p className="mt-5 whitespace-pre-wrap text-sm leading-6 text-slate-600">
                         {product.description?.trim() || "Sản phẩm hiện chưa có mô tả chi tiết. Vui lòng quay lại sau."}
                     </p>
                 ) : (
