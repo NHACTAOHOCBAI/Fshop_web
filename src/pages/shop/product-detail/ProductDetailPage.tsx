@@ -174,6 +174,11 @@ const ProductDetailPage = () => {
     const { data: recommendationsQuery, isLoading: isRelatedLoading } = useFrequentlyBoughtTogether(productId, !!product);
     const relatedProducts = recommendationsQuery?.data ?? [];
 
+    const basePrice = Number(product?.price ?? 0);
+    const maxCouponDiscount = Number(product?.maxCouponDiscount ?? 0);
+    const hasCouponDiscount = Number.isFinite(maxCouponDiscount) && maxCouponDiscount > 0;
+    const discountedPrice = Math.max(0, basePrice - maxCouponDiscount);
+
 
     const isInWishlist = useMemo(() => {
         const wishlists = wishlistData?.data ?? [];
@@ -291,9 +296,24 @@ const ProductDetailPage = () => {
                         </div>
                     </div>
 
-                    <div className="rounded-lg bg-sky-50 p-4">
+                    <div className="rounded-lg bg-sky-50 p-4 space-y-1.5">
                         <p className="text-sm text-slate-600">Giá</p>
-                        <p className="text-3xl font-black text-primary">{formatCurrency(product.price)}</p>
+                        <div className="flex items-baseline gap-2.5">
+                            <p className="text-3xl font-black text-primary">
+                                {formatCurrency(hasCouponDiscount ? discountedPrice : basePrice)}
+                            </p>
+                            {hasCouponDiscount && (
+                                <p className="text-sm text-slate-400 line-through">
+                                    {formatCurrency(basePrice)}
+                                </p>
+                            )}
+                        </div>
+                        {hasCouponDiscount && (
+                            <div className="inline-block rounded-md border border-emerald-200 bg-emerald-50 px-2 py-1 text-xs text-emerald-700">
+                                <span className="font-semibold">Giảm tối đa {formatCurrency(maxCouponDiscount)}</span>
+                                {product.bestCouponCode ? ` với mã ${product.bestCouponCode}` : ""}
+                            </div>
+                        )}
                     </div>
 
                     <div className="grid gap-3 text-sm text-slate-600">
