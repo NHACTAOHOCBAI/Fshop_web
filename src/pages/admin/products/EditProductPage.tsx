@@ -1,5 +1,5 @@
 import { Loader2 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ChangeEvent } from "react";
 import { useNavigate, useParams } from "react-router";
 import { toast } from "sonner";
 
@@ -25,6 +25,7 @@ import {
     useUpdateProductFull,
     useUpdateProductTryonAsset,
 } from "@/hooks/useProducts";
+import { BE_URL } from "@/lib/axios";
 import type { ProductTryonAssetType } from "@/types/product";
 
 type ExistingImageState = {
@@ -64,7 +65,39 @@ const tryonAssetTypes: Array<{ value: ProductTryonAssetType; label: string }> = 
     { value: "glasses", label: "Glasses" },
     { value: "hat", label: "Hat" },
     { value: "accessory", label: "Accessory" },
+    { value: "watch", label: "Watch" },
+    { value: "foot", label: "Foot / Shoes" },
 ];
+
+const DEEPAR_EFFECT_MAX_SIZE_MB = 50;
+const DEEPAR_EFFECT_MAX_SIZE_BYTES = DEEPAR_EFFECT_MAX_SIZE_MB * 1024 * 1024;
+const INTERNAL_DEEPAR_EFFECT_PATH_PREFIX = "/api/v1/products/tryon-effects/";
+
+const isValidAssetUrl = (value: string, allowInternalEffectPath = false) => {
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return true;
+    }
+
+    if (allowInternalEffectPath && trimmed.startsWith(INTERNAL_DEEPAR_EFFECT_PATH_PREFIX)) {
+        return true;
+    }
+
+    try {
+        const url = new URL(trimmed);
+        return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+        return false;
+    }
+};
+
+const resolveAssetUrl = (value: string) => {
+    if (!value.startsWith(INTERNAL_DEEPAR_EFFECT_PATH_PREFIX)) {
+        return value;
+    }
+
+    return `${BE_URL.replace(/\/$/, "")}/${value.replace(/^\/?(api\/v1\/)?/, "")}`;
+};
 
 const createEmptyTryonDraft = (): TryonAssetDraftState => ({
     assetType: "glasses",
@@ -122,6 +155,41 @@ export default function EditProductPage() {
     const [variants, setVariants] = useState<VariantEditorState[]>([]);
     const [tryonDraft, setTryonDraft] = useState<TryonAssetDraftState>(createEmptyTryonDraft);
     const [tryonEditors, setTryonEditors] = useState<TryonAssetEditorState[]>([]);
+
+    const pickDeepAREffectFile = (fileList: FileList | null) => {
+        const file = fileList?.[0];
+        if (!file) {
+            return [];
+        }
+
+        if (!file.name.toLowerCase().endsWith(".deepar")) {
+            toast.error("DeepAR effect file must be a .deepar file");
+            return [];
+        }
+
+        if (file.size > DEEPAR_EFFECT_MAX_SIZE_BYTES) {
+            toast.error(`DeepAR effect file must not exceed ${DEEPAR_EFFECT_MAX_SIZE_MB}MB`);
+            return [];
+        }
+
+        return [file];
+    };
+
+    const handleDraftEffectFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = pickDeepAREffectFile(event.target.files);
+        if (files.length === 0) {
+            event.target.value = "";
+        }
+        setTryonDraft((prev) => ({ ...prev, effectFile: files }));
+    };
+
+    const handleEditorEffectFileChange = (assetId: number, event: ChangeEvent<HTMLInputElement>) => {
+        const files = pickDeepAREffectFile(event.target.files);
+        if (files.length === 0) {
+            event.target.value = "";
+        }
+        updateTryonEditor(assetId, (item) => ({ ...item, effectFile: files }));
+    };
 
     useEffect(() => {
         if (!product) {
@@ -193,14 +261,7 @@ export default function EditProductPage() {
             return false;
         }
 
-        try {
-            if (asset.deeparEffectUrl.trim()) {
-                new URL(asset.deeparEffectUrl.trim());
-            }
-            if (asset.thumbnailUrl.trim()) {
-                new URL(asset.thumbnailUrl.trim());
-            }
-        } catch {
+        if (!isValidAssetUrl(asset.deeparEffectUrl, true) || !isValidAssetUrl(asset.thumbnailUrl)) {
             toast.error("Current AR asset URLs must be valid URLs");
             return false;
         }
@@ -710,7 +771,7 @@ export default function EditProductPage() {
                             <Input
                                 type="file"
                                 accept=".deepar,application/octet-stream"
-                                onChange={(event) => setTryonDraft((prev) => ({ ...prev, effectFile: Array.from(event.target.files ?? []).slice(0, 1) }))}
+                                onChange={handleDraftEffectFileChange}
                                 disabled={isTryonPending}
                             />
                             {tryonDraft.effectFile[0] ? (
@@ -802,7 +863,7 @@ export default function EditProductPage() {
                                         <label className="text-xs font-medium text-slate-600">DeepAR effect file</label>
                                         {asset.deeparEffectUrl ? (
                                             <a
-                                                href={asset.deeparEffectUrl}
+                                                href={resolveAssetUrl(asset.deeparEffectUrl)}
                                                 target="_blank"
                                                 rel="noreferrer"
                                                 className="block truncate text-xs text-blue-600 hover:underline"
@@ -813,7 +874,7 @@ export default function EditProductPage() {
                                         <Input
                                             type="file"
                                             accept=".deepar,application/octet-stream"
-                                            onChange={(event) => updateTryonEditor(asset.id, (item) => ({ ...item, effectFile: Array.from(event.target.files ?? []).slice(0, 1) }))}
+                                            onChange={(event) => handleEditorEffectFileChange(asset.id, event)}
                                             disabled={isTryonPending}
                                         />
                                         {asset.effectFile[0] ? (

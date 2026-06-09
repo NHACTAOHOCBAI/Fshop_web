@@ -4,10 +4,58 @@ import { Link, useParams } from "react-router";
 
 import { Button } from "@/components/ui/button";
 import { useProductById, useProductTryonAssets } from "@/hooks/useProducts";
+import { BE_URL } from "@/lib/axios";
 import type { ProductTryonAsset } from "@/types/product";
 
 type DeepARInstance = {
     shutdown?: () => void | Promise<void>;
+};
+
+const AR_OUTPUT_ASPECT_RATIO = 16 / 9;
+const AR_OUTPUT_MAX_WIDTH = 1920;
+const AR_OUTPUT_MIN_WIDTH = 1280;
+const AR_CAMERA_WIDTH = 1920;
+const AR_CAMERA_HEIGHT = 1080;
+const AR_CAMERA_FPS = 30;
+
+const resolveEffectUrl = (url: string) => {
+    if (/^https?:\/\//i.test(url)) {
+        return url;
+    }
+
+    return `${BE_URL.replace(/\/$/, "")}/${url.replace(/^\/?(api\/v1\/)?/, "")}`;
+};
+
+const isInternalEffectUrl = (url: string) => url.startsWith("/api/v1/products/tryon-effects/");
+
+const shouldUseDevApiProxy = () => {
+    if (!/^https?:\/\/[^/]*ngrok[^/]*/i.test(BE_URL)) {
+        return false;
+    }
+
+    return ["localhost", "127.0.0.1"].includes(window.location.hostname);
+};
+
+const getDeepAREffectUrl = (url: string) => {
+    if (isInternalEffectUrl(url) && shouldUseDevApiProxy()) {
+        return url;
+    }
+
+    return resolveEffectUrl(url);
+};
+
+const configureCanvasResolution = (canvas: HTMLCanvasElement) => {
+    const bounds = canvas.getBoundingClientRect();
+    const cssWidth = bounds.width || AR_OUTPUT_MIN_WIDTH;
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const outputWidth = Math.min(
+        Math.max(Math.round(cssWidth * dpr), AR_OUTPUT_MIN_WIDTH),
+        AR_OUTPUT_MAX_WIDTH,
+    );
+    const outputHeight = Math.round(outputWidth / AR_OUTPUT_ASPECT_RATIO);
+
+    canvas.width = outputWidth;
+    canvas.height = outputHeight;
 };
 
 const ProductTryonPage = () => {
@@ -77,10 +125,36 @@ const ProductTryonPage = () => {
                     return;
                 }
 
+                configureCanvasResolution(canvasRef.current);
+
                 const instance = await deepar.initialize({
                     licenseKey,
                     canvas: canvasRef.current,
-                    effect: selectedAsset.deeparEffectUrl,
+                    effect: getDeepAREffectUrl(selectedAsset.deeparEffectUrl),
+                    additionalOptions: {
+                        hint: "faceInit",
+                        cameraConfig: {
+                            disableDefaultCamera: true,
+                        },
+                    },
+                });
+
+                if (cancelled) {
+                    await instance.shutdown?.();
+                    return;
+                }
+
+                await instance.startCamera?.({
+                    mirror: true,
+                    mediaStreamConstraints: {
+                        audio: false,
+                        video: {
+                            facingMode: "user",
+                            width: { ideal: AR_CAMERA_WIDTH },
+                            height: { ideal: AR_CAMERA_HEIGHT },
+                            frameRate: { ideal: AR_CAMERA_FPS },
+                        },
+                    },
                 });
 
                 if (cancelled) {
@@ -150,9 +224,12 @@ const ProductTryonPage = () => {
                     This product does not have an active AR try-on asset yet.
                 </div>
             ) : (
-                <div className="grid min-h-[640px] gap-4 lg:grid-cols-[1fr_280px]">
+                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
                     <section className="relative overflow-hidden rounded-lg bg-black">
-                        <canvas ref={canvasRef} className="h-full min-h-[640px] w-full" />
+                        <canvas
+                            ref={canvasRef}
+                            className="block aspect-video w-full bg-black"
+                        />
 
                         {(isInitializing || runtimeError) && (
                             <div className="absolute inset-0 flex items-center justify-center bg-black/60 p-6 text-center text-white">

@@ -22,6 +22,8 @@ const unwrapApiData = <T>(payload: T | ApiResponse<T>): T => {
     return payload as T;
 };
 
+const TRYON_ASSET_UPLOAD_TIMEOUT_MS = 180_000;
+
 export const getProducts = async ({ limit, page, search, department, sortOrder, sortBy }: QueryParams) => {
     const { data } = await axiosInstance.get<PaginatedApiResponse<Product>>("/products", {
         params: { limit, page, search, department, sortOrder, sortBy },
@@ -44,6 +46,7 @@ export const createProductTryonAsset = async ({ productId, ...payload }: CreateP
     const formData = buildTryonAssetFormData(payload);
     const { data } = await axiosInstance.post<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: TRYON_ASSET_UPLOAD_TIMEOUT_MS,
     });
     return data;
 };
@@ -52,6 +55,7 @@ export const updateProductTryonAsset = async ({ productId, assetId, ...payload }
     const formData = buildTryonAssetFormData(payload);
     const { data } = await axiosInstance.patch<ApiResponse<ProductTryonAsset>>(`/products/${productId}/tryon-assets/${assetId}`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: TRYON_ASSET_UPLOAD_TIMEOUT_MS,
     });
     return data;
 };
@@ -178,6 +182,7 @@ export const updateProductFull = async ({ id, payload, productImages = [], varia
         headers: {
             "Content-Type": "multipart/form-data",
         },
+        timeout: TRYON_ASSET_UPLOAD_TIMEOUT_MS,
     });
 
     return data;

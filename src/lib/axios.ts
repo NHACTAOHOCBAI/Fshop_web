@@ -3,7 +3,7 @@ import { authStorage } from "@/lib/auth";
 import { extractApiErrorMessage } from "@/lib/api-error";
 import type { RefreshTokenResponse } from "@/types/auth";
 
-const BE_URL =
+export const BE_URL =
   import.meta.env.VITE_API_URL ||
   "https://fshop-backend-v19j.onrender.com/api/v1";
 

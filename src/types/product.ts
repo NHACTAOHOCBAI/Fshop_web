@@ -52,7 +52,7 @@ export type Product = {
     variants?: ProductVariant[];
 };
 
-export type ProductTryonAssetType = "glasses" | "hat" | "accessory";
+export type ProductTryonAssetType = "glasses" | "hat" | "accessory" | "watch" | "foot";
 
 export type ProductTryonAsset = {
     id: number;
