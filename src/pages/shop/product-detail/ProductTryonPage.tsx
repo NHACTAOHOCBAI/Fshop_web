@@ -1,11 +1,15 @@
-import { ArrowLeft, Camera, Loader2, RotateCcw } from "lucide-react";
+import { ArrowLeft, Camera, Loader2, RotateCcw, ChevronLeft, ShoppingBag, ShoppingCart } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
+import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
 import { useProductById, useProductTryonAssets } from "@/hooks/useProducts";
 import { BE_URL } from "@/lib/axios";
 import type { ProductTryonAsset } from "@/types/product";
+import { useAddToCart } from "@/hooks/useCart";
+import { formatCurrency } from "@/lib/utils";
+import { extractApiErrorMessage } from "@/lib/api-error";
 
 type DeepARInstance = {
     shutdown?: () => void | Promise<void>;
@@ -74,6 +78,10 @@ const ProductTryonPage = () => {
     const [isInitializing, setIsInitializing] = useState(false);
     const [runtimeError, setRuntimeError] = useState<string | null>(null);
 
+    const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
+
+    const firstVariant = product?.variants?.[0];
+
     const selectedAsset = useMemo<ProductTryonAsset | null>(() => {
         if (assets.length === 0) {
             return null;
@@ -106,12 +114,12 @@ const ProductTryonPage = () => {
 
             const licenseKey = import.meta.env.VITE_DEEPAR_LICENSE_KEY;
             if (!licenseKey) {
-                setRuntimeError("Missing VITE_DEEPAR_LICENSE_KEY in web environment.");
+                setRuntimeError("Thiếu cấu hình VITE_DEEPAR_LICENSE_KEY trên hệ thống.");
                 return;
             }
 
             if (!navigator.mediaDevices?.getUserMedia) {
-                setRuntimeError("This browser does not support camera access.");
+                setRuntimeError("Trình duyệt này không hỗ trợ truy cập camera.");
                 return;
             }
 
@@ -164,7 +172,7 @@ const ProductTryonPage = () => {
 
                 deepARRef.current = instance;
             } catch (error) {
-                const message = error instanceof Error ? error.message : "DeepAR could not start.";
+                const message = error instanceof Error ? error.message : "Không thể khởi động DeepAR.";
                 setRuntimeError(message);
             } finally {
                 if (!cancelled) {
@@ -181,6 +189,28 @@ const ProductTryonPage = () => {
         };
     }, [selectedAsset]);
 
+    const handleAddToCart = () => {
+        if (!firstVariant) {
+            toast.error("Không tìm thấy phân loại sản phẩm phù hợp");
+            return;
+        }
+
+        addToCart(
+            {
+                variantId: firstVariant.id,
+                quantity: 1,
+            },
+            {
+                onSuccess: () => {
+                    toast.success("Đã thêm sản phẩm vào giỏ hàng");
+                },
+                onError: (error) => {
+                    toast.error(extractApiErrorMessage(error, "Không thể thêm vào giỏ hàng"));
+                },
+            }
+        );
+    };
+
     const isLoading = productQuery.isLoading || assetsQuery.isLoading;
     const hasAssets = assets.length > 0;
 
@@ -188,7 +218,7 @@ const ProductTryonPage = () => {
         return (
             <div className="flex min-h-[65vh] items-center justify-center text-sm text-slate-500">
                 <Loader2 className="mr-2 size-4 animate-spin" />
-                Loading AR experience...
+                Đang tải trải nghiệm AR...
             </div>
         );
     }
@@ -196,36 +226,43 @@ const ProductTryonPage = () => {
     if (productQuery.isError || !product) {
         return (
             <div className="space-y-3 rounded-lg border border-red-200 bg-red-50 p-5 text-sm text-red-700">
-                <p>Could not load product for AR try-on.</p>
+                <p>Không thể tải sản phẩm để thực hiện thử đồ AR.</p>
                 <Button asChild variant="outline">
-                    <Link to={`/${department}`}>Back to catalog</Link>
+                    <Link to={`/${department}`}>Quay lại danh sách</Link>
                 </Button>
             </div>
         );
     }
 
     return (
-        <div className="min-h-[calc(100vh-120px)] space-y-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-                <Button asChild variant="outline">
-                    <Link to={`/${department}/products/${product.id}`}>
-                        <ArrowLeft className="size-4" />
-                        Product detail
-                    </Link>
-                </Button>
-                <div className="text-right">
-                    <p className="text-sm text-slate-500">AR Try-On</p>
-                    <h1 className="text-xl font-semibold text-slate-900">{product.name}</h1>
-                </div>
+        <div className="space-y-6">
+            {/* Navigation & Breadcrumbs */}
+            <div>
+                <Link
+                    to={`/${department}/products/${product.id}`}
+                    className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                >
+                    <ChevronLeft className="size-4" />
+                    Quay lại chi tiết sản phẩm
+                </Link>
+            </div>
+
+            {/* Title */}
+            <div className="flex flex-col gap-1">
+                <h1 className="text-2xl font-bold text-slate-900">Thử đồ AR (DeepAR)</h1>
+                <p className="text-sm text-slate-500">
+                    Sản phẩm: <span className="font-semibold text-slate-700">{product.name}</span>
+                </p>
             </div>
 
             {!hasAssets ? (
                 <div className="rounded-lg border border-dashed border-slate-300 bg-white p-8 text-center text-sm text-slate-500">
-                    This product does not have an active AR try-on asset yet.
+                    Sản phẩm này hiện chưa có phụ kiện thử đồ AR tương thích.
                 </div>
             ) : (
-                <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_280px]">
-                    <section className="relative overflow-hidden rounded-lg bg-black">
+                <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
+                    {/* Left Panel: Camera View */}
+                    <section className="relative overflow-hidden rounded-lg bg-black border border-slate-200">
                         <canvas
                             ref={canvasRef}
                             className="block aspect-video w-full bg-black"
@@ -236,34 +273,60 @@ const ProductTryonPage = () => {
                                 {isInitializing ? (
                                     <div className="space-y-3">
                                         <Loader2 className="mx-auto size-7 animate-spin" />
-                                        <p className="text-sm">Starting camera and DeepAR...</p>
+                                        <p className="text-sm">Đang kết nối camera và tải hiệu ứng AR...</p>
                                     </div>
                                 ) : (
                                     <div className="max-w-md space-y-3">
-                                        <Camera className="mx-auto size-7" />
-                                        <p className="text-sm">{runtimeError}</p>
+                                        <Camera className="mx-auto size-7 text-red-400" />
+                                        <p className="text-sm text-red-200">{runtimeError}</p>
                                     </div>
                                 )}
                             </div>
                         )}
                     </section>
 
-                    <aside className="space-y-3">
-                        <div className="rounded-lg border border-slate-200 bg-white p-3">
+                    {/* Right Panel: Controls & Info */}
+                    <aside className="space-y-5">
+                        {/* Product info card */}
+                        <div className="rounded-lg border border-slate-200 bg-white p-5 space-y-4">
+                            <div className="flex items-center gap-2">
+                                <ShoppingBag className="size-4 text-primary" />
+                                <span className="text-sm font-semibold text-slate-700">Thông tin sản phẩm</span>
+                            </div>
+                            <div className="space-y-1.5">
+                                <h3 className="font-semibold text-slate-950 text-sm line-clamp-2">{product.name}</h3>
+                                <p className="text-xs text-slate-500">Thương hiệu: <span className="font-medium text-slate-700">{product.brand?.name ?? "Đang cập nhật"}</span></p>
+                                <p className="text-sm font-bold text-primary">{formatCurrency(Number(product.price))}</p>
+                            </div>
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="w-full mt-3 gap-2"
+                                disabled={isAddingToCart || !firstVariant}
+                                onClick={handleAddToCart}
+                            >
+                                <ShoppingCart className="size-4" />
+                                Thêm vào giỏ
+                            </Button>
+                        </div>
+
+                        {/* Effects assets selection */}
+                        <div className="rounded-lg border border-slate-200 bg-white p-5">
                             <div className="mb-3 flex items-center justify-between">
-                                <p className="text-sm font-semibold text-slate-900">Assets</p>
+                                <span className="text-sm font-semibold text-slate-700">Danh sách phụ kiện thử đồ</span>
                                 <Button
                                     type="button"
                                     size="icon"
                                     variant="outline"
                                     onClick={() => selectedAsset && setSelectedAssetId(selectedAsset.id)}
-                                    aria-label="Reload current asset"
+                                    aria-label="Tải lại hiệu ứng"
+                                    className="size-8"
                                 >
                                     <RotateCcw className="size-4" />
                                 </Button>
                             </div>
 
-                            <div className="space-y-2">
+                            <div className="space-y-2 max-h-[220px] overflow-y-auto pr-1">
                                 {assets.map((asset) => (
                                     <button
                                         key={asset.id}
@@ -271,20 +334,20 @@ const ProductTryonPage = () => {
                                         onClick={() => setSelectedAssetId(asset.id)}
                                         className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left transition ${
                                             selectedAsset?.id === asset.id
-                                                ? "border-primary bg-primary/5"
-                                                : "border-slate-200 hover:border-primary/50"
+                                                ? "border-primary bg-primary/5 font-semibold text-primary"
+                                                : "border-slate-200 hover:border-primary/50 text-slate-700"
                                         }`}
                                     >
                                         {asset.thumbnailUrl ? (
-                                            <img src={asset.thumbnailUrl} alt={asset.displayName} className="size-12 rounded object-cover" />
+                                            <img src={asset.thumbnailUrl} alt={asset.displayName} className="size-10 rounded object-cover" />
                                         ) : (
-                                            <div className="flex size-12 items-center justify-center rounded bg-slate-100 text-xs text-slate-500">
+                                            <div className="flex size-10 items-center justify-center rounded bg-slate-50 text-[10px] text-slate-400 border border-slate-100">
                                                 AR
                                             </div>
                                         )}
                                         <span className="min-w-0">
-                                            <span className="block truncate text-sm font-medium text-slate-900">{asset.displayName}</span>
-                                            <span className="block text-xs capitalize text-slate-500">{asset.assetType}</span>
+                                            <span className="block truncate text-xs font-semibold">{asset.displayName}</span>
+                                            <span className="block text-[10px] capitalize text-slate-400 font-normal">{asset.assetType}</span>
                                         </span>
                                     </button>
                                 ))}
