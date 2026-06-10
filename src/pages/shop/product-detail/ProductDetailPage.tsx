@@ -414,15 +414,17 @@ const ProductDetailPage = () => {
                             Thử đồ AR
                         </Button>
                     ) : null}
-                    <Button
-                        type="button"
-                        variant="outline"
-                        className="w-full gap-2"
-                        onClick={() => navigate(`/${department}/products/${product.id}/virtual-tryon-2d`)}
-                    >
-                        <Shirt className="size-4" />
-                        Thử đồ 2D (AI)
-                    </Button>
+                    {['top', 'bottom', 'dress'].includes(product.category?.slotType?.code ?? '') && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            className="w-full gap-2"
+                            onClick={() => navigate(`/${department}/products/${product.id}/virtual-tryon-2d`)}
+                        >
+                            <Shirt className="size-4" />
+                            Thử đồ 2D (AI)
+                        </Button>
+                    )}
                 </section>
             </div>
 
