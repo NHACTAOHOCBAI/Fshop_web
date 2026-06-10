@@ -158,12 +158,17 @@ export const useAddPostComment = () => {
             payload: Parameters<typeof postsService.addPostComment>[1];
         }) => postsService.addPostComment(postId, payload),
         onSuccess: (data) => {
-            // Invalidate comments for this post
             queryClient.invalidateQueries({
                 queryKey: [...POSTS_QUERY_KEY, data.postId, "comments"],
             });
-            // Also invalidate the post itself to update comment count
             queryClient.invalidateQueries({ queryKey: [...POSTS_QUERY_KEY, data.postId] });
+            // Re-fetch sau 3 giây để nhặt kết quả AI moderation
+            // (AI chạy async, comment có thể bị ẩn sau khi flag)
+            setTimeout(() => {
+                queryClient.invalidateQueries({
+                    queryKey: [...POSTS_QUERY_KEY, data.postId, "comments"],
+                });
+            }, 3000);
         },
     });
 };

@@ -29,8 +29,11 @@ import {
     useLivestreamComments,
     useLivestreamRealtime,
     useCreateLivestreamComment,
+    useGetActivePoll,
 } from "@/hooks/useLivestreams";
+import { LivestreamPollControl } from "@/components/livestream/LivestreamPollControl";
 import type { Product } from "@/types/product";
+import type { LivestreamPoll, PollVoteResult } from "@/types/livestream";
 import { authStorage } from "@/lib/auth";
 
 const statusStyles = {
@@ -157,6 +160,8 @@ export default function LivestreamSessionPage() {
     const [viewerCount, setViewerCount] = useState<number | null>(null);
     const [pinProductSearch, setPinProductSearch] = useState("");
     const [selectedPinProducts, setSelectedPinProducts] = useState<Product[]>([]);
+    const [activePoll, setActivePoll] = useState<LivestreamPoll | null>(null);
+    const [liveResults, setLiveResults] = useState<PollVoteResult | null>(null);
 
     const chatScrollRef = useRef<HTMLDivElement | null>(null);
 
@@ -189,10 +194,18 @@ export default function LivestreamSessionPage() {
     const unpinMutation = useUnpinLivestreamProduct();
     const createCommentMutation = useCreateLivestreamComment();
 
+    const activePollQuery = useGetActivePoll(isValidId ? livestreamId : null);
+    useEffect(() => {
+        if (activePollQuery.data?.data) setActivePoll(activePollQuery.data.data);
+    }, [activePollQuery.data]);
+
     useLivestreamRealtime({
         livestreamId: isValidId ? livestreamId : undefined,
         enabled: isValidId && hasToken,
         onViewerCountUpdated: (count) => setViewerCount(count),
+        onPollCreated: (poll) => { setActivePoll(poll); setLiveResults(null); },
+        onPollUpdated: (result) => setLiveResults(result),
+        onPollClosed: () => { setActivePoll(null); setLiveResults(null); },
     });
 
     const productOptions = productsQuery.data?.data ?? [];
@@ -496,6 +509,19 @@ export default function LivestreamSessionPage() {
                             })
                         )}
                     </div>
+
+                    {/* Live Poll Control (Admin) */}
+                    {livestream?.status === "live" && (
+                        <div className="mt-4">
+                            <LivestreamPollControl
+                                livestreamId={livestreamId}
+                                activePoll={activePoll}
+                                liveResults={liveResults}
+                                onPollCreated={(poll) => { setActivePoll(poll); setLiveResults(null); }}
+                                onPollClosed={() => { setActivePoll(null); setLiveResults(null); }}
+                            />
+                        </div>
+                    )}
 
                     {/* Admin chat response box */}
                     <form onSubmit={handleSendAdminMessage} className="mt-4 flex gap-2">

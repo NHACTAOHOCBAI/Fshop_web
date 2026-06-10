@@ -153,3 +153,30 @@ export const connectLivestreamSocket = (accessToken: string): Socket => {
         reconnection: true,
     });
 };
+
+// ── Live Poll API ──────────────────────────────────────────
+
+export const createPoll = async (
+    livestreamId: number,
+    payload: { question: string; options: string[] },
+) => {
+    const { data } = await axiosInstance.post<ApiResponse<import("@/types/livestream").LivestreamPoll>>(
+        `${API_BASE}/${livestreamId}/polls`,
+        payload,
+    );
+    return data;
+};
+
+export const closePoll = async (livestreamId: number, pollId: number) => {
+    const { data } = await axiosInstance.post<ApiResponse<import("@/types/livestream").LivestreamPoll>>(
+        `${API_BASE}/${livestreamId}/polls/${pollId}/close`,
+    );
+    return data;
+};
+
+export const getActivePoll = async (livestreamId: number) => {
+    const { data } = await axiosInstance.get<ApiResponse<import("@/types/livestream").LivestreamPoll | null>>(
+        `${API_BASE}/${livestreamId}/polls/active`,
+    );
+    return data;
+};

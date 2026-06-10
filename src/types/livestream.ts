@@ -115,3 +115,39 @@ export type LivestreamSummary = {
     totalRevenue: number;
     topProducts: LivestreamSummaryProduct[];
 };
+
+// ── Live Poll ──────────────────────────────────────────────
+
+export type PollStatus = "active" | "closed";
+
+export type PollOption = {
+    index: number;
+    text: string;
+    count: number;
+    percentage: number;
+};
+
+export type LivestreamPoll = {
+    id: number;
+    livestreamId: number;
+    question: string;
+    options: string[];
+    status: PollStatus;
+    totalVotes: number;
+    results?: PollOption[] | null;
+    createdAt: string;
+    endedAt?: string | null;
+};
+
+export type PollVoteResult = {
+    pollId: number;
+    livestreamId: number;
+    options: PollOption[];
+    totalVotes: number;
+};
+
+export type PollClosedPayload = {
+    pollId: number;
+    finalResults: PollOption[];
+    totalVotes: number;
+};

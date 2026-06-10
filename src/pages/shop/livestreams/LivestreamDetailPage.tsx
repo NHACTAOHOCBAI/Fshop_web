@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate, useParams } from "react-router";
-import { Loader2, SendHorizontal, ShoppingCart, Users, Video } from "lucide-react";
+import { Loader2, Maximize2, Minimize2, SendHorizontal, ShoppingCart, Users, Video } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -11,7 +11,9 @@ import {
     useLivestreamById,
     useLivestreamComments,
     useLivestreamRealtime,
+    useGetActivePoll,
 } from "@/hooks/useLivestreams";
+import { LivestreamPollOverlay } from "@/components/livestream/LivestreamPollOverlay";
 import { useAddToCart } from "@/hooks/useCart";
 import { LivestreamViewer } from "@/components/livestream/LivestreamViewer";
 import { authStorage } from "@/lib/auth";
@@ -54,6 +56,12 @@ const LivestreamDetailPage = () => {
     const [message, setMessage] = useState("");
     const [viewerCount, setViewerCount] = useState<number | null>(null);
     const [pendingCartVariantId, setPendingCartVariantId] = useState<number | null>(null);
+    const [activePoll, setActivePoll] = useState<import("@/types/livestream").LivestreamPoll | null>(null);
+    const [liveResults, setLiveResults] = useState<import("@/types/livestream").PollVoteResult | null>(null);
+    const [pollClosed, setPollClosed] = useState(false);
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const socketEmitRef = useRef<((event: string, data: unknown) => void) | null>(null);
+    const videoWrapperRef = useRef<HTMLDivElement>(null);
     const chatScrollRef = useRef<HTMLDivElement | null>(null);
     const livestreamQuery = useLivestreamById(isValidId ? livestreamId : null, isValidId);
     const commentsQuery = useLivestreamComments(isValidId ? livestreamId : null, {
@@ -95,11 +103,46 @@ const LivestreamDetailPage = () => {
         };
     }, [setActiveLivestream, setShowFloating]);
 
+    const activePollQuery = useGetActivePoll(isValidId ? livestreamId : null);
+    useEffect(() => {
+        if (activePollQuery.data?.data) {
+            setActivePoll(activePollQuery.data.data);
+            setPollClosed(false);
+        }
+    }, [activePollQuery.data]);
+
     useLivestreamRealtime({
         livestreamId: isValidId ? livestreamId : undefined,
         enabled: isValidId && hasToken,
         onViewerCountUpdated: (count) => setViewerCount(count),
+        onPollCreated: (poll) => { setActivePoll(poll); setLiveResults(null); setPollClosed(false); },
+        onPollUpdated: (result) => setLiveResults(result),
+        onPollClosed: (payload) => {
+            setPollClosed(true);
+            setLiveResults({ pollId: payload.pollId, livestreamId, options: payload.finalResults, totalVotes: payload.totalVotes });
+            setTimeout(() => { setActivePoll(null); setLiveResults(null); setPollClosed(false); }, 6000);
+        },
+        emitRef: socketEmitRef,
     });
+
+    const handleVote = (pollId: number, optionIndex: number) => {
+        socketEmitRef.current?.("submitVote", { pollId, optionIndex });
+    };
+
+    const toggleFullscreen = () => {
+        if (!videoWrapperRef.current) return;
+        if (!document.fullscreenElement) {
+            void videoWrapperRef.current.requestFullscreen();
+        } else {
+            void document.exitFullscreen();
+        }
+    };
+
+    useEffect(() => {
+        const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+        document.addEventListener("fullscreenchange", handleFsChange);
+        return () => document.removeEventListener("fullscreenchange", handleFsChange);
+    }, []);
 
     const comments = commentsQuery.data?.data ?? [];
     const resolvedViewerCount = viewerCount ?? livestream?.viewerCount ?? 0;
@@ -192,7 +235,14 @@ const LivestreamDetailPage = () => {
                         {/* Left Column: Player & Pinned Products */}
                         <div className="space-y-5">
                             {/* Video Screen Wrapper */}
-                            <div className="relative overflow-hidden rounded-3xl border border-slate-100 bg-black aspect-video w-full">
+                            <div
+                                ref={videoWrapperRef}
+                                className={`relative overflow-hidden bg-black w-full group ${
+                                    isFullscreen
+                                        ? "h-screen rounded-none"
+                                        : "aspect-video rounded-3xl border border-slate-100"
+                                }`}
+                            >
                                 {livestream.status === "live" ? (
                                     <LivestreamViewer
                                         livestreamId={livestreamId}
@@ -210,6 +260,8 @@ const LivestreamDetailPage = () => {
                                         )}
                                     </div>
                                 )}
+
+                                {/* Live badge + viewer count */}
                                 {livestream.status === "live" && (
                                     <>
                                         <div className="absolute left-4 top-4 inline-flex items-center gap-1.5 rounded-full bg-red-600 px-3 py-1 text-[10px] font-bold tracking-wider text-white animate-pulse">
@@ -222,6 +274,27 @@ const LivestreamDetailPage = () => {
                                         </div>
                                     </>
                                 )}
+
+                                {/* Fullscreen button — hiện khi hover */}
+                                <button
+                                    onClick={toggleFullscreen}
+                                    className="absolute right-3 top-3 rounded-lg bg-black/50 p-1.5 text-white opacity-0 transition-opacity group-hover:opacity-100 hover:bg-black/70"
+                                    title={isFullscreen ? "Thoát toàn màn hình" : "Toàn màn hình"}
+                                >
+                                    {isFullscreen
+                                        ? <Minimize2 className="size-4" />
+                                        : <Maximize2 className="size-4" />
+                                    }
+                                </button>
+
+                                {/* Poll overlay — absolute inside video, visible in fullscreen */}
+                                <LivestreamPollOverlay
+                                    poll={activePoll}
+                                    liveResults={liveResults}
+                                    isClosed={pollClosed}
+                                    onVote={handleVote}
+                                    onDismiss={() => { setActivePoll(null); setLiveResults(null); setPollClosed(false); }}
+                                />
                             </div>
 
                             {/* Header Info */}
@@ -378,6 +451,7 @@ const LivestreamDetailPage = () => {
                             </form>
                         </aside>
                     </section>
+
                 </>
             )}
         </div>
