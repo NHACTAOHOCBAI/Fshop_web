@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
   useModerationRecent,
+  useModerationRealtime,
   useModerationStats,
 } from "@/hooks/useModeration";
 import {
@@ -154,6 +155,8 @@ const ModerationItemsTable = ({
 );
 
 const ModerationDashboard = () => {
+  useModerationRealtime(true);
+
   const { data: stats, isLoading } = useModerationStats();
   const { data: recent, isLoading: isRecentLoading } = useModerationRecent(6);
 

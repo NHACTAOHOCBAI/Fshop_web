@@ -1,7 +1,7 @@
 export type ContentType = 'post' | 'review' | 'post_comment' | 'livestream_comment';
 export type ModerationDecision = 'approved' | 'flagged';
 export type ModerationPriority = 'NORMAL' | 'HIGH';
-export type ModerationQueueStatus = 'pending' | 'reviewed' | 'approved' | 'rejected';
+export type ModerationQueueStatus = 'pending' | 'approved' | 'rejected';
 
 export interface ModerationLabel {
   label: string;

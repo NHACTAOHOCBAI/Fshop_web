@@ -6,7 +6,7 @@ import { ArrowLeft, ChevronDown, ChevronRight, RefreshCw } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useModerationQueue, useOverrideDecision } from "@/hooks/useModeration";
+import { useModerationQueue, useModerationRealtime, useOverrideDecision } from "@/hooks/useModeration";
 import type {
   ContentType,
   ModerationLog,
@@ -39,7 +39,6 @@ const LABEL_COLORS: Record<string, string> = {
 
 const STATUS_LABELS: Record<ModerationQueueStatus, string> = {
   pending: "Chờ xem xét",
-  reviewed: "Đã xem xét",
   approved: "Đã duyệt",
   rejected: "Đã từ chối",
 };
@@ -221,10 +220,11 @@ const LogRow = ({ log }: { log: ModerationLog }) => {
 };
 
 const ModerationQueue = () => {
+  useModerationRealtime(true);
+
   const [searchParams, setSearchParams] = useSearchParams();
   const initialStatus = searchParams.get("status");
   const safeInitialStatus: ModerationQueueStatus =
-    initialStatus === "reviewed" ||
     initialStatus === "approved" ||
     initialStatus === "rejected"
       ? initialStatus
@@ -279,7 +279,6 @@ const ModerationQueue = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="pending">Chờ xem xét</SelectItem>
-              <SelectItem value="reviewed">Đã xem xét</SelectItem>
               <SelectItem value="approved">Đã duyệt</SelectItem>
               <SelectItem value="rejected">Đã từ chối</SelectItem>
             </SelectContent>

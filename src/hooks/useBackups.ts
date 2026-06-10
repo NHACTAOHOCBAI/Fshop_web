@@ -87,7 +87,7 @@ export const useCreateBackup = () => {
 
     return useMutation({
         mutationFn: createBackup,
-        onSuccess: () => {
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["backups"] });
         },
     });
@@ -98,7 +98,7 @@ export const useRestoreBackup = () => {
 
     return useMutation({
         mutationFn: restoreBackup,
-        onSuccess: () => {
+        onSettled: () => {
             queryClient.invalidateQueries({ queryKey: ["backups"] });
         },
     });

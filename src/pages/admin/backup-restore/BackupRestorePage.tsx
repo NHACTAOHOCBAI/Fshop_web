@@ -51,6 +51,19 @@ const formatBackupDate = (isoDate: string) => {
     return date.toLocaleString("vi-VN");
 };
 
+const isTimeoutError = (error: unknown) => {
+    if (!(error instanceof Error)) return false;
+    return error.message.toLowerCase().includes("timeout");
+};
+
+const getLongRunningErrorMessage = (error: unknown, fallback: string) => {
+    if (isTimeoutError(error)) {
+        return "Tác vụ vẫn có thể đang chạy trên server. Vui lòng tải lại danh sách sau ít phút.";
+    }
+
+    return error instanceof Error ? error.message : fallback;
+};
+
 const BackupRestorePage = () => {
     const [statusFilter, setStatusFilter] = useState<BackupStatus | "all">("all");
     const [selectedDelete, setSelectedDelete] = useState<Backup | null>(null);
@@ -153,12 +166,28 @@ const BackupRestorePage = () => {
     });
 
     const handleCreateBackup = () => {
+        toast.loading("Đang tạo bản sao lưu, quá trình có thể mất vài phút...", {
+            id: "backup-create",
+        });
+
         createBackupMutate(undefined, {
             onSuccess: () => {
-                toast.success("Đã tạo bản sao lưu thành công.");
+                toast.success("Đã tạo bản sao lưu thành công.", { id: "backup-create" });
             },
             onError: (createError) => {
-                toast.error(`Tạo bản sao lưu thất bại: ${createError.message}`);
+                if (isTimeoutError(createError)) {
+                    toast.error(
+                        `Tạo bản sao lưu thất bại: ${getLongRunningErrorMessage(
+                            createError,
+                            "Đã có lỗi xảy ra khi tạo bản sao lưu.",
+                        )}`,
+                        { id: "backup-create" },
+                    );
+                    return;
+                }
+                toast.error(`Tạo bản sao lưu thất bại: ${createError.message}`, {
+                    id: "backup-create",
+                });
             },
         });
     };
@@ -168,15 +197,33 @@ const BackupRestorePage = () => {
             return;
         }
 
+        toast.loading("Đang khôi phục dữ liệu, vui lòng không đóng trang...", {
+            id: "backup-restore",
+        });
+
         restoreBackupMutate(
             { filename: selectedRestore.filename },
             {
                 onSuccess: () => {
-                    toast.success(`Đã khôi phục từ ${selectedRestore.filename}.`);
+                    toast.success(`Đã khôi phục từ ${selectedRestore.filename}.`, {
+                        id: "backup-restore",
+                    });
                     setSelectedRestore(null);
                 },
                 onError: (restoreError) => {
-                    toast.error(`Khôi phục thất bại: ${restoreError.message}`);
+                    if (isTimeoutError(restoreError)) {
+                        toast.error(
+                            `Khôi phục thất bại: ${getLongRunningErrorMessage(
+                                restoreError,
+                                "Đã có lỗi xảy ra khi khôi phục dữ liệu.",
+                            )}`,
+                            { id: "backup-restore" },
+                        );
+                        return;
+                    }
+                    toast.error(`Khôi phục thất bại: ${restoreError.message}`, {
+                        id: "backup-restore",
+                    });
                 },
             }
         );
