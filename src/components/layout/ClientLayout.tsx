@@ -46,7 +46,7 @@ const navItems = [
   { to: "/kids", label: "Trẻ em", end: false },
   { to: "/mix-match", label: "Mix & Match", end: false },
   { to: "/livestreams", label: "Live", end: false },
-  { to: "/community", label: "Community", end: false },
+  { to: "/community", label: "Cộng đồng", end: false },
 ];
 
 const formatNotificationTime = (value: string) => {
@@ -91,7 +91,7 @@ const ClientLayout = () => {
           : pathname.startsWith("/my-account")
             ? "tài khoản"
             : pathname.startsWith("/community")
-              ? "community"
+              ? "cộng đồng"
               : pathname.startsWith("/mix-match")
                 ? "mix & match"
                 : pathname.startsWith("/livestreams")
