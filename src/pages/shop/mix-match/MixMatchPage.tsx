@@ -73,12 +73,14 @@ const MixMatchPage = () => {
     const slotTypes = slotTypesQuery.data?.data ?? [];
     const slotMeta = useMemo(
         () =>
-            slotTypes.map((st) => ({
-                slot: st.code as OutfitSlot,
-                label: st.name,
-                hint: st.hint || "",
-                slotTypeId: st.id,
-            })),
+            slotTypes
+                .filter((st) => ["top", "bottom", "shoes", "accessory"].includes(st.code))
+                .map((st) => ({
+                    slot: st.code as OutfitSlot,
+                    label: st.name,
+                    hint: st.hint || "",
+                    slotTypeId: st.id,
+                })),
         [slotTypes],
     );
 
@@ -107,6 +109,15 @@ const MixMatchPage = () => {
             if (!targetSlotType) return true;
             const categorySlotTypeId = product.category?.slotTypeId;
             if (!categorySlotTypeId) return true;
+
+            // Handle 'dress' slot mapping (since web layout uses bottom/Quần/Váy for dresses)
+            if (slotCode === "bottom") {
+                const dressSlotType = slotTypes.find((st) => st.code === "dress");
+                if (dressSlotType && categorySlotTypeId === dressSlotType.id) {
+                    return true;
+                }
+            }
+
             return categorySlotTypeId === targetSlotType.id;
         },
         [slotTypes],

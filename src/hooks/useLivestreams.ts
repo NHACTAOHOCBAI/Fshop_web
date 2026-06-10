@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import type React from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import { authStorage } from "@/lib/auth";
@@ -21,8 +22,19 @@ import {
     startLivestream,
     unpinLivestreamProduct,
     updateLivestream,
+    createPoll,
+    closePoll,
+    getActivePoll,
 } from "@/services/livestreams";
-import type { GetLivestreamsParams, Livestream, LivestreamComment, LivestreamDetail } from "@/types/livestream";
+import type {
+    GetLivestreamsParams,
+    Livestream,
+    LivestreamComment,
+    LivestreamDetail,
+    LivestreamPoll,
+    PollVoteResult,
+    PollClosedPayload,
+} from "@/types/livestream";
 import type { ApiResponse, PaginatedApiResponse } from "@/types/response";
 
 const livestreamCommentsPrefixQueryKey = (id: number) => [...LIVESTREAMS_QUERY_KEY, id, "comments"] as const;
@@ -394,19 +406,31 @@ type UseLivestreamRealtimeOptions = {
     livestreamId?: number;
     enabled?: boolean;
     onViewerCountUpdated?: (count: number) => void;
+    onPollCreated?: (poll: LivestreamPoll) => void;
+    onPollUpdated?: (result: PollVoteResult) => void;
+    onPollClosed?: (payload: PollClosedPayload) => void;
+    emitRef?: React.MutableRefObject<((event: string, data: unknown) => void) | null>;
 };
 
 export const useLivestreamRealtime = ({
     livestreamId,
     enabled = true,
     onViewerCountUpdated,
+    onPollCreated,
+    onPollUpdated,
+    onPollClosed,
+    emitRef,
 }: UseLivestreamRealtimeOptions) => {
     const queryClient = useQueryClient();
     const onViewerCountUpdatedRef = useRef(onViewerCountUpdated);
+    const onPollCreatedRef = useRef(onPollCreated);
+    const onPollUpdatedRef = useRef(onPollUpdated);
+    const onPollClosedRef = useRef(onPollClosed);
 
-    useEffect(() => {
-        onViewerCountUpdatedRef.current = onViewerCountUpdated;
-    }, [onViewerCountUpdated]);
+    useEffect(() => { onViewerCountUpdatedRef.current = onViewerCountUpdated; }, [onViewerCountUpdated]);
+    useEffect(() => { onPollCreatedRef.current = onPollCreated; }, [onPollCreated]);
+    useEffect(() => { onPollUpdatedRef.current = onPollUpdated; }, [onPollUpdated]);
+    useEffect(() => { onPollClosedRef.current = onPollClosed; }, [onPollClosed]);
 
     useEffect(() => {
         if (!enabled || !livestreamId) {
@@ -469,9 +493,28 @@ export const useLivestreamRealtime = ({
             queryClient.invalidateQueries({ queryKey: livestreamByIdQueryKey(livestreamId) });
         };
 
+        // Poll listeners
+        const handlePollCreated = (data: { poll: LivestreamPoll }) => {
+            onPollCreatedRef.current?.(data.poll);
+        };
+        const handlePollUpdated = (result: PollVoteResult) => {
+            onPollUpdatedRef.current?.(result);
+        };
+        const handlePollClosed = (payload: PollClosedPayload) => {
+            onPollClosedRef.current?.(payload);
+        };
+
+        // Expose emit function so parent can send submitVote
+        if (emitRef) {
+            emitRef.current = (event: string, data: unknown) => socket.emit(event, data);
+        }
+
         socket.on("viewerCountUpdated", handleViewerCountUpdated);
         socket.on("newLivestreamComment", handleNewComment);
         socket.on("pinnedProductsUpdated", handlePinnedProductsUpdated);
+        socket.on("pollCreated", handlePollCreated);
+        socket.on("pollUpdated", handlePollUpdated);
+        socket.on("pollClosed", handlePollClosed);
 
         return () => {
             const detailCache = queryClient.getQueryData<ApiResponse<LivestreamDetail>>(
@@ -480,11 +523,15 @@ export const useLivestreamRealtime = ({
             const fallbackNextCount = Math.max((detailCache?.data.viewerCount ?? 0) - 1, 0);
             applyViewerCountToCaches(queryClient, livestreamId, fallbackNextCount);
 
+            if (emitRef) emitRef.current = null;
             socket.emit("leaveLivestream", { livestreamId });
             socket.off("connect", joinRoom);
             socket.off("viewerCountUpdated", handleViewerCountUpdated);
             socket.off("newLivestreamComment", handleNewComment);
             socket.off("pinnedProductsUpdated", handlePinnedProductsUpdated);
+            socket.off("pollCreated", handlePollCreated);
+            socket.off("pollUpdated", handlePollUpdated);
+            socket.off("pollClosed", handlePollClosed);
             socket.disconnect();
         };
     }, [enabled, livestreamId, queryClient]);
@@ -495,5 +542,30 @@ export const useLivestreamSummary = (id: number | null) => {
         queryKey: id !== null ? livestreamSummaryQueryKey(id) : [],
         queryFn: () => getLivestreamSummary(id!),
         enabled: id !== null,
+    });
+};
+
+// ── Live Poll Hooks ────────────────────────────────────────
+
+export const useCreatePoll = () => {
+    return useMutation({
+        mutationFn: ({ livestreamId, question, options }: { livestreamId: number; question: string; options: string[] }) =>
+            createPoll(livestreamId, { question, options }),
+    });
+};
+
+export const useClosePoll = () => {
+    return useMutation({
+        mutationFn: ({ livestreamId, pollId }: { livestreamId: number; pollId: number }) =>
+            closePoll(livestreamId, pollId),
+    });
+};
+
+export const useGetActivePoll = (livestreamId: number | null) => {
+    return useQuery({
+        queryKey: [...LIVESTREAMS_QUERY_KEY, livestreamId, "active-poll"] as const,
+        queryFn: () => getActivePoll(livestreamId!),
+        enabled: livestreamId !== null,
+        refetchOnWindowFocus: false,
     });
 };
