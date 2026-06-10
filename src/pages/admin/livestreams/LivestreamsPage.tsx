@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router";
-import { BarChart2, Check, Loader2, Play, Plus, Radio, Search, Square, Tv, X } from "lucide-react";
+import { BarChart2, Loader2, Play, Plus, Radio, Search, Square, Tv } from "lucide-react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { DateTimePicker } from "@/components/ui/date-time-picker";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
     useCreateLivestream,
     useEndLivestream,
@@ -21,7 +22,6 @@ import type {
     LivestreamStatus,
     UpdateLivestreamPayload,
 } from "@/types/livestream";
-import type { Product } from "@/types/product";
 
 const statusStyles: Record<LivestreamStatus, string> = {
     scheduled: "bg-amber-50 text-amber-700 border border-amber-200",
@@ -35,18 +35,6 @@ const statusLabels: Record<LivestreamStatus | "all", string> = {
     live: "Đang phát",
     ended: "Đã kết thúc",
 };
-
-
-
-const formatCurrency = (value: number | string) =>
-    Number(value || 0).toLocaleString("vi-VN", {
-        style: "currency",
-        currency: "VND",
-    });
-
-const getProductImage = (product?: Product | null) =>
-    product?.images?.find((image) => image.imageUrl)?.imageUrl ??
-    product?.variants?.find((variant) => variant.imageUrl)?.imageUrl;
 
 const LivestreamForm = ({
     mode,
@@ -65,7 +53,9 @@ const LivestreamForm = ({
         initial?.scheduledStartAt ? new Date(initial.scheduledStartAt) : undefined
     );
     const [coverImage, setCoverImage] = useState<File | undefined>();
+    const [isActive, setIsActive] = useState<boolean>(initial?.isActive ?? true);
 
+    const isNotScheduled = initial && initial.status !== "scheduled";
     const canSubmit = title.trim().length > 0 && (mode === "update" || !!scheduledStartAt);
 
     const handleSubmit = () => {
@@ -87,8 +77,9 @@ const LivestreamForm = ({
         onSubmit({
             title: title.trim(),
             description: description.trim() || undefined,
-            scheduledStartAt: scheduledStartAt ? scheduledStartAt.toISOString() : undefined,
+            scheduledStartAt: isNotScheduled ? undefined : (scheduledStartAt ? scheduledStartAt.toISOString() : undefined),
             coverImage,
+            isActive,
         });
     };
 
@@ -115,6 +106,7 @@ const LivestreamForm = ({
                     value={scheduledStartAt}
                     onChange={(value) => setScheduledStartAt(value || undefined)}
                     placeholder="Chọn thời gian bắt đầu"
+                    disabled={isNotScheduled}
                 />
             </div>
 
@@ -126,6 +118,22 @@ const LivestreamForm = ({
                     onChange={(e) => setCoverImage(e.target.files?.[0])}
                 />
             </div>
+
+            {mode === "update" && (
+                <div className="flex items-center gap-2 pt-2">
+                    <Checkbox
+                        id="isActive"
+                        checked={isActive}
+                        onCheckedChange={(checked) => setIsActive(checked === true)}
+                    />
+                    <label
+                        htmlFor="isActive"
+                        className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 text-slate-800 cursor-pointer"
+                    >
+                        Kích hoạt hiển thị (isActive)
+                    </label>
+                </div>
+            )}
 
             <div className="flex justify-end">
                 <Button onClick={handleSubmit} disabled={loading || !canSubmit}>

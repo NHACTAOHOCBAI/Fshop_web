@@ -258,16 +258,16 @@ function CreateInventoryDialog({ open, setOpen }: { open: boolean; setOpen: (v: 
 
     return (
         <Dialog open={open} onOpenChange={setOpen}>
-            <DialogContent>
+            <DialogContent className="sm:max-w-md">
                 <DialogHeader>
                     <DialogTitle>Tạo tồn kho</DialogTitle>
                     <DialogDescription>Khởi tạo tồn kho cho một biến thể sản phẩm</DialogDescription>
                 </DialogHeader>
-                <div className="space-y-4">
+                <div className="space-y-4 min-w-0 w-full">
                     <div className="space-y-2">
                         <label className="text-sm font-medium">Biến thể</label>
                         <Select value={variantId} onValueChange={setVariantId}>
-                            <SelectTrigger>
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Chọn biến thể" />
                             </SelectTrigger>
                             <SelectContent>

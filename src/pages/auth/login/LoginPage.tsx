@@ -1,7 +1,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Eye, EyeOff, Sparkles, ArrowRight, ShieldCheck } from "lucide-react";
+import { Eye, EyeOff, Sparkles, ShieldCheck } from "lucide-react";
 import { Link, useLocation, useNavigate } from "react-router";
 import { toast } from "sonner";
 import { z } from "zod";

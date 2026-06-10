@@ -21,6 +21,7 @@ const TYPE_CONFIG: Record<NotificationTypeExtended, { icon: ElementType; classNa
     POST: { icon: Megaphone, className: "bg-slate-100 text-slate-600" },
     LIVESTREAM: { icon: Megaphone, className: "bg-rose-50 text-rose-600" },
     ADMIN_BROADCAST: { icon: Megaphone, className: "bg-violet-50 text-violet-600" },
+    INVENTORY: { icon: Package, className: "bg-sky-50 text-sky-600" },
 };
 
 const formatDateTime = (value: string) => {

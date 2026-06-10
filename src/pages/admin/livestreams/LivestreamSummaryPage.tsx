@@ -9,7 +9,6 @@ import {
     TrendingUp,
     Users,
     Loader2,
-    Calendar,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
@@ -85,9 +84,7 @@ export default function LivestreamSummaryPage() {
         return `conic-gradient(${segments.join(", ")})`;
     }, [productsShare]);
 
-    const handlePrint = () => {
-        window.print();
-    };
+
 
     if (!isValidId) {
         return (

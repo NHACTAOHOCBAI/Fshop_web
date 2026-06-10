@@ -69,6 +69,7 @@ export type UpdateLivestreamPayload = {
     description?: string;
     scheduledStartAt?: string;
     coverImage?: File;
+    isActive?: boolean;
 };
 
 export type PinLivestreamProductPayload = {

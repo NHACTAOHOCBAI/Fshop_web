@@ -53,6 +53,7 @@ const LivestreamDetailPage = () => {
 
     const [message, setMessage] = useState("");
     const [viewerCount, setViewerCount] = useState<number | null>(null);
+    const [pendingCartVariantId, setPendingCartVariantId] = useState<number | null>(null);
     const chatScrollRef = useRef<HTMLDivElement | null>(null);
     const livestreamQuery = useLivestreamById(isValidId ? livestreamId : null, isValidId);
     const commentsQuery = useLivestreamComments(isValidId ? livestreamId : null, {
@@ -63,7 +64,7 @@ const LivestreamDetailPage = () => {
     }, isValidId);
 
     const createCommentMutation = useCreateLivestreamComment();
-    const { mutate: addToCart, isPending: isAddingToCart } = useAddToCart();
+    const { mutate: addToCart } = useAddToCart();
 
     const { setActiveLivestream, setShowFloating } = useLivestreamContext();
     const livestream = livestreamQuery.data?.data;
@@ -138,6 +139,7 @@ const LivestreamDetailPage = () => {
             return;
         }
 
+        setPendingCartVariantId(variantId);
         addToCart(
             { variantId, quantity: 1, livestreamId },
             {
@@ -146,6 +148,9 @@ const LivestreamDetailPage = () => {
                 },
                 onError: (error: any) => {
                     toast.error(error.message || "Không thể thêm vào giỏ hàng");
+                },
+                onSettled: () => {
+                    setPendingCartVariantId(null);
                 },
             }
         );
@@ -249,6 +254,7 @@ const LivestreamDetailPage = () => {
                                             if (!item.product) return null;
                                             const firstVariant = item.product.variants?.find((v) => v.isActive) ?? item.product.variants?.[0];
                                             const canAddToCart = Boolean(firstVariant);
+                                            const isAddingThisProduct = pendingCartVariantId === firstVariant?.id;
                                             const productImage = item.product.images?.find((img) => img.imageUrl)?.imageUrl ?? item.product.variants?.find((v) => v.imageUrl)?.imageUrl;
 
                                             return (
@@ -281,10 +287,10 @@ const LivestreamDetailPage = () => {
                                                         <Button 
                                                             size="sm" 
                                                             className="flex-1 h-8 text-[11px] rounded-lg gap-1"
-                                                            disabled={isAddingToCart || !canAddToCart}
+                                                            disabled={isAddingThisProduct || !canAddToCart}
                                                             onClick={() => handleAddToCart(firstVariant?.id)}
                                                         >
-                                                            {isAddingToCart ? (
+                                                            {isAddingThisProduct ? (
                                                                 <Loader2 className="size-3 animate-spin" />
                                                             ) : (
                                                                 <ShoppingCart className="size-3" />

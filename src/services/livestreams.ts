@@ -73,6 +73,9 @@ export const updateLivestream = async (id: number, payload: UpdateLivestreamPayl
     if (payload.coverImage) {
         formData.append("coverImage", payload.coverImage);
     }
+    if (payload.isActive !== undefined) {
+        formData.append("isActive", String(payload.isActive));
+    }
 
     const { data } = await axiosInstance.patch<ApiResponse<Livestream>>(`${API_BASE}/${id}`, formData, {
         headers: {
