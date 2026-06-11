@@ -361,7 +361,7 @@ const FloatingAiChatbot = () => {
   const handleSend = async () => {
     const normalized = draft.trim();
     if (isSending) return;
-    if (!normalized && !imageFile && !voiceFile) return;
+    if (!normalized && !imageFile && !voiceFile && selectedProducts.length === 0) return;
 
     let sessionId = activeSession?.id;
 
@@ -396,11 +396,13 @@ const FloatingAiChatbot = () => {
         await voiceSearchMutation.mutateAsync({ sessionId, file: voiceFile });
         setVoiceFile(null);
         if (voiceInputRef.current) voiceInputRef.current.value = "";
-      } else if (normalized) {
+      } else if (normalized || selectedProducts.length > 0) {
+        const attachedProductIds = selectedProducts.map((product) => product.id);
+        const visibleMessage = normalized || "Tư vấn riêng về sản phẩm đã chọn giúp mình";
         const optimisticMessage: AiChatMessage = {
           id: -Date.now(),
           role: "user",
-          content: normalized,
+          content: visibleMessage,
           products: null,
           latencyMs: null,
           createdAt: new Date().toISOString(),
@@ -411,8 +413,9 @@ const FloatingAiChatbot = () => {
 
         await sendMessageMutation.mutateAsync({
           sessionId,
-          message: normalized,
+          message: visibleMessage,
           historyLimit: 12,
+          productIds: attachedProductIds,
         });
 
         setPendingMessage(null);
@@ -437,7 +440,7 @@ const FloatingAiChatbot = () => {
   const isMediaSearching =
     imageSearchMutation.isPending || voiceSearchMutation.isPending;
   const canSend =
-    (Boolean(draft.trim()) || Boolean(imageFile) || Boolean(voiceFile)) &&
+    (Boolean(draft.trim()) || Boolean(imageFile) || Boolean(voiceFile) || selectedProducts.length > 0) &&
     !isSending;
 
   const renderComposerAttachments = () => {

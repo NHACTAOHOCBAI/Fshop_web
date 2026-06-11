@@ -67,14 +67,15 @@ type SendMessageArgs = {
     sessionId: number;
     message: string;
     historyLimit?: number;
+    productIds?: number[];
 };
 
 export const useSendAiChatMessage = () => {
     const queryClient = useQueryClient();
 
     return useMutation({
-        mutationFn: ({ sessionId, message, historyLimit }: SendMessageArgs) =>
-            sendAiChatMessage(sessionId, { message, historyLimit }),
+        mutationFn: ({ sessionId, message, historyLimit, productIds }: SendMessageArgs) =>
+            sendAiChatMessage(sessionId, { message, historyLimit, productIds }),
         onSuccess: (response, variables) => {
             const { userMessage, assistantMessage } = response.data;
 

@@ -1,4 +1,4 @@
-import { ArrowLeft, Camera, Loader2, RotateCcw, ChevronLeft, ShoppingBag, ShoppingCart } from "lucide-react";
+import { Camera, Loader2, RotateCcw, ChevronLeft, ShoppingBag, ShoppingCart } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useParams } from "react-router";
 import { toast } from "sonner";

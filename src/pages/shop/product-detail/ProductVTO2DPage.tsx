@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useParams, useNavigate, Link } from "react-router";
+import { useParams, Link } from "react-router";
 import { 
     ChevronLeft, 
     Upload, 
@@ -13,7 +13,6 @@ import {
     User, 
     Sparkles, 
     Info, 
-    Eye, 
     ShoppingCart 
 } from "lucide-react";
 import { toast } from "sonner";
@@ -52,7 +51,6 @@ const SAMPLE_MODELS = [
 ];
 
 const ProductVTO2DPage = () => {
-    const navigate = useNavigate();
     const { department, productId } = useParams<{ department?: string; productId?: string }>();
     const id = Number(productId);
 

@@ -244,7 +244,7 @@ export const virtualTryon2D = async (
         formData,
         {
             headers: { "Content-Type": "multipart/form-data" },
-            timeout: 120_000,
+            timeout: 240_000,
         },
     );
 

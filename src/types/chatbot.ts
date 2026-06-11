@@ -45,6 +45,7 @@ export type CreateAiChatSessionPayload = {
 export type SendAiChatMessagePayload = {
     message: string;
     historyLimit?: number;
+    productIds?: number[];
 };
 
 export type SendAiChatMessageResponse = {
