@@ -27,7 +27,7 @@ const SlotTypesPage = () => {
         deleteItem(
             { id },
             {
-                onSuccess: () => toast.success("Đã xóa slot type"),
+                onSuccess: () => toast.success("Đã xóa vị trí phối đồ"),
                 onError: (error) => toast.error(`Xóa thất bại: ${error.message}`),
             }
         );
@@ -36,7 +36,7 @@ const SlotTypesPage = () => {
     return (
         <div className="space-y-4 w-full">
             <div>
-                <h1 className="text-2xl font-semibold">Quản lý Slot Type (Vị trí phối đồ)</h1>
+                <h1 className="text-2xl font-semibold">Quản lý Vị trí phối đồ</h1>
                 <p className="text-sm text-muted-foreground mt-1">
                     Cấu hình và định nghĩa các vùng/vị trí phối đồ trên cơ thể người mẫu cho tính năng thử đồ ảo (Try-On).
                 </p>
@@ -54,7 +54,7 @@ const SlotTypesPage = () => {
                     onClick={() => setOpenCreate(true)}
                 >
                     <Plus className="size-4" />
-                    Thêm Slot Type
+                    Thêm vị trí phối đồ
                 </Button>
             </CrudTable>
 

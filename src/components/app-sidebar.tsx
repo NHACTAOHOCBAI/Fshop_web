@@ -68,7 +68,7 @@ const adminMenuItems = [
   },
   { title: "Thương hiệu", url: "/admin/brands", icon: <TagsIcon /> },
   { title: "Danh mục", url: "/admin/categories", icon: <FolderTreeIcon /> },
-  { title: "Slot Types", url: "/admin/slot-types", icon: <LayersIcon /> },
+  { title: "Vị trí phối đồ", url: "/admin/slot-types", icon: <LayersIcon /> },
   { title: "Thuộc tính", url: "/admin/attributes", icon: <RulerIcon /> },
   { title: "Đơn hàng", url: "/admin/orders", icon: <ShoppingBagIcon /> },
   { title: "Sản phẩm", url: "/admin/products", icon: <BoxesIcon /> },

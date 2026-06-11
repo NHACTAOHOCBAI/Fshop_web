@@ -66,7 +66,7 @@ export function UpdateSlotTypeDialog({
             },
             {
                 onSuccess: () => {
-                    toast.success("Đã cập nhật slot type");
+                    toast.success("Đã cập nhật vị trí phối đồ");
                 },
                 onError: (error) => {
                     toast.error(`Cập nhật thất bại: ${error.message}`);
@@ -100,7 +100,7 @@ export function UpdateSlotTypeDialog({
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="w-[calc(100vw-1rem)] max-h-[96vh] overflow-y-auto sm:max-w-md sm:w-full">
                 <DialogHeader>
-                    <DialogTitle>Cập nhật Slot Type</DialogTitle>
+                    <DialogTitle>Cập nhật Vị trí phối đồ</DialogTitle>
                     <DialogDescription>
                         Nhập thông tin bên dưới để cập nhật vị trí phối đồ.
                     </DialogDescription>

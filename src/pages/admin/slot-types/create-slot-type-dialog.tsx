@@ -46,7 +46,7 @@ export function CreateSlotTypeDialog({ open, setOpen }: CreateSlotTypeDialogProp
             },
             {
                 onSuccess: () => {
-                    toast.success("Đã tạo slot type");
+                    toast.success("Đã tạo vị trí phối đồ");
                 },
                 onError: (error) => {
                     toast.error(`Tạo thất bại: ${error.message}`);
@@ -68,7 +68,7 @@ export function CreateSlotTypeDialog({ open, setOpen }: CreateSlotTypeDialogProp
         <Dialog open={open} onOpenChange={setOpen}>
             <DialogContent className="w-[calc(100vw-1rem)] max-h-[96vh] overflow-y-auto sm:max-w-md sm:w-full">
                 <DialogHeader>
-                    <DialogTitle>Thêm Slot Type</DialogTitle>
+                    <DialogTitle>Thêm Vị trí phối đồ</DialogTitle>
                     <DialogDescription>
                         Nhập thông tin bên dưới để tạo vị trí phối đồ mới.
                     </DialogDescription>

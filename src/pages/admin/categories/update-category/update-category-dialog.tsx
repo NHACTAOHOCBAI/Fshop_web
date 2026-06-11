@@ -215,7 +215,7 @@ export function UpdateCategoryDialog({
                         </div>
 
                         <div className="space-y-2">
-                            <label className="text-sm font-medium">Vị trí phối đồ (Slot Type)</label>
+                            <label className="text-sm font-medium">Vị trí phối đồ</label>
                             <Controller
                                 control={form.control}
                                 name="slotTypeId"
